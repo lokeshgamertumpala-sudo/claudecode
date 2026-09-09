@@ -5,6 +5,24 @@ import requests
 from litellm.integrations.custom_logger import CustomLogger
 from typing import Any
 
+ARCHITECTURAL_COHESION_DIRECTIVE = """
+[CRITICAL ARCHITECTURAL CONTRACT - PERMANENT MULTI-FILE DIRECTIVE]
+You are operating as an Elite Principal Software Architect and Lead Engineer.
+When generating, modifying, or refactoring multi-file software projects, you MUST adhere strictly to these principles:
+1. INTERCONNECTED COMPLETENESS (ZERO ORPHANED IMPORTS):
+   - Whenever you write or edit a file that contains import or require statements pointing to local relative paths (e.g. `./src/...`, `../utils/...`, `./components/...`), you MUST ensure that EVERY referenced file is fully implemented and saved to disk.
+   - NEVER create entry points (e.g. `App.js`, `index.html`, `main.py`) referencing missing screens, helper functions, or state stores.
+2. IMPORT/EXPORT SYMMETRY:
+   - Match export signatures precisely. If a module uses `export default Foo`, import it via `import Foo from ...`. If it uses named exports (`export const bar`), import via `import { bar } from ...`.
+   - Verify external package names against package.json (e.g., `@react-navigation/bottom-tabs`, NOT `@react-navigation/bottom-tab`).
+3. ZERO STUBS / ZERO PLACEHOLDERS:
+   - Never write `// TODO: implement later`, empty callbacks, or mock returns when asked to build features. Write full, complete, production-grade logic.
+4. DOM & EVENT WIRING:
+   - In web/mobile apps, all buttons, forms, and interactive elements must be connected to their corresponding state, handlers, or event listeners.
+5. PRE-COMPLETION VERIFICATION:
+   - Always run syntax checks and verify import chains before concluding. Zero runtime errors, zero syntax errors, and 100% interconnected harmony.
+"""
+
 class RequestSanitizer(CustomLogger):
     def __init__(self):
         super().__init__()
@@ -48,44 +66,10 @@ class RequestSanitizer(CustomLogger):
         record = self.health.get(nim_id)
         if not record:
             return True
-
         # If currently in cooldown after a recent 429/503/timeout, do not use
-        if now < record["cooldown_until"]:
+        if now < record.get("cooldown_until", 0.0):
             return False
-
-        # If probed recently (< 25 seconds), return cached health status
-        if now - record["last_probe"] < 25.0:
-            return record["healthy"]
-
-        # Perform a fast, lightweight 1-token probe
-        record["last_probe"] = now
-        if not self.api_key:
-            self._load_api_key()
-        if not self.api_key:
-            return True
-
-        try:
-            r = requests.post(
-                "https://integrate.api.nvidia.com/v1/chat/completions",
-                headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
-                json={"model": nim_id, "messages": [{"role": "user", "content": "1"}], "max_tokens": 1},
-                timeout=2.5
-            )
-            if r.status_code == 200:
-                record["healthy"] = True
-                record["cooldown_until"] = 0.0
-                return True
-            else:
-                # 429 Rate Limit, 503 Service Unavailable, etc.
-                record["healthy"] = False
-                record["cooldown_until"] = now + 45.0
-                print(f"[SMART-ROUTER] {nim_id} is busy/limited ({r.status_code}). Setting 45s cooldown.", flush=True)
-                return False
-        except Exception as e:
-            record["healthy"] = False
-            record["cooldown_until"] = now + 45.0
-            print(f"[SMART-ROUTER] {nim_id} probe failed ({e}). Setting 45s cooldown.", flush=True)
-            return False
+        return True
 
     def sanitize_content(self, content):
         if not isinstance(content, list):
@@ -129,12 +113,19 @@ class RequestSanitizer(CustomLogger):
         return "auto"
 
     def resolve_target_model(self, pref: str) -> str:
-        # Mapping for explicit user choices
+        # Mapping for explicit user choices (both short slugs and canonical names)
         mapping = {
             "kimi": ("moonshotai/kimi-k3", "moonshotai/kimi-k3"),
+            "kimi-k3": ("moonshotai/kimi-k3", "moonshotai/kimi-k3"),
+            "moonshotai/kimi-k3": ("moonshotai/kimi-k3", "moonshotai/kimi-k3"),
             "nemotron": ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b"),
+            "nvidia/nemotron-3-super-120b-a12b": ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b"),
             "laguna": ("backup-laguna", "poolside/laguna-xs-2.1"),
+            "poolside": ("backup-laguna", "poolside/laguna-xs-2.1"),
+            "poolside/laguna-xs-2.1": ("backup-laguna", "poolside/laguna-xs-2.1"),
+            "gpt": ("openai/gpt-oss-20b", "openai/gpt-oss-20b"),
             "gpt-oss": ("openai/gpt-oss-20b", "openai/gpt-oss-20b"),
+            "openai/gpt-oss-20b": ("openai/gpt-oss-20b", "openai/gpt-oss-20b"),
         }
 
         # If user explicitly locked a model and it's healthy, use it
@@ -166,7 +157,37 @@ class RequestSanitizer(CustomLogger):
                 if isinstance(content, list):
                     msg["content"] = self.sanitize_content(content)
 
-        # 2. Dynamic zero-error model resolution
+            # 2. Inject Permanent Architectural Cohesion Directive into system prompt
+            directive_text = ARCHITECTURAL_COHESION_DIRECTIVE.strip()
+            system_msg = None
+            for msg in messages:
+                if isinstance(msg, dict) and msg.get("role") in ("system", "developer"):
+                    system_msg = msg
+                    break
+            
+            if system_msg:
+                s_content = system_msg.get("content")
+                if isinstance(s_content, str):
+                    if "[CRITICAL ARCHITECTURAL CONTRACT" not in s_content:
+                        system_msg["content"] = directive_text + "\n\n" + s_content
+                elif isinstance(s_content, list):
+                    has_dir = any(isinstance(p, dict) and "[CRITICAL ARCHITECTURAL CONTRACT" in p.get("text", "") for p in s_content)
+                    if not has_dir:
+                        s_content.insert(0, {"type": "text", "text": directive_text + "\n\n"})
+            else:
+                messages.insert(0, {"role": "system", "content": directive_text})
+
+        # 3. If top-level system parameter is passed
+        top_system = data.get("system")
+        if top_system:
+            if isinstance(top_system, str) and "[CRITICAL ARCHITECTURAL CONTRACT" not in top_system:
+                data["system"] = ARCHITECTURAL_COHESION_DIRECTIVE.strip() + "\n\n" + top_system
+            elif isinstance(top_system, list):
+                has_dir = any(isinstance(p, dict) and "[CRITICAL ARCHITECTURAL CONTRACT" in p.get("text", "") for p in top_system)
+                if not has_dir:
+                    top_system.insert(0, {"type": "text", "text": ARCHITECTURAL_COHESION_DIRECTIVE.strip() + "\n\n"})
+
+        # 4. Dynamic zero-error model resolution
         pref = self.get_selected_model()
         target_model = self.resolve_target_model(pref)
         data["model"] = target_model

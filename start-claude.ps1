@@ -133,12 +133,13 @@ if (-not $proxyReady) {
 
 # 5. Set Claude Code environment variables
 $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:$port"
-$env:ANTHROPIC_AUTH_TOKEN = "sk-litellm-proxy-key"
 $env:ANTHROPIC_API_KEY = "sk-litellm-proxy-key"
-$env:ANTHROPIC_MODEL = "moonshotai/kimi-k3"
-$env:ANTHROPIC_DEFAULT_SONNET_MODEL = "moonshotai/kimi-k3"
-$env:ANTHROPIC_DEFAULT_HAIKU_MODEL = "moonshotai/kimi-k3"
-$env:ANTHROPIC_DEFAULT_OPUS_MODEL = "moonshotai/kimi-k3"
+Remove-Item env:ANTHROPIC_AUTH_TOKEN -ErrorAction SilentlyContinue
+[Environment]::SetEnvironmentVariable("ANTHROPIC_AUTH_TOKEN", $null, "Process")
+$env:ANTHROPIC_MODEL = "claude-sonnet-4-5"
+$env:ANTHROPIC_DEFAULT_SONNET_MODEL = "claude-sonnet-4-5"
+$env:ANTHROPIC_DEFAULT_HAIKU_MODEL = "claude-sonnet-4-5"
+$env:ANTHROPIC_DEFAULT_OPUS_MODEL = "claude-sonnet-4-5"
 $env:CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT = "1"
 
 Write-Host "====================================================" -ForegroundColor Cyan
