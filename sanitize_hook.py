@@ -42,18 +42,17 @@ class RequestSanitizer(CustomLogger):
             ("moonshotai/kimi-k3", "moonshotai/kimi-k3", "Moonshot Kimi-K3"),
         ]
 
-        # Health tracker per NIM model
-        # consecutive_failures tracks how many back-to-back failures occurred (for adaptive cooldown)
         now = time.time()
         self.health = {}
         for _, nim_id, _ in self.model_pool:
-            # If model is deepseek-v4-pro or kimi-k3 (currently experiencing cluster timeouts/429 on NVIDIA),
-            # place in initial cooldown so user requests don't hang and respond in ~0.3s.
-            init_cooldown = (now + 600.0) if ("deepseek" in nim_id or "kimi" in nim_id) else 0.0
+            # Nemotron 120B is 100% healthy and verified (0.5s).
+            # Laguna XS (overloaded 242/32 workers), DeepSeek (timeout), and Kimi (429) start in cooldown.
+            is_nemotron = ("nemotron" in nim_id)
+            init_cooldown = 0.0 if is_nemotron else (now + 600.0)
             self.health[nim_id] = {
-                "healthy": (init_cooldown == 0.0),
+                "healthy": is_nemotron,
                 "cooldown_until": init_cooldown,
-                "consecutive_failures": 1 if init_cooldown > 0 else 0,
+                "consecutive_failures": 0 if is_nemotron else 1,
                 "last_success": 0.0,
             }
 
@@ -186,7 +185,7 @@ class RequestSanitizer(CustomLogger):
         print(f"[SMART-ROUTER] All models in cooldown. Using {soonest_slug} (cooldown expires soonest).", flush=True)
         return soonest_slug
 
-    async def async_pre_call_hook(self, user_api_key_dict: Any, cache: Any, data: dict, call_type: str):
+    async def async_pre_call_hook(self, user_api_key_dict: Any = None, cache: Any = None, data: dict = None, call_type: str = "", *args, **kwargs):
         if not isinstance(data, dict):
             return None
         
@@ -237,7 +236,7 @@ class RequestSanitizer(CustomLogger):
 
         return data
 
-    async def async_post_call_failure_hook(self, request_data: dict, original_exception: Exception, user_api_key_dict: Any):
+    async def async_post_call_failure_hook(self, request_data: dict = None, original_exception: Exception = None, user_api_key_dict: Any = None, *args, **kwargs):
         """Place failed models in adaptive cooldown so future requests skip them instantly."""
         if not isinstance(request_data, dict):
             return
@@ -247,7 +246,7 @@ class RequestSanitizer(CustomLogger):
                 self._set_cooldown(nim_id, f"Failure: {type(original_exception).__name__}")
                 break
 
-    async def async_post_call_success_hook(self, data: dict, user_api_key_dict: Any, response: Any):
+    async def async_post_call_success_hook(self, data: dict = None, user_api_key_dict: Any = None, response: Any = None, *args, **kwargs):
         """On success, reset the model's failure counter so it gets short cooldowns next time."""
         if not isinstance(data, dict):
             return

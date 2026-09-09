@@ -116,27 +116,26 @@ router_settings:
   num_retries: 1
   retry_after: 0
   fallbacks:
-    # Primary models: Nemotron -> Laguna -> DeepSeek V4 Pro -> Kimi (Kimi last because 429)
-    - moonshotai/kimi-k3: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
-    - kimi-k3: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
-    - backup-nemotron: ["backup-laguna", "deepseek-v4-pro", "moonshotai/kimi-k3"]
-    - nemotron: ["backup-laguna", "deepseek-v4-pro", "moonshotai/kimi-k3"]
-    - backup-laguna: ["backup-nemotron", "deepseek-v4-pro", "moonshotai/kimi-k3"]
-    - laguna: ["backup-nemotron", "deepseek-v4-pro", "moonshotai/kimi-k3"]
-    - deepseek-ai/deepseek-v4-pro-0813: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
-    - deepseek-v4-pro: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
-    - deepseek: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
-    # Claude-mapped names: all fall back to Nemotron first
-    - claude-sonnet-4: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
-    - claude-sonnet-4-5: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
-    - claude-3-7-sonnet-20250219: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
-    - claude-3-5-sonnet-20241022: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
-    - claude-3-5-haiku-20241022: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
-    - claude-haiku-4-5: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
-    - claude-opus-4: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
-    - claude-opus-4-5: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
-    - claude-3-opus-20240229: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
-    - "*": ["backup-nemotron", "backup-laguna", "deepseek-v4-pro", "moonshotai/kimi-k3"]
+    # All fallbacks go directly to Nemotron 120B (the only model with 100% healthy capacity)
+    - moonshotai/kimi-k3: ["backup-nemotron"]
+    - kimi-k3: ["backup-nemotron"]
+    - backup-nemotron: ["backup-laguna"]
+    - nemotron: ["backup-laguna"]
+    - backup-laguna: ["backup-nemotron"]
+    - laguna: ["backup-nemotron"]
+    - deepseek-ai/deepseek-v4-pro-0813: ["backup-nemotron"]
+    - deepseek-v4-pro: ["backup-nemotron"]
+    - deepseek: ["backup-nemotron"]
+    - claude-sonnet-4: ["backup-nemotron"]
+    - claude-sonnet-4-5: ["backup-nemotron"]
+    - claude-3-7-sonnet-20250219: ["backup-nemotron"]
+    - claude-3-5-sonnet-20241022: ["backup-nemotron"]
+    - claude-3-5-haiku-20241022: ["backup-nemotron"]
+    - claude-haiku-4-5: ["backup-nemotron"]
+    - claude-opus-4: ["backup-nemotron"]
+    - claude-opus-4-5: ["backup-nemotron"]
+    - claude-3-opus-20240229: ["backup-nemotron"]
+    - "*": ["backup-nemotron"]
 
 litellm_settings:
   drop_params: true
