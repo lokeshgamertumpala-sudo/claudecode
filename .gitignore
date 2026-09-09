@@ -1,0 +1,21 @@
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Python cache & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Runtime logs
+*.log
+litellm.log
+proxy-*.log
+watchdog.log
+
+# Node dependencies
+node_modules/
+
+# Local runtime state
+active_model.txt

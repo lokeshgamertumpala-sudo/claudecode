@@ -1,0 +1,137 @@
+model_list:
+  # Primary model: Moonshot AI Kimi-K3
+  - model_name: "moonshotai/kimi-k3"
+    litellm_params:
+      model: "nvidia_nim/moonshotai/kimi-k3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "kimi-k3"
+    litellm_params:
+      model: "nvidia_nim/moonshotai/kimi-k3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  # Automatic high-reliability fallbacks & models on NVIDIA NIM
+  - model_name: "nvidia/nemotron-3-super-120b-a12b"
+    litellm_params:
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "nemotron"
+    litellm_params:
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "backup-nemotron"
+    litellm_params:
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "poolside/laguna-xs-2.1"
+    litellm_params:
+      model: "nvidia_nim/poolside/laguna-xs-2.1"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "laguna"
+    litellm_params:
+      model: "nvidia_nim/poolside/laguna-xs-2.1"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "backup-laguna"
+    litellm_params:
+      model: "nvidia_nim/poolside/laguna-xs-2.1"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "openai/gpt-oss-20b"
+    litellm_params:
+      model: "nvidia_nim/openai/gpt-oss-20b"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "gpt-oss"
+    litellm_params:
+      model: "nvidia_nim/openai/gpt-oss-20b"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "auto"
+    litellm_params:
+      model: "nvidia_nim/moonshotai/kimi-k3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  # Claude Code model mappings
+  - model_name: "claude-sonnet-4"
+    litellm_params:
+      model: "nvidia_nim/moonshotai/kimi-k3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "claude-sonnet-4-5"
+    litellm_params:
+      model: "nvidia_nim/moonshotai/kimi-k3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "claude-3-7-sonnet-20250219"
+    litellm_params:
+      model: "nvidia_nim/moonshotai/kimi-k3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "claude-3-5-sonnet-20241022"
+    litellm_params:
+      model: "nvidia_nim/moonshotai/kimi-k3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "claude-3-5-haiku-20241022"
+    litellm_params:
+      model: "nvidia_nim/moonshotai/kimi-k3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "claude-haiku-4-5"
+    litellm_params:
+      model: "nvidia_nim/moonshotai/kimi-k3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "claude-opus-4"
+    litellm_params:
+      model: "nvidia_nim/moonshotai/kimi-k3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "claude-opus-4-5"
+    litellm_params:
+      model: "nvidia_nim/moonshotai/kimi-k3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "claude-3-opus-20240229"
+    litellm_params:
+      model: "nvidia_nim/moonshotai/kimi-k3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "*"
+    litellm_params:
+      model: "nvidia_nim/moonshotai/kimi-k3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+router_settings:
+  num_retries: 2
+  retry_after: 1
+  fallbacks:
+    - moonshotai/kimi-k3: ["backup-laguna", "backup-nemotron"]
+    - kimi-k3: ["backup-laguna", "backup-nemotron"]
+    - claude-sonnet-4: ["backup-laguna", "backup-nemotron"]
+    - claude-sonnet-4-5: ["backup-laguna", "backup-nemotron"]
+    - claude-3-7-sonnet-20250219: ["backup-laguna", "backup-nemotron"]
+    - claude-3-5-sonnet-20241022: ["backup-laguna", "backup-nemotron"]
+    - claude-3-5-haiku-20241022: ["backup-laguna", "backup-nemotron"]
+    - claude-haiku-4-5: ["backup-laguna", "backup-nemotron"]
+    - claude-opus-4: ["backup-laguna", "backup-nemotron"]
+    - claude-opus-4-5: ["backup-laguna", "backup-nemotron"]
+    - claude-3-opus-20240229: ["backup-laguna", "backup-nemotron"]
+    - "*": ["backup-laguna", "backup-nemotron"]
+
+litellm_settings:
+  drop_params: true
+  set_verbose: false
+  num_retries: 2
+  retry_after: 1
+  request_timeout: 1800
+  stream_timeout: 60
+  callbacks: ["sanitize_hook.proxy_handler_instance"]
+
+general_settings:
+  master_key: "sk-litellm-proxy-key"

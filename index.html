@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CROWD CLASH 3D - Play Now</title>
+<style>
+* {margin:0; padding:0; box-sizing:border-box}
+html,body {height:100%; overflow:hidden; background:#000; font-family:Arial,Helvetica,sans-serif}
+#game {position:relative; width:100%; height:100%; background:linear-gradient(135deg, #1a2a6c, #b21f1f)}
+#canvas {display:block; width:100%; height:100%; background:#000}
+#ui {position:absolute; top:0; left:0; width:100%; padding:20px; box-sizing:border-box; pointer-events:none}
+#hud {position:absolute; top:10px; left:10px; color:#fff; font-size:24px; font-weight:bold; text-shadow:0 0 5px rgba(0,0,0,0.5)}
+#crowd-count {color:#ffd700; font-size:28px; text-shadow:0 0 10px rgba(255,215,0,0.7)}
+#instructions {position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); color:#fff; padding:15px 25px; border-radius:12px; font-size:18px; max-width:80%; text-align:center}
+#message {position:absolute; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:#fff; padding:20px 30px; border-radius:15px; font-size:20px; text-align:center; max-width:90%; opacity:0; transition:opacity 0.3s ease}
+.btn {position:absolute; bottom:20px; right:20px; background:#ff6b6b; color:#fff; border:none; padding:12px 24px; border-radius:25px; font-size:16px; font-weight:bold; cursor:pointer; box-shadow:0 4px 15px rgba(255,107,107,0.4); transition:all 0.3s ease}
+.btn:hover {background:#ff5252; transform:translateY(-3px); box-shadow:0 6px 20px rgba(255,107,107,0.6)}
+.btn:active {transform:translateY(0)}
+.gate {position:absolute; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:18px; color:#fff; text-shadow:0 0 3px rgba(0,0,0,0.5); box-shadow:0 0 10px rgba(0,0,0,0.3); z-index:5; animation:pulse 2s infinite}
+.gate.add {background:linear-gradient(45deg, #00ff00, #00cc00)}
+.gate.mult {background:linear-gradient(45deg, #00ffff, #00cccc)}
+.gate.sub {background:linear-gradient(45deg, #ff6b6b, #ff5252)}
+@keyframes pulse {0% {transform:scale(1);} 50% {transform:scale(1.05);} 100% {transform:scale(1)}}
+.projectile {position:absolute; width:8px; height:8px; background:#ffd700; border-radius:50%; z-index:10}
+.explosion {position:absolute; width:0; height:0; border-radius:50%; background:rgba(255,165,0,0.7); box-shadow:0 0 20px rgba(255,165,0,0.5); z-index:15; pointer-events:none; opacity:0}
+@media (max-width:480px) {#hud {font-size:20px;} #crowd-count {font-size:24px;} #instructions {font-size:16px; padding:12px 20px;} #message {font-size:18px; padding:16px 24px;} .btn {padding:10px 20px; font-size:14px; bottom:10px;} .gate {width:40px; height:40px; font-size:16px;} .projectile {width:6px; height:6px;}}
+</style>
+</head>
+<body>
+<div id="game">
+<canvas id="canvas"></canvas>
+<div id="ui">
+<div id="hud">Crowd: <span id="crowd-count">10</span> / 100</div>
+<div id="instructions">Click or tap anywhere to aim and fire!</div>
+<div id="message"></div>
+<button class="btn" id="restart-btn" style="display:none;">Restart</button>
+</div>
+</div>
+
+<script>
+(() => {
+// Game state
+const state = {
+crowd: 10,
+maxCrowd: 500,
+goal: 100,
+phase: 'playing', // playing, victory, gameover
+gates: [],
+projectiles: [],
+explosions: [],
+mouseX: 0,
+mouseY: 0,
+lastShot: 0,
+shotDelay: 250
+};
+
+// DOM elements
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const crowdCountEl = document.getElementById('crowd-count');
+const messageEl = document.getElementById('message');
+const restartBtn = document.getElementById('restart-btn');
+const instructionsEl = document.getElementById('instructions');
+
+// Initialize
+function init() {
+resize();
+createGates();
+setupEvents();
+gameLoop();
+// Hide instructions after 5 seconds
+setTimeout(() => {
+instructionsEl.style.opacity = '0';
+setTimeout(() => { instructionsEl.style.display = 'none'; }, 500);
+}, 5000);
+}
+
+// Resize canvas
+function resize() {
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+}
+
+// Create initial gates
+function createGates() {
+state.gates = [];
+const gateCount = 6;
+for (let i = 0; i < gateCount; i++) {
+const gateType = Math.random() < 0.5 ? 'add' : (Math.random() < 0.75 ? 'mult' : 'sub');
+const value = Math.floor(Math.random() * 12) + 3; // 3-14
+const x = Math.random() * (canvas.width - 80) + 40;
+const y = Math.random() * (canvas.height - 160) + 80;
+
+state.gates.push({
+type: gateType,
+value: value,
+x: x,
+y: y,
+width: 50,
+height: 50,
+id: Date.now() + i
+});
+}
+}
+
+// Setup events
+function setupEvents() {
+// Mouse events
+canvas.addEventListener('mousedown', (e) => {
+if (state.phase !== 'playing') return;
+const rect = canvas.getBoundingClientRect();
+state.mouseX = e.clientX - rect.left;
+state.mouseY = e.clientY - rect.top;
+shoot();
+});
+
+// Touch events
+canvas.addEventListener('touchstart', (e) => {
+if (state.phase !== 'playing') return;
+e.preventDefault();
+const touch = e.touches[0];
+const rect = canvas.getBoundingClientRect();
+state.mouseX = touch.clientX - rect.left;
+state.mouseY = touch.clientY - rect.top;
+shoot();
+}, {passive: false});
+
+// Window resize
+window.addEventListener('resize', resize);
+
+// Restart button
+restartBtn.addEventListener('click', () => {
+resetGame();
+messageEl.style.opacity = '0';
+restartBtn.style.display = 'none';
+});
+
+// Hide instructions on click/tap anywhere
+document.addEventListener('click', () => {
+if (instructionsEl.style.display !== 'none') {
+instructionsEl.style.opacity = '0';
+setTimeout(() => { instructionsEl.style.display = 'none'; }, 300);
+}
+});
+document.addEventListener('touchstart', () => {
+if (instructionsEl.style.display !== 'none') {
+instructionsEl.style.opacity = '0';
+setTimeout(() => { instructionsEl.style.display = 'none'; }, 300);
+}
+}, {passive: true});
+}
+
+// Shoot a projectile
+function shoot() {
+const now = Date.now();
+if (now - state.lastShot < state.shotDelay) return;
+state.lastShot = now;
+
+// Create projectile from center bottom
+const projectile = {
+x: canvas.width / 2,
+y: canvas.height - 30,
+vx: (state.mouseX - (canvas.width / 2)) * 0.12,
+vy: (state.mouseY - (canvas.height - 30)) * 0.12,
+width: 8,
+height: 8,
+life: 100
+};
+state.projectiles.push(projectile);
+
+// Visual feedback: brief flash at cannon
+createExplosion(canvas.width / 2, canvas.height - 15, 15, '#ffff00', 10);
+}
+
+// Update game state
+function update() {
+if (state.phase !== 'playing') return;
+
+// Update projectiles
+for (let i = state.projectiles.length - 1; i >= 0; i--) {
+const p = state.projectiles[i];
+p.x += p.vx;
+p.y += p.vy;
+p.life--;
+
+// Remove if off screen or expired
+if (p.x < -30 || p.x > canvas.width + 30 ||
+p.y < -30 || p.y > canvas.height + 30 ||
+p.life <= 0) {
+state.projectiles.splice(i, 1);
+continue;
+}
+
+// Check gate collisions
+for (let j = state.gates.length - 1; j >= 0; j--) {
+const gate = state.gates[j];
+const dx = p.x - (gate.x + gate.width/2);
+const dy = p.y - (gate.y + gate.height/2);
+const distance = Math.sqrt(dx*dx + dy*dy);
+
+if (distance < gate.width/2 + p.width/2) {
+// Hit gate!
+hitGate(gate);
+state.gates.splice(j, 1);
+state.projectiles.splice(i, 1);
+createExplosion(gate.x + gate.width/2, gate.y + gate.height/2, 30,
+gate.type === 'add' ? '#00ff00' :
+gate.type === 'mult' ? '#00ffff' : '#ff6b6b', 15);
+break; // Only hit one gate per projectile
+}
+}
+}
+
+// Update explosions
+for (let i = state.explosions.length - 1; i >= 0; i--) {
+const exp = state.explosions[i];
+exp.life--;
+if (exp.life <= 0) {
+state.explosions.splice(i, 1);
+continue;
+}
+// Calculate current size based on life left
+const lifeRatio = exp.life / exp.maxLife;
+exp.size = exp.maxSize * lifeRatio;
+}
+
+// Spawn new gates occasionally
+if (Math.random() < 0.003) {
+createGates();
+}
+
+// Check win/lose conditions
+if (state.crowd >= state.goal) {
+state.phase = 'victory';
+showMessage('🎉 VICTORY! 🎉\nYou reached the goal!\nClick to play again');
+restartBtn.style.display = 'block';
+} else if (state.crowd <= 0) {
+state.phase = 'gameover';
+showMessage('💀 GAME OVER 💀\nYour crowd reached zero!\nClick to try again');
+restartBtn.style.display = 'block';
+}
+}
+
+// Hit a gate and apply its effect
+function hitGate(gate) {
+if (gate.type === 'add') {
+state.crowd = Math.min(state.maxCrowd, state.crowd + gate.value);
+showMessage(`+${gate.value}`, gate.x + gate.width/2, gate.y + gate.height/2);
+} else if (gate.type === 'mult') {
+state.crowd = Math.min(state.maxCrowd, Math.floor(state.crowd * gate.value));
+showMessage(`×${gate.value}`, gate.x + gate.width/2, gate.y + gate.height/2);
+} else if (gate.type === 'sub') {
+state.crowd = Math.max(0, state.crowd - gate.value);
+showMessage(`-${gate.value}`, gate.x + gate.width/2, gate.y + gate.height/2);
+}
+updateCrowdDisplay();
+
+// Small screen shake
+canvas.style.transform = 'translate(3px, 3px)';
+setTimeout(() => { canvas.style.transform = 'translate(0px, 0px)'; }, 80);
+}
+
+// Create visual explosion effect
+function createExplosion(x, y, size, color, duration) {
+const explosion = {
+x: x,
+y: y,
+size: size,
+maxSize: size,
+color: color,
+life: duration,
+maxLife: duration
+};
+state.explosions.push(explosion);
+}
+
+// Update crowd count display
+function updateCrowdDisplay() {
+crowdCountEl.textContent = state.crowd;
+
+// Color coding based on crowd size
+if (state.crowd >= state.goal * 0.8) {
+crowdCountEl.style.color = '#00ff00';
+} else if (state.crowd >= state.goal * 0.5) {
+crowdCountEl.style.color = '#ffff00';
+} else if (state.crowd >= state.goal * 0.2) {
+crowdCountEl.style.color = '#ff8800';
+} else {
+crowdCountEl.style.color = '#ff0000';
+}
+}
+
+// Show message at gate hit location or center
+function showMessage(text, x = canvas.width/2, y = canvas.height/2) {
+// Create floating message element
+const msg = document.createElement('div');
+msg.textContent = text;
+msg.style.position = 'absolute';
+msg.style.left = `${x}px`;
+msg.style.top = `${y}px`;
+msg.style.background = 'rgba(0,0,0,0.7)';
+msg.style.color = 'white';
+msg.style.padding = '8px 12px';
+msg.style.borderRadius = '10px';
+msg.style.fontSize = '16px';
+msg.style.fontWeight = 'bold';
+msg.style.zIndex = '20';
+msg.style.pointerEvents = 'none';
+msg.style.transform = 'translate(-50%, -50%)';
+msg.style.opacity = '0';
+msg.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+document.body.appendChild(msg);
+
+// Animate in
+requestAnimationFrame(() => {
+msg.style.opacity = '1';
+msg.style.transform = 'translate(-50%, -70%)';
+});
+
+// Remove after animation
+setTimeout(() => {
+msg.style.opacity = '0';
+setTimeout(() => { document.body.removeChild(msg); }, 500);
+}, 1500);
+}
+
+// Show victory/defeat message
+function showMessage(text) {
+messageEl.textContent = text;
+messageEl.style.opacity = '1';
+}
+
+// Reset game to initial state
+function resetGame() {
+state.crowd = 10;
+state.phase = 'playing';
+state.gates = [];
+state.projectiles = [];
+state.explosions = [];
+createGates();
+updateCrowdDisplay();
+messageEl.style.opacity = '0';
+restartBtn.style.display = 'none';
+instructionsEl.style.display = 'block';
+instructionsEl.style.opacity = '1';
+}
+
+// Main game loop
+function gameLoop() {
+update();
+render();
+requestAnimationFrame(gameLoop);
+}
+
+// Render everything
+function render() {
+// Clear canvas
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+// Draw background gradient
+const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+gradient.addColorStop(0, '#1a2a6c');
+gradient.addColorStop(0.5, '#b21f1f');
+gradient.addColorStop(1, '#1a2a6c');
+ctx.fillStyle = gradient;
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+// Draw explosions
+for (const exp of state.explosions) {
+ctx.beginPath();
+ctx.arc(exp.x, exp.y, exp.size, 0, Math.PI * 2);
+ctx.fillStyle = exp.color;
+ctx.globalAlpha = exp.life / exp.maxLife * 0.8;
+ctx.fill();
+ctx.globalAlpha = 1.0;
+}
+
+// Draw gates
+for (const gate of state.gates) {
+// Gate background
+ctx.beginPath();
+ctx.arc(gate.x + gate.width/2, gate.y + gate.height/2, gate.width/2, 0, Math.PI * 2);
+if (gate.type === 'add') {
+ctx.fillStyle = 'linear-gradient(45deg, #00ff00, #00cc00)';
+} else if (gate.type === 'mult') {
+ctx.fillStyle = 'linear-gradient(45deg, #00ffff, #00cccc)';
+} else if (gate.type === 'sub') {
+ctx.fillStyle = 'linear-gradient(45deg, #ff6b6b, #ff5252)';
+}
+ctx.fill();
+
+// Gate border
+ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+ctx.lineWidth = 2;
+ctx.stroke();
+
+// Gate text (value and type symbol)
+ctx.fillStyle = 'white';
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+ctx.font = 'bold 18px Arial';
+
+// Value
+ctx.fillText(gate.value, gate.x + gate.width/2, gate.y + gate.height/2 - 6);
+
+// Type symbol
+ctx.font = 'bold 20px Arial';
+const symbol = gate.type === 'add' ? '+' : gate.type === 'mult' ? '×' : '-';
+ctx.fillText(symbol, gate.x + gate.width/2, gate.y + gate.height/2 + 10);
+}
+}
+
+// Draw projectiles
+for (const p of state.projectiles) {
+ctx.beginPath();
+ctx.arc(p.x, p.y, p.width/2, 0, Math.PI * 2);
+ctx.fillStyle = '#ffd700';
+ctx.shadowColor = '#ffff00';
+ctx.shadowBlur = 6;
+ctx.fill();
+ctx.shadowBlur = 0;
+}
+
+// Draw aiming indicator (subtle circle at mouse position)
+if (state.phase === 'playing') {
+ctx.beginPath();
+ctx.arc(state.mouseX, state.mouseY, 20, 0, Math.PI * 2);
+ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+ctx.lineWidth = 2;
+ctx.stroke();
+ctx.beginPath();
+ctx.arc(canvas.width/2, canvas.height-30, 3, 0, Math.PI * 2);
+ctx.fillStyle = '#ff6b6b';
+ctx.fill();
+}
+}
+
+// Start the game
+init();
+})();
+</script>
+</body>
+</html>
