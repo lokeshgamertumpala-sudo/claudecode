@@ -108,21 +108,27 @@ model_list:
       api_key: "os.environ/NVIDIA_API_KEY"
 
 router_settings:
-  num_retries: 2
-  retry_after: 1
+  num_retries: 3
+  retry_after: 0
   fallbacks:
-    - moonshotai/kimi-k3: ["backup-laguna", "backup-nemotron"]
-    - kimi-k3: ["backup-laguna", "backup-nemotron"]
-    - claude-sonnet-4: ["backup-laguna", "backup-nemotron"]
-    - claude-sonnet-4-5: ["backup-laguna", "backup-nemotron"]
-    - claude-3-7-sonnet-20250219: ["backup-laguna", "backup-nemotron"]
-    - claude-3-5-sonnet-20241022: ["backup-laguna", "backup-nemotron"]
-    - claude-3-5-haiku-20241022: ["backup-laguna", "backup-nemotron"]
-    - claude-haiku-4-5: ["backup-laguna", "backup-nemotron"]
-    - claude-opus-4: ["backup-laguna", "backup-nemotron"]
-    - claude-opus-4-5: ["backup-laguna", "backup-nemotron"]
-    - claude-3-opus-20240229: ["backup-laguna", "backup-nemotron"]
-    - "*": ["backup-laguna", "backup-nemotron"]
+    - moonshotai/kimi-k3: ["backup-laguna", "openai/gpt-oss-20b", "backup-nemotron"]
+    - kimi-k3: ["backup-laguna", "openai/gpt-oss-20b", "backup-nemotron"]
+    - backup-nemotron: ["backup-laguna", "openai/gpt-oss-20b", "moonshotai/kimi-k3"]
+    - nemotron: ["backup-laguna", "openai/gpt-oss-20b", "moonshotai/kimi-k3"]
+    - backup-laguna: ["openai/gpt-oss-20b", "backup-nemotron", "moonshotai/kimi-k3"]
+    - laguna: ["openai/gpt-oss-20b", "backup-nemotron", "moonshotai/kimi-k3"]
+    - openai/gpt-oss-20b: ["backup-laguna", "backup-nemotron", "moonshotai/kimi-k3"]
+    - gpt-oss: ["backup-laguna", "backup-nemotron", "moonshotai/kimi-k3"]
+    - claude-sonnet-4: ["backup-laguna", "openai/gpt-oss-20b", "backup-nemotron"]
+    - claude-sonnet-4-5: ["backup-laguna", "openai/gpt-oss-20b", "backup-nemotron"]
+    - claude-3-7-sonnet-20250219: ["backup-laguna", "openai/gpt-oss-20b", "backup-nemotron"]
+    - claude-3-5-sonnet-20241022: ["backup-laguna", "openai/gpt-oss-20b", "backup-nemotron"]
+    - claude-3-5-haiku-20241022: ["backup-laguna", "openai/gpt-oss-20b", "backup-nemotron"]
+    - claude-haiku-4-5: ["backup-laguna", "openai/gpt-oss-20b", "backup-nemotron"]
+    - claude-opus-4: ["backup-laguna", "openai/gpt-oss-20b", "backup-nemotron"]
+    - claude-opus-4-5: ["backup-laguna", "openai/gpt-oss-20b", "backup-nemotron"]
+    - claude-3-opus-20240229: ["backup-laguna", "openai/gpt-oss-20b", "backup-nemotron"]
+    - "*": ["backup-laguna", "openai/gpt-oss-20b", "backup-nemotron", "moonshotai/kimi-k3"]
 
 litellm_settings:
   drop_params: true
