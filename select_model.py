@@ -4,11 +4,11 @@ import time
 import requests
 
 MODELS = {
-    "1": ("Auto Smart-Failover", "auto", "Prioritizes Kimi-K3; zero-downtime failover to Nemotron 120B (Zero Errors)"),
-    "2": ("Moonshot AI Kimi-K3", "moonshotai/kimi-k3", "Deep reasoning & coding (with auto-rate-limit protection)"),
-    "3": ("NVIDIA Nemotron 3 Super 120B", "nvidia/nemotron-3-super-120b-a12b", "120B enterprise model, ultra-fast 0.4s response, 100% quota"),
-    "4": ("Poolside Laguna XS 2.1", "poolside/laguna-xs-2.1", "High-speed code specialist model"),
-    "5": ("OpenAI GPT-OSS 20B", "openai/gpt-oss-20b", "Fast utility & code assistance model")
+    "1": ("Auto Smart-Failover", "auto", "Prioritizes Nemotron 120B; adaptive failover across all models (Zero Errors)"),
+    "2": ("NVIDIA Nemotron 3 Super 120B", "nvidia/nemotron-3-super-120b-a12b", "120B enterprise model, ultra-fast ~0.3s, 100% quota (RECOMMENDED)"),
+    "3": ("Poolside Laguna XS 2.1", "poolside/laguna-xs-2.1", "High-speed code specialist, ~0.3s latency"),
+    "4": ("OpenAI GPT-OSS 20B", "openai/gpt-oss-20b", "Fast utility & code assistance model"),
+    "5": ("Moonshot AI Kimi-K3", "moonshotai/kimi-k3", "Deep reasoning & coding (rate-limited on free tier)")
 }
 
 ALIASES = {

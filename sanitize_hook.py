@@ -29,22 +29,25 @@ class RequestSanitizer(CustomLogger):
         self.api_key = None
         self._load_api_key()
         
-        # Priority order for autonomous zero-downtime routing
+        # Priority order: fastest & most-available models first.
+        # Kimi-K3 is heavily rate-limited on free tier, so it goes last.
         # (litellm_slug, nim_model_id, human_name)
         self.model_pool = [
-            ("moonshotai/kimi-k3", "moonshotai/kimi-k3", "Moonshot Kimi-K3"),
             ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b", "Nemotron 120B"),
             ("backup-laguna", "poolside/laguna-xs-2.1", "Poolside Laguna XS 2.1"),
             ("openai/gpt-oss-20b", "openai/gpt-oss-20b", "OpenAI GPT-OSS 20B"),
+            ("moonshotai/kimi-k3", "moonshotai/kimi-k3", "Moonshot Kimi-K3"),
         ]
 
-        # Health tracker per NIM model: { nim_id: { "healthy": bool, "last_probe": float, "cooldown_until": float } }
+        # Health tracker per NIM model
+        # consecutive_failures tracks how many back-to-back failures occurred (for adaptive cooldown)
         self.health = {}
         for _, nim_id, _ in self.model_pool:
             self.health[nim_id] = {
                 "healthy": True,
-                "last_probe": 0.0,
-                "cooldown_until": 0.0
+                "cooldown_until": 0.0,
+                "consecutive_failures": 0,
+                "last_success": 0.0,
             }
 
     def _load_api_key(self):
@@ -66,10 +69,33 @@ class RequestSanitizer(CustomLogger):
         record = self.health.get(nim_id)
         if not record:
             return True
-        # If currently in cooldown after a recent 429/503/timeout, do not use
         if now < record.get("cooldown_until", 0.0):
             return False
         return True
+
+    def _set_cooldown(self, nim_id: str, reason: str):
+        """Adaptive cooldown: longer cooldowns for models that keep failing."""
+        now = time.time()
+        record = self.health.get(nim_id)
+        if not record:
+            return
+        record["consecutive_failures"] = record.get("consecutive_failures", 0) + 1
+        record["healthy"] = False
+        # Graduated cooldown: 30s -> 60s -> 120s -> 300s (cap at 5 min)
+        base_cooldowns = [30, 60, 120, 300]
+        idx = min(record["consecutive_failures"] - 1, len(base_cooldowns) - 1)
+        cooldown_secs = base_cooldowns[idx]
+        record["cooldown_until"] = now + cooldown_secs
+        print(f"[SMART-ROUTER] {nim_id} -> {reason}. Cooldown {cooldown_secs}s (failure #{record['consecutive_failures']}).", flush=True)
+
+    def _mark_success(self, nim_id: str):
+        """Reset failure counter on success to restore short cooldowns."""
+        record = self.health.get(nim_id)
+        if record:
+            record["healthy"] = True
+            record["consecutive_failures"] = 0
+            record["last_success"] = time.time()
+            record["cooldown_until"] = 0.0
 
     def sanitize_content(self, content):
         if not isinstance(content, list):
@@ -83,7 +109,7 @@ class RequestSanitizer(CustomLogger):
                 elif part_type == "tool_use":
                     tool_name = part.get("name", "")
                     if tool_name == "ai":
-                        new_content.append({"type": "text", "text": "Displaying model selector: 1. Auto Smart-Failover, 2. Kimi-K3, 3. Nemotron 120B, 4. Laguna XS, 5. GPT-OSS."})
+                        new_content.append({"type": "text", "text": "Displaying model selector: 1. Auto Smart-Failover, 2. Nemotron 120B, 3. Laguna XS, 4. GPT-OSS, 5. Kimi-K3."})
                     else:
                         new_content.append(part)
                 elif part_type == "tool_result":
@@ -133,15 +159,23 @@ class RequestSanitizer(CustomLogger):
             slug, nim_id = mapping[pref]
             if self.is_model_healthy(nim_id):
                 return slug
-            print(f"[SMART-ROUTER] Preferred model '{pref}' is currently throttled (429/cooldown). Auto-rerouting to prevent API error...", flush=True)
+            print(f"[SMART-ROUTER] Preferred model '{pref}' is throttled. Auto-rerouting...", flush=True)
 
         # In 'auto' mode or if preferred model is down: pick first healthy from priority pool
         for slug, nim_id, name in self.model_pool:
             if self.is_model_healthy(nim_id):
                 return slug
 
-        # Ultimate fallback if all are in cooldown: Laguna XS 2.1 (fastest response)
-        return "backup-laguna"
+        # Ultimate fallback: pick the model whose cooldown expires soonest
+        soonest_slug = "backup-nemotron"
+        soonest_time = float("inf")
+        for slug, nim_id, name in self.model_pool:
+            cd = self.health.get(nim_id, {}).get("cooldown_until", 0.0)
+            if cd < soonest_time:
+                soonest_time = cd
+                soonest_slug = slug
+        print(f"[SMART-ROUTER] All models in cooldown. Using {soonest_slug} (cooldown expires soonest).", flush=True)
+        return soonest_slug
 
     async def async_pre_call_hook(self, user_api_key_dict: Any, cache: Any, data: dict, call_type: str):
         if not isinstance(data, dict):
@@ -195,17 +229,24 @@ class RequestSanitizer(CustomLogger):
         return data
 
     async def async_post_call_failure_hook(self, request_data: dict, original_exception: Exception, user_api_key_dict: Any):
-        # When any model encounters an upstream failure (e.g. 429 / 503 / timeout), place in cooldown
+        """Place failed models in adaptive cooldown so future requests skip them instantly."""
         if not isinstance(request_data, dict):
             return
         model_used = str(request_data.get("model", "")).lower()
-        now = time.time()
         for slug, nim_id, name in self.model_pool:
             if slug.lower() in model_used or nim_id.lower() in model_used:
-                if nim_id in self.health:
-                    self.health[nim_id]["healthy"] = False
-                    self.health[nim_id]["cooldown_until"] = now + 60.0
-                    print(f"[SMART-ROUTER] Failure detected on {name} ({original_exception}). Cooldown for 60s.", flush=True)
+                self._set_cooldown(nim_id, f"Failure: {type(original_exception).__name__}")
+                break
+
+    async def async_post_call_success_hook(self, data: dict, user_api_key_dict: Any, response: Any):
+        """On success, reset the model's failure counter so it gets short cooldowns next time."""
+        if not isinstance(data, dict):
+            return
+        model_used = str(data.get("model", "")).lower()
+        for slug, nim_id, name in self.model_pool:
+            if slug.lower() in model_used or nim_id.lower() in model_used:
+                self._mark_success(nim_id)
                 break
 
 proxy_handler_instance = RequestSanitizer()
+

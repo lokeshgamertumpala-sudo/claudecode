@@ -46,24 +46,24 @@ if (Test-Path $activeModelFile) {
 }
 
 $modelMap = @{
-    "1" = "auto"
-    "auto" = "auto"
-    "2" = "moonshotai/kimi-k3"
+    "1" = "claude-sonnet-4-5"
+    "auto" = "claude-sonnet-4-5"
+    "2" = "nvidia/nemotron-3-super-120b-a12b"
+    "nemotron" = "nvidia/nemotron-3-super-120b-a12b"
+    "nvidia/nemotron-3-super-120b-a12b" = "nvidia/nemotron-3-super-120b-a12b"
+    "3" = "poolside/laguna-xs-2.1"
+    "laguna" = "poolside/laguna-xs-2.1"
+    "poolside/laguna-xs-2.1" = "poolside/laguna-xs-2.1"
+    "4" = "openai/gpt-oss-20b"
+    "gpt-oss" = "openai/gpt-oss-20b"
+    "openai/gpt-oss-20b" = "openai/gpt-oss-20b"
+    "5" = "moonshotai/kimi-k3"
     "kimi" = "moonshotai/kimi-k3"
     "kimi-k3" = "moonshotai/kimi-k3"
     "moonshotai/kimi-k3" = "moonshotai/kimi-k3"
-    "3" = "nvidia/nemotron-3-super-120b-a12b"
-    "nemotron" = "nvidia/nemotron-3-super-120b-a12b"
-    "nvidia/nemotron-3-super-120b-a12b" = "nvidia/nemotron-3-super-120b-a12b"
-    "4" = "poolside/laguna-xs-2.1"
-    "laguna" = "poolside/laguna-xs-2.1"
-    "poolside/laguna-xs-2.1" = "poolside/laguna-xs-2.1"
-    "5" = "openai/gpt-oss-20b"
-    "gpt-oss" = "openai/gpt-oss-20b"
-    "openai/gpt-oss-20b" = "openai/gpt-oss-20b"
 }
 
-$chosenModel = if ($modelMap.ContainsKey($activeModel.ToLower())) { $modelMap[$activeModel.ToLower()] } else { $activeModel }
+$chosenModel = if ($modelMap.ContainsKey($activeModel.ToLower())) { $modelMap[$activeModel.ToLower()] } else { "claude-sonnet-4-5" }
 
 # Set Environment Variables
 $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:$port"
