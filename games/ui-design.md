@@ -1,0 +1,1 @@
+---\nname: ui-design\n---\n# UI Design Specification\n\n## Overview\n- Build an intentional, premium UI for phone, tablet, and PC devices, with device‑specific layouts and controls designed to feel native and polished.\n

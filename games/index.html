@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crowd Command: Original Arcade Strategy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: #000;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #111;
+            overflow: hidden;
+        }
+
+        #game-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 18px;
+            text-shadow: 0 0 5px rgba(0,0,0,0.7);
+            z-index: 11;
+        }
+
+        #level-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            text-align: right;
+            text-shadow: 0 0 3px rgba(0,0,0,0.5);
+            z-index: 11;
+        }
+
+        #message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 20px 30px;
+            border-radius: 12px;
+            font-size: 24px;
+            text-align: center;
+            max-width: 90%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 12;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #4a90e2, #357ab8);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+            transition: all 0.3s ease;
+            z-index: 11;
+        }
+
+        .btn:hover {
+            background: linear-gradient(45deg, #357ab8, #2a5a8c);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Gate styles */
+        .gate {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            color: #fff;
+            text-shadow: 0 0 3px rgba(0,0,0,0.5);
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            z-index: 8;
+            transition: all 0.2s ease;
+        }
+
+        .gate.add {
+            background: linear-gradient(45deg, #00ff88, #00cc6a);
+            border: 2px solid rgba(0, 255, 136, 0.5);
+        }
+
+        .gate.mult {
+            background: linear-gradient(45deg, #00ffff, #00cccc);
+            border: 2px solid rgba(0, 255, 255, 0.5);
+        }
+
+        .gate.sub {
+            background: linear-gradient(45deg, #ff6b6b, #ff5252);
+            border: 2px solid rgba(255, 107, 107, 0.5);
+        }
+
+        .gate.speed {
+            background: linear-gradient(45deg, #ffd700, #ffb800);
+            border: 2px solid rgba(255, 215, 0, 0.5);
+        }
+
+        .gate.split {
+            background: linear-gradient(45deg, #ff00ff, #cc00cc);
+            border: 2px solid rgba(255, 0, 255, 0.5);
+        }
+
+        .gate.magnet {
+            background: linear-gradient(45deg, #8a2be2, #6a1cb2);
+            border: 2px solid rgba(138, 43, 226, 0.5);
+        }
+
+        .gate.shield {
+            background: linear-gradient(45deg, #ffffff, #e0e0e0);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: #333;
+        }
+
+        .gate.random {
+            background: linear-gradient(45deg, #ff8c00, #cc7000);
+            border: 2px solid rgba(255, 140, 0, 0.5);
+        }
+
+        .gate.risk_reward {
+            background: linear-gradient(45deg, #8b0000, #6b0000);
+            border: 2px solid rgba(139, 0, 0, 0.5);
+        }
+
+        @media (max-width: 480px) {
+            #hud {
+                font-size: 16px;
+            }
+
+            #level-info {
+                font-size: 14px;
+            }
+
+            #message {
+                font-size: 20px;
+                padding: 16px 24px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 14px;
+                bottom: 15px;
+                right: 15px;
+            }
+
+            .gate {
+                width: 50px;
+                height: 50px;
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="ui-overlay">
+            <div id="hud">
+                <span id="crowd-count">0</span> / <span id="goal-count">0</span>
+                <span id="score-count">0</span>
+                <span id="wave-count">0</span>
+            </div>
+            <div id="level-info">
+                <span id="level-number">0</span>
+                <span id="coins-count">0</span>
+            </div>
+            <div id="message"></div>
+            <button class="btn" id="restart-btn" style="display:none;">Restart</button>
+            <!-- Main Menu overlay -->
+            <div id="main-menu" class="overlay">
+                <h1>Crowd Command</h1>
+                <button id="btn-play" class="btn">Play</button>
+                <button id="btn-levels" class="btn">Levels</button>
+                <button id="btn-settings" class="btn">Settings</button>
+            </div>
+            <!-- Level Select placeholder -->
+            <div id="level-select" class="overlay" style="display:none;">
+                <h2>Select Level</h2>
+                <button class="btn">Level 1</button>
+                <button class="btn">Level 2</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="bundle.js"></script>
+</body>
+</html>

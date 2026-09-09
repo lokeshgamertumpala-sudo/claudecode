@@ -1,0 +1,190 @@
+{
+  "enemyArchetypes": [
+    {
+      "id": "runner",
+      "name": "Runner",
+      "description": "Fast, fragile enemies that rush the player",
+      "tacticalPurpose": "Tests reaction time and prioritization",
+      "baseStats": {
+        "health": 15,
+        "speed": 4,
+        "damage": 10,
+        "size": 0.8,
+        "value": 10
+      },
+      "behaviors": ["charge", "evade"],
+      "weaknesses": ["rapid_fire", "area_damage"],
+      "resistances": ["single_target"],
+      "visualTags": ["red", "streamlined", "speed_lines"],
+      "spawnWeight": 25
+    },
+    {
+      "id": "tank",
+      "name": "Tank",
+      "description": "Slow, heavily armored enemies that absorb damage",
+      "tacticalPurpose": "Forces players to use powerful weapons or sustained fire",
+      "baseStats": {
+        "health": 100,
+        "speed": 1,
+        "damage": 25,
+        "size": 1.5,
+        "value": 50
+      },
+      "behaviors": ["advance", "crush"],
+      "weaknesses": ["armor_piercing", "explosive"],
+      "resistances": ["rapid_fire", "piercing"],
+      "visualTags": ["gray", "armored", "slow"],
+      "spawnWeight": 15
+    },
+    {
+      "id": "guard",
+      "name": "Guard",
+      "description": "Shielded enemies that block projectiles from certain angles",
+      "tacticalPurpose": "Requires flanking or shield-piercing weapons",
+      "baseStats": {
+        "health": 40,
+        "speed": 2,
+        "damage": 15,
+        "size": 1.0,
+        "value": 25
+      },
+      "behaviors": ["patrol", "block", "counter"],
+      "weaknesses": ["shield_piercing", "flanking"],
+      "resistances": ["frontal_projectiles"],
+      "visualTags": ["blue", "shield", "defensive"],
+      "spawnWeight": 20
+    },
+    {
+      "id": "splitter",
+      "name": "Splitter",
+      "description": "Enemies that divide into smaller versions when damaged",
+      "tacticalPurpose": "Punishes overkill and encourages precision",
+      "baseStats": {
+        "health": 30,
+        "speed": 2.5,
+        "damage": 12,
+        "size": 1.0,
+        "value": 20
+      },
+      "behaviors": ["split_on_damage", "flee_when_low"],
+      "weaknesses": ["exact_damage", "slow_projectiles"],
+      "resistances": ["overkill", "high_rate_of_fire"],
+      "splitInto": [{"id": "runner", "count": 2, "healthPercentage": 0.5}],
+      "visualTags": ["yellow", "fractured", "unstable"],
+      "spawnWeight": 10
+    },
+    {
+      "id": "shooter",
+      "name": "Shooter",
+      "description": "Ranged enemies that attack from a distance",
+      "tacticalPurpose": "Creates pressure and forces movement",
+      "baseStats": {
+        "health": 25,
+        "speed": 1.5,
+        "damage": 8,
+        "range": 200,
+        "fireRate": 1.5,
+        "size": 0.9,
+        "value": 15
+      },
+      "behaviors": ["keep_distance", "strafe", "suppressive_fire"],
+      "weaknesses": ["close_range", "high_mobility"],
+      "resistances": ["long_range"],
+      "visualTags": ["purple", "cannon", "ranged"],
+      "spawnWeight": 18
+    },
+    {
+      "id": "shieldCarrier",
+      "name": "Shield Carrier",
+      "description": "Enemies that project protective shields around allies",
+      "tacticalPurpose": "Encourages target prioritization and shield breaking",
+      "baseStats": {
+        "health": 35,
+        "speed": 1.8,
+        "damage": 5,
+        "shieldStrength": 50,
+        "shieldRadius": 80,
+        "size": 1.2,
+        "value": 30
+      },
+      "behaviors": ["protect_allies", "maintain_formation"],
+      "weaknesses": ["shield_break", "focus_fire"],
+      "resistances": ["indirect_damage"],
+      "visualTags": ["green", "shield_aura", "support"],
+      "spawnWeight": 12
+    },
+    {
+      "id": "charger",
+      "name": "Charger",
+      "description": "Enemies that build up momentum for devastating rushes",
+      "tacticalPurpose": "Requires anticipation and interruption",
+      "baseStats": {
+        "health": 45,
+        "speed": 1,
+        "damage": 40,
+        "chargeTime": 2.0,
+        "chargeSpeed": 8,
+        "size": 1.3,
+        "value": 35
+      },
+      "behaviors": ["charge_windup", "charge_release", "stun_on_wall_hit"],
+      "weaknesses": ["interrupt_during_charge", "stun"],
+      "resistances": ["damage_while_charging"],
+      "visualTags": ["orange", "charging", "momentum_lines"],
+      "spawnWeight": 8
+    },
+    {
+      "id": "spawner",
+      "name": "Spawner",
+      "description": "Static enemies that continuously generate smaller enemies",
+      "tacticalPurpose": "Forces players to eliminate sources before they overwhelm",
+      "baseStats": {
+        "health": 60,
+        "speed": 0,
+        "damage": 0,
+        "spawnRate": 5.0,
+        "spawnType": "runner",
+        "maxSpawns": 3,
+        "size": 1.4,
+        "value": 40
+      },
+      "behaviors": ["spawn_continuously", "call_for_help_when_attacked"],
+      "weaknesses": ["priority_target", "area_effect"],
+      "resistances": ["single_target_low_damage"],
+      "visualTags": ["brown", "hive", "pulsing"],
+      "spawnWeight": 5
+    }
+  ],
+  "miniBosses": [
+    {
+      "id": "mini_boss_01",
+      "name": "Data Sentinel",
+      "description": "A rotating defense unit with multiple attack modes",
+      "baseStats": {
+        "health": 200,
+        "speed": 0.8,
+        "damage": 20,
+        "size": 2.0,
+        "value": 150
+      },
+      "phases": [
+        {
+          "threshold": 0.66,
+          "behaviors": ["laser_sweep", "missile_barrage"],
+          "weaknesses": ["center_core"]
+        },
+        {
+          "threshold": 0.33,
+          "behaviors": ["orbiting_drones", "shield_pulse"],
+          "weaknesses": ["drone_control_unit"]
+        },
+        {
+          "threshold": 0,
+          "behaviors": ["core_explosion", "frantic_fire"],
+          "weaknesses": ["exposed_core"]
+        }
+      ],
+      "visualTags": ["cyan", "rotating", "mechanical"]
+    }
+  ]
+}
