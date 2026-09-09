@@ -44,12 +44,16 @@ class RequestSanitizer(CustomLogger):
 
         # Health tracker per NIM model
         # consecutive_failures tracks how many back-to-back failures occurred (for adaptive cooldown)
+        now = time.time()
         self.health = {}
         for _, nim_id, _ in self.model_pool:
+            # If model is deepseek-v4-pro or kimi-k3 (currently experiencing cluster timeouts/429 on NVIDIA),
+            # place in initial cooldown so user requests don't hang and respond in ~0.3s.
+            init_cooldown = (now + 600.0) if ("deepseek" in nim_id or "kimi" in nim_id) else 0.0
             self.health[nim_id] = {
-                "healthy": True,
-                "cooldown_until": 0.0,
-                "consecutive_failures": 0,
+                "healthy": (init_cooldown == 0.0),
+                "cooldown_until": init_cooldown,
+                "consecutive_failures": 1 if init_cooldown > 0 else 0,
                 "last_success": 0.0,
             }
 
