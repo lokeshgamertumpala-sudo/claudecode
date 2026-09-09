@@ -15,21 +15,22 @@ ALIASES = {
     "auto": "auto",
     "smart": "auto",
     "1": "auto",
-    "kimi": "moonshotai/kimi-k3",
-    "kimi-k3": "moonshotai/kimi-k3",
-    "moonshotai/kimi-k3": "moonshotai/kimi-k3",
-    "2": "moonshotai/kimi-k3",
     "nemotron": "nvidia/nemotron-3-super-120b-a12b",
+    "nvidia": "nvidia/nemotron-3-super-120b-a12b",
     "nvidia/nemotron-3-super-120b-a12b": "nvidia/nemotron-3-super-120b-a12b",
-    "3": "nvidia/nemotron-3-super-120b-a12b",
+    "2": "nvidia/nemotron-3-super-120b-a12b",
     "laguna": "poolside/laguna-xs-2.1",
     "poolside": "poolside/laguna-xs-2.1",
     "poolside/laguna-xs-2.1": "poolside/laguna-xs-2.1",
-    "4": "poolside/laguna-xs-2.1",
+    "3": "poolside/laguna-xs-2.1",
     "gpt": "openai/gpt-oss-20b",
     "gpt-oss": "openai/gpt-oss-20b",
     "openai/gpt-oss-20b": "openai/gpt-oss-20b",
-    "5": "openai/gpt-oss-20b"
+    "4": "openai/gpt-oss-20b",
+    "kimi": "moonshotai/kimi-k3",
+    "kimi-k3": "moonshotai/kimi-k3",
+    "moonshotai/kimi-k3": "moonshotai/kimi-k3",
+    "5": "moonshotai/kimi-k3"
 }
 
 pref_file = os.path.join(os.path.dirname(__file__), "active_model.txt")
