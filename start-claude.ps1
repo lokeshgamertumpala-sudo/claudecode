@@ -128,26 +128,32 @@ if (-not $proxyReady) {
         }
         exit 1
     }
-    Write-Host "[+] Proxy is up and ready! Model: moonshotai/kimi-k3" -ForegroundColor Green
+    Write-Host "[+] Proxy is up and ready! Model: Moonshot AI Kimi-K3 (moonshotai/kimi-k3)" -ForegroundColor Green
 }
 
-# 5. Set Claude Code environment variables
+# 5. Set active model preference to Kimi-K3
+"moonshotai/kimi-k3" | Out-File -FilePath (Join-Path $ScriptDir "active_model.txt") -Encoding utf8
+
+# 6. Set Claude Code environment variables for Kimi-K3
+$targetModel = "moonshotai/kimi-k3"
 $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:$port"
 $env:ANTHROPIC_API_KEY = "sk-litellm-proxy-key"
 Remove-Item env:ANTHROPIC_AUTH_TOKEN -ErrorAction SilentlyContinue
 [Environment]::SetEnvironmentVariable("ANTHROPIC_AUTH_TOKEN", $null, "Process")
-$env:ANTHROPIC_MODEL = "claude-sonnet-4-5"
-$env:ANTHROPIC_DEFAULT_SONNET_MODEL = "claude-sonnet-4-5"
-$env:ANTHROPIC_DEFAULT_HAIKU_MODEL = "claude-sonnet-4-5"
-$env:ANTHROPIC_DEFAULT_OPUS_MODEL = "claude-sonnet-4-5"
+$env:ANTHROPIC_MODEL = $targetModel
+$env:ANTHROPIC_DEFAULT_SONNET_MODEL = $targetModel
+$env:ANTHROPIC_DEFAULT_HAIKU_MODEL = $targetModel
+$env:ANTHROPIC_DEFAULT_OPUS_MODEL = $targetModel
 $env:CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT = "1"
 
 Write-Host "====================================================" -ForegroundColor Cyan
-Write-Host "Launching Claude Code..." -ForegroundColor Green
+Write-Host "Launching Claude Code directly with Kimi-K3..." -ForegroundColor Green
+Write-Host "Model ID: $targetModel" -ForegroundColor Gray
 Write-Host "====================================================`n" -ForegroundColor Cyan
 
+$claudeArgs = @("--model", $targetModel)
 if ($args.Count -gt 0) {
-    & $claudeCmd $args
-} else {
-    & $claudeCmd
+    $claudeArgs += $args
 }
+
+& $claudeCmd $claudeArgs

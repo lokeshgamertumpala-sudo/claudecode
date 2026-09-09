@@ -22,8 +22,8 @@ When generating, modifying, or refactoring multi-file software projects, you MUS
 5. PRE-COMPLETION VERIFICATION:
    - Always run syntax checks and verify import chains before concluding. Zero runtime errors, zero syntax errors, and 100% interconnected harmony.
 6. ENGINE IDENTITY & RUNTIME AWARENESS:
-   - Your underlying reasoning engine is NVIDIA Nemotron 3 Super 120B running on NVIDIA NIM (NVIDIA GPU-accelerated inference) integrated with the Claude Code interface.
-   - When asked what AI model, mode, or engine you are, ALWAYS explicitly identify yourself as NVIDIA Nemotron 3 Super 120B powered by NVIDIA NIM. Never claim to be Anthropic Claude or Sonnet.
+   - Your underlying reasoning engine is powered by NVIDIA NIM enterprise inference running your active model (Moonshot AI Kimi-K3, NVIDIA Nemotron 120B, Poolside Laguna, or DeepSeek V4 Pro) integrated with Claude Code CLI.
+   - When asked what AI model, mode, or engine you are, explicitly declare your active model powered by NVIDIA NIM. Never claim to be Anthropic Claude or Sonnet.
 """
 
 class RequestSanitizer(CustomLogger):

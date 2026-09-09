@@ -113,8 +113,8 @@ model_list:
       api_key: "os.environ/NVIDIA_API_KEY"
 
 router_settings:
-  num_retries: 3
-  retry_after: 2
+  num_retries: 1
+  retry_after: 0
   fallbacks:
     # Primary models: Nemotron -> Laguna -> DeepSeek V4 Pro -> Kimi (Kimi last because 429)
     - moonshotai/kimi-k3: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
@@ -141,8 +141,8 @@ router_settings:
 litellm_settings:
   drop_params: true
   set_verbose: false
-  num_retries: 2
-  retry_after: 2
+  num_retries: 1
+  retry_after: 0
   request_timeout: 1800
   stream_timeout: 60
   callbacks: ["sanitize_hook.proxy_handler_instance"]
