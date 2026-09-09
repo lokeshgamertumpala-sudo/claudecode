@@ -41,14 +41,19 @@ model_list:
       model: "nvidia_nim/poolside/laguna-xs-2.1"
       api_key: "os.environ/NVIDIA_API_KEY"
 
-  - model_name: "openai/gpt-oss-20b"
+  - model_name: "deepseek-ai/deepseek-v4-pro-0813"
     litellm_params:
-      model: "nvidia_nim/openai/gpt-oss-20b"
+      model: "nvidia_nim/deepseek-ai/deepseek-v4-pro-0813"
       api_key: "os.environ/NVIDIA_API_KEY"
 
-  - model_name: "gpt-oss"
+  - model_name: "deepseek-v4-pro"
     litellm_params:
-      model: "nvidia_nim/openai/gpt-oss-20b"
+      model: "nvidia_nim/deepseek-ai/deepseek-v4-pro-0813"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
+  - model_name: "deepseek"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-v4-pro-0813"
       api_key: "os.environ/NVIDIA_API_KEY"
 
   - model_name: "auto"
@@ -111,26 +116,27 @@ router_settings:
   num_retries: 3
   retry_after: 2
   fallbacks:
-    # Primary models: Nemotron -> Laguna -> GPT-OSS -> Kimi (Kimi last because 429)
-    - moonshotai/kimi-k3: ["backup-nemotron", "backup-laguna", "openai/gpt-oss-20b"]
-    - kimi-k3: ["backup-nemotron", "backup-laguna", "openai/gpt-oss-20b"]
-    - backup-nemotron: ["backup-laguna", "openai/gpt-oss-20b", "moonshotai/kimi-k3"]
-    - nemotron: ["backup-laguna", "openai/gpt-oss-20b", "moonshotai/kimi-k3"]
-    - backup-laguna: ["backup-nemotron", "openai/gpt-oss-20b", "moonshotai/kimi-k3"]
-    - laguna: ["backup-nemotron", "openai/gpt-oss-20b", "moonshotai/kimi-k3"]
-    - openai/gpt-oss-20b: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
-    - gpt-oss: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
+    # Primary models: Nemotron -> Laguna -> DeepSeek V4 Pro -> Kimi (Kimi last because 429)
+    - moonshotai/kimi-k3: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
+    - kimi-k3: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
+    - backup-nemotron: ["backup-laguna", "deepseek-v4-pro", "moonshotai/kimi-k3"]
+    - nemotron: ["backup-laguna", "deepseek-v4-pro", "moonshotai/kimi-k3"]
+    - backup-laguna: ["backup-nemotron", "deepseek-v4-pro", "moonshotai/kimi-k3"]
+    - laguna: ["backup-nemotron", "deepseek-v4-pro", "moonshotai/kimi-k3"]
+    - deepseek-ai/deepseek-v4-pro-0813: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
+    - deepseek-v4-pro: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
+    - deepseek: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
     # Claude-mapped names: all fall back to Nemotron first
-    - claude-sonnet-4: ["backup-nemotron", "backup-laguna", "openai/gpt-oss-20b"]
-    - claude-sonnet-4-5: ["backup-nemotron", "backup-laguna", "openai/gpt-oss-20b"]
-    - claude-3-7-sonnet-20250219: ["backup-nemotron", "backup-laguna", "openai/gpt-oss-20b"]
-    - claude-3-5-sonnet-20241022: ["backup-nemotron", "backup-laguna", "openai/gpt-oss-20b"]
-    - claude-3-5-haiku-20241022: ["backup-nemotron", "backup-laguna", "openai/gpt-oss-20b"]
-    - claude-haiku-4-5: ["backup-nemotron", "backup-laguna", "openai/gpt-oss-20b"]
-    - claude-opus-4: ["backup-nemotron", "backup-laguna", "openai/gpt-oss-20b"]
-    - claude-opus-4-5: ["backup-nemotron", "backup-laguna", "openai/gpt-oss-20b"]
-    - claude-3-opus-20240229: ["backup-nemotron", "backup-laguna", "openai/gpt-oss-20b"]
-    - "*": ["backup-nemotron", "backup-laguna", "openai/gpt-oss-20b", "moonshotai/kimi-k3"]
+    - claude-sonnet-4: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
+    - claude-sonnet-4-5: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
+    - claude-3-7-sonnet-20250219: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
+    - claude-3-5-sonnet-20241022: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
+    - claude-3-5-haiku-20241022: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
+    - claude-haiku-4-5: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
+    - claude-opus-4: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
+    - claude-opus-4-5: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
+    - claude-3-opus-20240229: ["backup-nemotron", "backup-laguna", "deepseek-v4-pro"]
+    - "*": ["backup-nemotron", "backup-laguna", "deepseek-v4-pro", "moonshotai/kimi-k3"]
 
 litellm_settings:
   drop_params: true

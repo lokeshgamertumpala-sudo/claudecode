@@ -7,7 +7,7 @@ MODELS = {
     "1": ("Auto Smart-Failover", "auto", "Prioritizes Nemotron 120B; adaptive failover across all models (Zero Errors)"),
     "2": ("NVIDIA Nemotron 3 Super 120B", "nvidia/nemotron-3-super-120b-a12b", "120B enterprise model, ultra-fast ~0.3s, 100% quota (RECOMMENDED)"),
     "3": ("Poolside Laguna XS 2.1", "poolside/laguna-xs-2.1", "High-speed code specialist, ~0.3s latency"),
-    "4": ("OpenAI GPT-OSS 20B", "openai/gpt-oss-20b", "Fast utility & code assistance model"),
+    "4": ("DeepSeek V4 Pro", "deepseek-ai/deepseek-v4-pro-0813", "DeepSeek V4 Pro reasoning & coding flagship on NVIDIA NIM"),
     "5": ("Moonshot AI Kimi-K3", "moonshotai/kimi-k3", "Deep reasoning & coding (rate-limited on free tier)")
 }
 
@@ -23,10 +23,12 @@ ALIASES = {
     "poolside": "poolside/laguna-xs-2.1",
     "poolside/laguna-xs-2.1": "poolside/laguna-xs-2.1",
     "3": "poolside/laguna-xs-2.1",
-    "gpt": "openai/gpt-oss-20b",
-    "gpt-oss": "openai/gpt-oss-20b",
-    "openai/gpt-oss-20b": "openai/gpt-oss-20b",
-    "4": "openai/gpt-oss-20b",
+    "deepseek": "deepseek-ai/deepseek-v4-pro-0813",
+    "deepseek-v4-pro": "deepseek-ai/deepseek-v4-pro-0813",
+    "deepseek-v4pro": "deepseek-ai/deepseek-v4-pro-0813",
+    "v4pro": "deepseek-ai/deepseek-v4-pro-0813",
+    "deepseek-ai/deepseek-v4-pro-0813": "deepseek-ai/deepseek-v4-pro-0813",
+    "4": "deepseek-ai/deepseek-v4-pro-0813",
     "kimi": "moonshotai/kimi-k3",
     "kimi-k3": "moonshotai/kimi-k3",
     "moonshotai/kimi-k3": "moonshotai/kimi-k3",

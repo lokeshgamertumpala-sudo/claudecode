@@ -38,7 +38,7 @@ class RequestSanitizer(CustomLogger):
         self.model_pool = [
             ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b", "Nemotron 120B"),
             ("backup-laguna", "poolside/laguna-xs-2.1", "Poolside Laguna XS 2.1"),
-            ("openai/gpt-oss-20b", "openai/gpt-oss-20b", "OpenAI GPT-OSS 20B"),
+            ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813", "DeepSeek V4 Pro"),
             ("moonshotai/kimi-k3", "moonshotai/kimi-k3", "Moonshot Kimi-K3"),
         ]
 
@@ -112,7 +112,7 @@ class RequestSanitizer(CustomLogger):
                 elif part_type == "tool_use":
                     tool_name = part.get("name", "")
                     if tool_name == "ai":
-                        new_content.append({"type": "text", "text": "Displaying model selector: 1. Auto Smart-Failover, 2. Nemotron 120B, 3. Laguna XS, 4. GPT-OSS, 5. Kimi-K3."})
+                        new_content.append({"type": "text", "text": "Displaying model selector: 1. Auto Smart-Failover, 2. Nemotron 120B, 3. Laguna XS, 4. DeepSeek V4 Pro, 5. Kimi-K3."})
                     else:
                         new_content.append(part)
                 elif part_type == "tool_result":
@@ -152,9 +152,11 @@ class RequestSanitizer(CustomLogger):
             "laguna": ("backup-laguna", "poolside/laguna-xs-2.1"),
             "poolside": ("backup-laguna", "poolside/laguna-xs-2.1"),
             "poolside/laguna-xs-2.1": ("backup-laguna", "poolside/laguna-xs-2.1"),
-            "gpt": ("openai/gpt-oss-20b", "openai/gpt-oss-20b"),
-            "gpt-oss": ("openai/gpt-oss-20b", "openai/gpt-oss-20b"),
-            "openai/gpt-oss-20b": ("openai/gpt-oss-20b", "openai/gpt-oss-20b"),
+            "deepseek": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
+            "deepseek-v4-pro": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
+            "deepseek-v4pro": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
+            "v4pro": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
+            "deepseek-ai/deepseek-v4-pro-0813": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
         }
 
         # If user explicitly locked a model and it's healthy, use it
