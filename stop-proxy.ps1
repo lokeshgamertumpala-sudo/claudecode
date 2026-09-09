@@ -12,21 +12,29 @@ if ($watchdogs) {
     Write-Host "[i] No watchdog supervisor running." -ForegroundColor Gray
 }
 
-# 2. Terminate litellm processes
+# 2. Terminate processes listening on port 4000
 $port = 4000
 $conns = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
 if ($conns) {
     $conns | ForEach-Object {
         $procId = $_.OwningProcess
         if ($procId -gt 0) {
-            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
-            Write-Host "[+] Stopped proxy process (PID: $procId) on port $port." -ForegroundColor Green
+            cmd.exe /c "taskkill /F /T /PID $procId" 2>$null
+            Write-Host "[+] Stopped process tree (PID: $procId) on port $port." -ForegroundColor Green
         }
     }
-} else {
-    Write-Host "[i] No proxy running on port $port." -ForegroundColor Gray
 }
 
-# Fallback: kill any orphaned litellm.exe
-Get-Process litellm -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-Write-Host "[+] Claude Code background services stopped." -ForegroundColor Green
+# 3. Terminate all litellm.exe and python instances running litellm
+$litellmProcs = Get-CimInstance Win32_Process -Filter "CommandLine LIKE '%litellm%'" -ErrorAction SilentlyContinue
+if ($litellmProcs) {
+    $litellmProcs | ForEach-Object {
+        if ($_.ProcessId -ne $PID) {
+            cmd.exe /c "taskkill /F /T /PID $($_.ProcessId)" 2>$null
+            Write-Host "[+] Cleaned up stale litellm process (PID: $($_.ProcessId))." -ForegroundColor Green
+        }
+    }
+}
+
+Start-Sleep -Seconds 1
+Write-Host "[+] Claude Code background services stopped cleanly." -ForegroundColor Green

@@ -20,8 +20,8 @@ $ready = $false
 Write-Host "Verifying independent proxy..." -NoNewline
 for ($i = 0; $i -lt 15; $i++) {
     try {
-        $resp = Invoke-RestMethod -Uri "http://127.0.0.1:$port/v1/models" -Headers @{ Authorization = "Bearer sk-litellm-proxy-key" } -TimeoutSec 1 -ErrorAction Stop
-        if ($resp) {
+        $resp = Invoke-RestMethod -Uri "http://127.0.0.1:$port/health/readiness" -TimeoutSec 1 -ErrorAction Stop
+        if ($resp.status -eq "healthy") {
             $ready = $true
             break
         }

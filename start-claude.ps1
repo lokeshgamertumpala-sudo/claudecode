@@ -77,18 +77,37 @@ $port = 4000
 $proxyStartedByUs = $false
 $proxyReady = $false
 
-try {
-    $response = Invoke-RestMethod -Uri "http://127.0.0.1:$port/v1/models" -Headers @{ Authorization = "Bearer sk-litellm-proxy-key" } -TimeoutSec 2 -ErrorAction SilentlyContinue
-    if ($response) {
-        Write-Host "[+] LiteLLM proxy is already running on port $port." -ForegroundColor Green
-        $proxyReady = $true
+$listener = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
+if ($listener) {
+    try {
+        $response = Invoke-RestMethod -Uri "http://127.0.0.1:$port/health/readiness" -TimeoutSec 3 -ErrorAction Stop
+        if ($response.status -eq "healthy") {
+            Write-Host "[+] LiteLLM proxy is already running and healthy on port $port." -ForegroundColor Green
+            $proxyReady = $true
+        }
+    } catch {
+        $proxyReady = $false
     }
-} catch {
-    $proxyReady = $false
 }
 
 if (-not $proxyReady) {
-    Write-Host "[*] Starting LiteLLM proxy with Kimi-K3 routing..." -ForegroundColor Cyan
+    # Clean any stale process holding the port
+    $conns = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
+    if ($conns) {
+        $conns | ForEach-Object {
+            $pId = $_.OwningProcess
+            if ($pId -gt 0 -and $pId -ne $PID) { cmd.exe /c "taskkill /F /T /PID $pId" 2>$null }
+        }
+    }
+    $stale = Get-CimInstance Win32_Process -Filter "CommandLine LIKE '%litellm%'" -ErrorAction SilentlyContinue
+    if ($stale) {
+        $stale | ForEach-Object {
+            if ($_.ProcessId -ne $PID) { cmd.exe /c "taskkill /F /T /PID $($_.ProcessId)" 2>$null }
+        }
+    }
+    Start-Sleep -Seconds 1
+
+    Write-Host "[*] Starting LiteLLM proxy with high-speed NIM routing..." -ForegroundColor Cyan
     $env:PYTHONUTF8 = "1"
     $env:PYTHONIOENCODING = "utf-8"
     $configFile = Join-Path $ScriptDir "config.yaml"
@@ -110,8 +129,8 @@ if (-not $proxyReady) {
     for ($i = 0; $i -lt 30; $i++) {
         Start-Sleep -Milliseconds 500
         try {
-            $resp = Invoke-RestMethod -Uri "http://127.0.0.1:$port/v1/models" -Headers @{ Authorization = "Bearer sk-litellm-proxy-key" } -TimeoutSec 1 -ErrorAction Stop
-            if ($resp) {
+            $resp = Invoke-RestMethod -Uri "http://127.0.0.1:$port/health/readiness" -TimeoutSec 1 -ErrorAction Stop
+            if ($resp.status -eq "healthy") {
                 $proxyReady = $true
                 break
             }
@@ -124,7 +143,7 @@ if (-not $proxyReady) {
     if (-not $proxyReady) {
         Write-Error "LiteLLM proxy failed to start within timeout. Check logs or config.yaml."
         if ($proxyStartedByUs -and $proxyProcess -and -not $proxyProcess.HasExited) {
-            $proxyProcess.Kill()
+            cmd.exe /c "taskkill /F /T /PID $($proxyProcess.Id)" 2>$null
         }
         exit 1
     }

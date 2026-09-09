@@ -1,5 +1,5 @@
 # Continuous Watchdog Supervisor for LiteLLM Proxy
-# Keeps the proxy alive 24/7, automatically reviving it if it stops or crashes.
+# Keeps a single instance of LiteLLM proxy alive 24/7 without duplicate process collisions.
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 if (-not $ScriptDir) { $ScriptDir = "C:\Users\NEW\OneDrive\Desktop\claudecode" }
@@ -41,34 +41,88 @@ $outLog = Join-Path $ScriptDir "proxy-stdout.log"
 $errLog = Join-Path $ScriptDir "proxy-stderr.log"
 $watchdogLog = Join-Path $ScriptDir "watchdog.log"
 
-"[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Watchdog started. Monitoring port $port..." | Out-File $watchdogLog -Append -Encoding utf8
+function Clean-StaleProxyProcesses {
+    param([int]$targetPort)
+    $conns = Get-NetTCPConnection -LocalPort $targetPort -State Listen -ErrorAction SilentlyContinue
+    if ($conns) {
+        $conns | ForEach-Object {
+            $pId = $_.OwningProcess
+            if ($pId -gt 0 -and $pId -ne $PID) {
+                cmd.exe /c "taskkill /F /T /PID $pId" 2>$null
+            }
+        }
+    }
+    $stale = Get-CimInstance Win32_Process -Filter "CommandLine LIKE '%litellm%'" -ErrorAction SilentlyContinue
+    if ($stale) {
+        $stale | ForEach-Object {
+            if ($_.ProcessId -ne $PID) {
+                cmd.exe /c "taskkill /F /T /PID $($_.ProcessId)" 2>$null
+            }
+        }
+    }
+    Start-Sleep -Seconds 2
+}
+
+# Start with 2 so if proxy is down on boot, check 1 triggers revival immediately
+$consecutiveFailures = 2
 
 while ($true) {
     $alive = $false
-    try {
-        $resp = Invoke-RestMethod -Uri "http://127.0.0.1:$port/v1/models" -Headers @{ Authorization = "Bearer sk-litellm-proxy-key" } -TimeoutSec 2 -ErrorAction Stop
-        if ($resp) { $alive = $true }
-    } catch {
-        $alive = $false
-    }
 
-    if (-not $alive) {
-        "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Proxy down! Reviving litellm on port $port..." | Out-File $watchdogLog -Append -Encoding utf8
+    $listener = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
+    if ($listener) {
         try {
-            $proc = Start-Process -FilePath $litellmCmd `
-                -ArgumentList "--config `"$configFile`" --port $port --host 127.0.0.1" `
-                -WorkingDirectory $ScriptDir `
-                -RedirectStandardOutput $outLog `
-                -RedirectStandardError $errLog `
-                -WindowStyle Hidden `
-                -PassThru
-                
-            Start-Sleep -Seconds 3
-            "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Revived litellm (PID: $($proc.Id))." | Out-File $watchdogLog -Append -Encoding utf8
+            $resp = Invoke-RestMethod -Uri "http://127.0.0.1:$port/health/readiness" -TimeoutSec 5 -ErrorAction Stop
+            if ($resp.status -eq "healthy") {
+                $alive = $true
+            }
         } catch {
-            "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Failed to start litellm: $_" | Out-File $watchdogLog -Append -Encoding utf8
+            $alive = $false
         }
     }
 
-    Start-Sleep -Seconds 5
+    if ($alive) {
+        $consecutiveFailures = 0
+    } else {
+        $consecutiveFailures++
+        "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Health check failed ($consecutiveFailures/3)." | Out-File $watchdogLog -Append -Encoding utf8
+
+        if ($consecutiveFailures -ge 3) {
+            "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Proxy down after 3 checks! Cleaning stale processes and reviving on port $port..." | Out-File $watchdogLog -Append -Encoding utf8
+            Clean-StaleProxyProcesses -targetPort $port
+
+            try {
+                $proc = Start-Process -FilePath $litellmCmd `
+                    -ArgumentList "--config `"$configFile`" --port $port --host 127.0.0.1" `
+                    -WorkingDirectory $ScriptDir `
+                    -RedirectStandardOutput $outLog `
+                    -RedirectStandardError $errLog `
+                    -WindowStyle Hidden `
+                    -PassThru
+                
+                $started = $false
+                for ($k = 0; $k -lt 15; $k++) {
+                    Start-Sleep -Seconds 1
+                    try {
+                        $testResp = Invoke-RestMethod -Uri "http://127.0.0.1:$port/health/readiness" -TimeoutSec 2 -ErrorAction Stop
+                        if ($testResp.status -eq "healthy") {
+                            $started = $true
+                            break
+                        }
+                    } catch {}
+                }
+
+                if ($started) {
+                    "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Revived litellm successfully (PID: $($proc.Id))." | Out-File $watchdogLog -Append -Encoding utf8
+                } else {
+                    "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Litellm process started (PID: $($proc.Id)), waiting for warm-up." | Out-File $watchdogLog -Append -Encoding utf8
+                }
+            } catch {
+                "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Failed to start litellm: $_" | Out-File $watchdogLog -Append -Encoding utf8
+            }
+            $consecutiveFailures = 0
+        }
+    }
+
+    Start-Sleep -Seconds 10
 }

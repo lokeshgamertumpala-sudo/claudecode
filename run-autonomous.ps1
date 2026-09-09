@@ -20,8 +20,8 @@ $port = 4000
 $ready = $false
 for ($i = 0; $i -lt 15; $i++) {
     try {
-        $resp = Invoke-RestMethod -Uri "http://127.0.0.1:$port/v1/models" -Headers @{ Authorization = "Bearer sk-litellm-proxy-key" } -TimeoutSec 1
-        if ($resp) { $ready = $true; break }
+        $resp = Invoke-RestMethod -Uri "http://127.0.0.1:$port/health/readiness" -TimeoutSec 1 -ErrorAction Stop
+        if ($resp.status -eq "healthy") { $ready = $true; break }
     } catch {
         Start-Sleep -Milliseconds 500
     }
