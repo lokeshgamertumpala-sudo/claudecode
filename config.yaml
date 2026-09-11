@@ -56,9 +56,14 @@ model_list:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-pro-0813"
       api_key: "os.environ/NVIDIA_API_KEY"
 
+  - model_name: "deepseek-v4-flash"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
+      api_key: "os.environ/NVIDIA_API_KEY"
+
   - model_name: "auto"
     litellm_params:
-      model: "nvidia_nim/moonshotai/kimi-k3"
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
 
   # Claude Code model mappings
@@ -109,39 +114,38 @@ model_list:
 
   - model_name: "*"
     litellm_params:
-      model: "nvidia_nim/moonshotai/kimi-k3"
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
 
 router_settings:
-  num_retries: 1
-  retry_after: 0
+  num_retries: 2
+  retry_after: 0.5
   fallbacks:
-    # All fallbacks go directly to Nemotron 120B (the only model with 100% healthy capacity)
-    - moonshotai/kimi-k3: ["backup-nemotron"]
-    - kimi-k3: ["backup-nemotron"]
-    - backup-nemotron: ["backup-laguna"]
-    - nemotron: ["backup-laguna"]
-    - backup-laguna: ["backup-nemotron"]
-    - laguna: ["backup-nemotron"]
-    - deepseek-ai/deepseek-v4-pro-0813: ["backup-nemotron"]
-    - deepseek-v4-pro: ["backup-nemotron"]
-    - deepseek: ["backup-nemotron"]
-    - claude-sonnet-4: ["backup-nemotron"]
-    - claude-sonnet-4-5: ["backup-nemotron"]
-    - claude-3-7-sonnet-20250219: ["backup-nemotron"]
-    - claude-3-5-sonnet-20241022: ["backup-nemotron"]
-    - claude-3-5-haiku-20241022: ["backup-nemotron"]
-    - claude-haiku-4-5: ["backup-nemotron"]
-    - claude-opus-4: ["backup-nemotron"]
-    - claude-opus-4-5: ["backup-nemotron"]
-    - claude-3-opus-20240229: ["backup-nemotron"]
-    - "*": ["backup-nemotron"]
+    - moonshotai/kimi-k3: ["backup-nemotron", "deepseek-v4-flash"]
+    - kimi-k3: ["backup-nemotron", "deepseek-v4-flash"]
+    - backup-nemotron: ["deepseek-v4-flash"]
+    - nemotron: ["deepseek-v4-flash"]
+    - backup-laguna: ["backup-nemotron", "deepseek-v4-flash"]
+    - laguna: ["backup-nemotron", "deepseek-v4-flash"]
+    - deepseek-ai/deepseek-v4-pro-0813: ["backup-nemotron", "deepseek-v4-flash"]
+    - deepseek-v4-pro: ["backup-nemotron", "deepseek-v4-flash"]
+    - deepseek: ["backup-nemotron", "deepseek-v4-flash"]
+    - claude-sonnet-4: ["backup-nemotron", "deepseek-v4-flash"]
+    - claude-sonnet-4-5: ["backup-nemotron", "deepseek-v4-flash"]
+    - claude-3-7-sonnet-20250219: ["backup-nemotron", "deepseek-v4-flash"]
+    - claude-3-5-sonnet-20241022: ["backup-nemotron", "deepseek-v4-flash"]
+    - claude-3-5-haiku-20241022: ["backup-nemotron", "deepseek-v4-flash"]
+    - claude-haiku-4-5: ["backup-nemotron", "deepseek-v4-flash"]
+    - claude-opus-4: ["backup-nemotron", "deepseek-v4-flash"]
+    - claude-opus-4-5: ["backup-nemotron", "deepseek-v4-flash"]
+    - claude-3-opus-20240229: ["backup-nemotron", "deepseek-v4-flash"]
+    - "*": ["backup-nemotron", "deepseek-v4-flash"]
 
 litellm_settings:
   drop_params: true
   set_verbose: false
-  num_retries: 1
-  retry_after: 0
+  num_retries: 2
+  retry_after: 0.5
   request_timeout: 60
   stream_timeout: 60
   callbacks: ["sanitize_hook.proxy_handler_instance"]

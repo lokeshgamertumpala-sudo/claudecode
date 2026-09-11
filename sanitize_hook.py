@@ -37,6 +37,7 @@ class RequestSanitizer(CustomLogger):
         # (litellm_slug, nim_model_id, human_name)
         self.model_pool = [
             ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b", "Nemotron 120B"),
+            ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731", "DeepSeek V4 Flash"),
             ("backup-laguna", "poolside/laguna-xs-2.1", "Poolside Laguna XS 2.1"),
             ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813", "DeepSeek V4 Pro"),
             ("moonshotai/kimi-k3", "moonshotai/kimi-k3", "Moonshot Kimi-K3"),
@@ -45,14 +46,13 @@ class RequestSanitizer(CustomLogger):
         now = time.time()
         self.health = {}
         for _, nim_id, _ in self.model_pool:
-            # Nemotron 120B is 100% healthy and verified (0.5s).
-            # Laguna XS (overloaded 242/32 workers), DeepSeek (timeout), and Kimi (429) start in cooldown.
-            is_nemotron = ("nemotron" in nim_id)
-            init_cooldown = 0.0 if is_nemotron else (now + 600.0)
+            # Nemotron 120B and DeepSeek V4 Flash are active and verified.
+            is_active = ("nemotron" in nim_id or "flash" in nim_id)
+            init_cooldown = 0.0 if is_active else (now + 600.0)
             self.health[nim_id] = {
-                "healthy": is_nemotron,
+                "healthy": is_active,
                 "cooldown_until": init_cooldown,
-                "consecutive_failures": 0 if is_nemotron else 1,
+                "consecutive_failures": 0 if is_active else 1,
                 "last_success": 0.0,
             }
 
@@ -160,6 +160,9 @@ class RequestSanitizer(CustomLogger):
             "deepseek-v4pro": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
             "v4pro": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
             "deepseek-ai/deepseek-v4-pro-0813": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
+            "flash": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "deepseek-v4-flash": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "deepseek-ai/deepseek-v4-flash-0731": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
         }
 
         # If user explicitly locked a model and it's healthy, use it
