@@ -150,11 +150,14 @@ if (-not $proxyReady) {
     Write-Host "[+] Proxy is up and ready! Model: NVIDIA Nemotron 120B (nvidia/nemotron-3-super-120b-a12b)" -ForegroundColor Green
 }
 
-# 5. Set active model preference to Nemotron 120B (Sub-second latency + deep reasoning)
-"nvidia/nemotron-3-super-120b-a12b" | Out-File -FilePath (Join-Path $ScriptDir "active_model.txt") -Encoding utf8
+# 5. Set active model preference (Auto Smart-Failover: Nemotron 120B 0.5s sub-second + DeepSeek Flash high-capacity)
+$activeModelPath = Join-Path $ScriptDir "active_model.txt"
+if (-not (Test-Path $activeModelPath) -or (Get-Content $activeModelPath).Trim() -eq "") {
+    "auto" | Out-File -FilePath $activeModelPath -Encoding utf8
+}
 
-# 6. Set Claude Code environment variables for Nemotron 120B
-$targetModel = "nvidia/nemotron-3-super-120b-a12b"
+# 6. Set Claude Code environment variables (Claude 3.7 protocol enables native thinking timer & streaming deltas)
+$targetModel = "claude-3-7-sonnet-20250219"
 $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:$port"
 $env:ANTHROPIC_API_KEY = "sk-litellm-proxy-key"
 Remove-Item env:ANTHROPIC_AUTH_TOKEN -ErrorAction SilentlyContinue
@@ -166,8 +169,9 @@ $env:ANTHROPIC_DEFAULT_OPUS_MODEL = $targetModel
 $env:CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT = "1"
 
 Write-Host "====================================================" -ForegroundColor Cyan
-Write-Host "Launching Claude Code with NVIDIA Nemotron 120B..." -ForegroundColor Green
-Write-Host "Model ID: $targetModel (Fast Reasoning)" -ForegroundColor Gray
+Write-Host "Launching Claude Code with High-Speed NIM Engine..." -ForegroundColor Green
+Write-Host "Routing: Auto Smart-Failover (Nemotron 120B + DeepSeek Flash)" -ForegroundColor Gray
+Write-Host "Streaming: 100% Active (Native Thinking & Real-Time Seconds Timer)" -ForegroundColor Gray
 Write-Host "====================================================`n" -ForegroundColor Cyan
 
 $claudeArgs = @("--model", $targetModel)

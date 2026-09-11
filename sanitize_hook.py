@@ -119,12 +119,19 @@ class RequestSanitizer(CustomLogger):
                     else:
                         new_content.append(part)
                 elif part_type == "tool_result":
-                    res_content = str(part.get("content", ""))
-                    if "No such tool available: ai" in res_content:
-                        new_content.append({"type": "text", "text": "Model selector acknowledged."})
+                    res_content = part.get("content", "")
+                    if isinstance(res_content, str):
+                        if "No such tool available: ai" in res_content:
+                            new_content.append({"type": "text", "text": "Model selector acknowledged."})
+                            continue
+                        # If a single tool output is huge (>30k chars), truncate the middle to prevent upstream context blowout
+                        if len(res_content) > 30000:
+                            part["content"] = res_content[:12000] + f"\n\n[... Truncated {len(res_content) - 24000} characters of output for context stability ...] \n\n" + res_content[-12000:]
+                        new_content.append(part)
+                    elif isinstance(res_content, list):
+                        part["content"] = self.sanitize_content(res_content)
+                        new_content.append(part)
                     else:
-                        if isinstance(part.get("content"), list):
-                            part["content"] = self.sanitize_content(part["content"])
                         new_content.append(part)
                 else:
                     new_content.append(part)
@@ -144,7 +151,7 @@ class RequestSanitizer(CustomLogger):
                 pass
         return "auto"
 
-    def resolve_target_model(self, pref: str) -> str:
+    def resolve_target_model(self, pref: str, total_chars: int = 0) -> str:
         # Mapping for explicit user choices (both short slugs and canonical names)
         mapping = {
             "kimi": ("moonshotai/kimi-k3", "moonshotai/kimi-k3"),
@@ -164,6 +171,14 @@ class RequestSanitizer(CustomLogger):
             "deepseek-v4-flash": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
             "deepseek-ai/deepseek-v4-flash-0731": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
         }
+
+        # Context-size aware routing:
+        # If total context is massive (>20,000 characters), Nemotron 120B on NIM may return 503 Overload in-stream.
+        # DeepSeek V4 Flash handles large contexts (128k) smoothly with native thinking tokens!
+        if total_chars > 20000:
+            if self.is_model_healthy("deepseek-ai/deepseek-v4-flash-0731"):
+                print(f"[SMART-ROUTER] High-token payload ({total_chars} chars). Routing to DeepSeek V4 Flash for 100% capacity.", flush=True)
+                return "deepseek-v4-flash"
 
         # If user explicitly locked a model and it's healthy, use it
         if pref in mapping:
@@ -192,8 +207,9 @@ class RequestSanitizer(CustomLogger):
         if not isinstance(data, dict):
             return None
         
-        # 1. Sanitize messages to prevent multimodal crash
+        # 1. Sanitize messages to prevent multimodal crash and context blowout
         messages = data.get("messages")
+        total_chars = 0
         if messages and isinstance(messages, list):
             for msg in messages:
                 if not isinstance(msg, dict):
@@ -201,6 +217,11 @@ class RequestSanitizer(CustomLogger):
                 content = msg.get("content")
                 if isinstance(content, list):
                     msg["content"] = self.sanitize_content(content)
+                    for p in msg["content"]:
+                        if isinstance(p, dict):
+                            total_chars += len(str(p.get("text", ""))) + len(str(p.get("content", "")))
+                elif isinstance(content, str):
+                    total_chars += len(content)
 
             # 2. Inject Permanent Architectural Cohesion Directive into system prompt
             directive_text = ARCHITECTURAL_COHESION_DIRECTIVE.strip()
@@ -225,17 +246,21 @@ class RequestSanitizer(CustomLogger):
         # 3. If top-level system parameter is passed
         top_system = data.get("system")
         if top_system:
-            if isinstance(top_system, str) and "[CRITICAL ARCHITECTURAL CONTRACT" not in top_system:
-                data["system"] = ARCHITECTURAL_COHESION_DIRECTIVE.strip() + "\n\n" + top_system
+            if isinstance(top_system, str):
+                total_chars += len(top_system)
+                if "[CRITICAL ARCHITECTURAL CONTRACT" not in top_system:
+                    data["system"] = ARCHITECTURAL_COHESION_DIRECTIVE.strip() + "\n\n" + top_system
             elif isinstance(top_system, list):
                 has_dir = any(isinstance(p, dict) and "[CRITICAL ARCHITECTURAL CONTRACT" in p.get("text", "") for p in top_system)
                 if not has_dir:
                     top_system.insert(0, {"type": "text", "text": ARCHITECTURAL_COHESION_DIRECTIVE.strip() + "\n\n"})
 
-        # 4. Dynamic zero-error model resolution
+        # 4. Dynamic zero-error context-aware model resolution
         pref = self.get_selected_model()
-        target_model = self.resolve_target_model(pref)
+        target_model = self.resolve_target_model(pref, total_chars=total_chars)
         data["model"] = target_model
+
+        return data
 
         return data
 

@@ -146,8 +146,8 @@ litellm_settings:
   set_verbose: false
   num_retries: 2
   retry_after: 0.5
-  request_timeout: 60
-  stream_timeout: 60
+  request_timeout: 300
+  stream_timeout: 300
   callbacks: ["sanitize_hook.proxy_handler_instance"]
 
 general_settings:
