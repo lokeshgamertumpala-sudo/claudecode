@@ -87,10 +87,10 @@ class RequestSanitizer(CustomLogger):
             return
         record["consecutive_failures"] = record.get("consecutive_failures", 0) + 1
         record["healthy"] = False
-        # Graduated cooldown: 30s -> 60s -> 120s -> 300s (cap at 5 min)
-        base_cooldowns = [30, 60, 120, 300]
+        # Graduated cooldown: 60s -> 120s -> 300s -> 600s
+        base_cooldowns = [60, 120, 300, 600]
         idx = min(record["consecutive_failures"] - 1, len(base_cooldowns) - 1)
-        cooldown_secs = base_cooldowns[idx]
+        cooldown_secs = 600 if ("timeout" in reason.lower() or "readtimedout" in reason.lower()) else base_cooldowns[idx]
         record["cooldown_until"] = now + cooldown_secs
         print(f"[SMART-ROUTER] {nim_id} -> {reason}. Cooldown {cooldown_secs}s (failure #{record['consecutive_failures']}).", flush=True)
 
