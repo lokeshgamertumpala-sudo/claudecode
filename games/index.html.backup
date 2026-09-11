@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crowd Command: Original Arcade Strategy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #070913;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #fff;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+        }
+
+        #game-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        /* Glassmorphism HUD */
+        #hud-top {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 10px 24px;
+            border-radius: 9999px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.15);
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .hud-stat {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .hud-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        .hud-value {
+            font-size: 18px;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            color: #f8fafc;
+        }
+
+        .hud-value.highlight {
+            color: #38bdf8;
+            text-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+        }
+
+        .hud-value.coin {
+            color: #fbbf24;
+            text-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
+        }
+
+        .hud-divider {
+            width: 1px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Modals & Overlays */
+        .modal-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .modal-card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 40px 48px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(59, 130, 246, 0.25);
+            animation: modalPop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 34px;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #ffffff 30%, #93c5fd 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-desc {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #94a3b8;
+            margin-bottom: 28px;
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.6);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 12px 24px;
+            background: rgba(30, 41, 59, 0.8);
+            color: #cbd5e1;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(51, 65, 85, 0.9);
+            color: #fff;
+        }
+
+        .controls-hint {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        /* Sound toggle button */
+        #btn-sound {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            color: #94a3b8;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 40;
+            transition: all 0.2s ease;
+        }
+
+        #btn-sound:hover {
+            background: rgba(30, 41, 59, 1);
+            color: #fff;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+
+        <!-- Top HUD -->
+        <div id="hud-top">
+            <div class="hud-stat">
+                <span class="hud-label">Crowd</span>
+                <span id="val-crowd" class="hud-value highlight">15</span>
+                <span style="color:#64748b; font-weight:700;">/</span>
+                <span id="val-goal" class="hud-value">120</span>
+            </div>
+            <div class="hud-divider"></div>
+            <div class="hud-stat">
+                <span class="hud-label">Score</span>
+                <span id="val-score" class="hud-value">0</span>
+            </div>
+            <div class="hud-divider"></div>
+            <div class="hud-stat">
+                <span class="hud-label">Level</span>
+                <span id="val-level" class="hud-value">1</span>
+            </div>
+            <div class="hud-divider"></div>
+            <div class="hud-stat">
+                <span class="hud-label">Coins</span>
+                <span id="val-coins" class="hud-value coin">0</span>
+            </div>
+        </div>
+
+        <!-- Audio toggle -->
+        <button id="btn-sound" title="Toggle Sound">🔊</button>
+
+        <!-- Main Menu Overlay -->
+        <div id="overlay-menu" class="modal-overlay">
+            <div class="modal-card">
+                <div class="modal-badge">⚡ 60FPS ARCADE STRATEGY</div>
+                <h1 class="modal-title">CROWD COMMAND</h1>
+                <p class="modal-desc">
+                    Aim your cannon, shoot multiplier gates to build a massive army, and defeat the enemy hordes before they reach your base!
+                </p>
+                <div class="modal-actions">
+                    <button id="btn-start" class="btn-primary">▶ Start Battle</button>
+                    <button id="btn-how" class="btn-secondary">How to Play</button>
+                </div>
+                <div class="controls-hint">
+                    🖱️ <b>Mouse / Touch</b>: Aim & Fire cannon automatically
+                </div>
+            </div>
+        </div>
+
+        <!-- Victory Overlay -->
+        <div id="overlay-victory" class="modal-overlay hidden">
+            <div class="modal-card">
+                <div class="modal-badge" style="background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.3); color: #4ade80;">
+                    🏆 VICTORY ACHIEVED
+                </div>
+                <h2 class="modal-title" style="background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip:text;">LEVEL COMPLETE!</h2>
+                <p id="txt-victory-desc" class="modal-desc">
+                    You crushed the enemy horde and exceeded the crowd threshold!
+                </p>
+                <div class="modal-actions">
+                    <button id="btn-next-level" class="btn-primary">Next Level ➔</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Defeat Overlay -->
+        <div id="overlay-defeat" class="modal-overlay hidden">
+            <div class="modal-card">
+                <div class="modal-badge" style="background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); color: #f87171;">
+                    ⚠️ OVERWHELMED
+                </div>
+                <h2 class="modal-title" style="background: linear-gradient(135deg, #f87171, #ef4444); -webkit-background-clip:text;">WAVE FAILED</h2>
+                <p class="modal-desc">
+                    Your crowd was overwhelmed by the enemy wave. Re-aim for high-value multiplier gates!
+                </p>
+                <div class="modal-actions">
+                    <button id="btn-retry" class="btn-primary">🔄 Try Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Self-Contained High Performance Game Engine -->
+    <script>
+    (function() {
+        'use strict';
+
+        // ==========================================
+        // 1. SOUND SYNTHESIZER (Web Audio API)
+        // ==========================================
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) this.ctx = new AudioContext();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playShoot() {
+                if (!this.enabled || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.12);
+            }
+            playGate() {
+                if (!this.enabled || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.18);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.18);
+            }
+            playExplosion() {
+                if (!this.enabled || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+            playVictory() {
+                if (!this.enabled || !this.ctx) return;
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                    setTimeout(() => {
+                        if (!this.ctx) return;
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.25);
+                    }, i * 110);
+                });
+            }
+        }
+        const sound = new SoundEngine();
+
+        // ==========================================
+        // 2. PARTICLE ENGINE
+        // ==========================================
+        class ParticleEngine {
+            constructor() {
+                this.particles = [];
+            }
+            spawn(x, y, color, count = 12, speed = 4) {
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const spd = (Math.random() * 0.7 + 0.3) * speed;
+                    this.particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * spd,
+                        vy: Math.sin(angle) * spd,
+                        color,
+                        radius: Math.random() * 3 + 2,
+                        alpha: 1,
+                        decay: Math.random() * 0.02 + 0.02
+                    });
+                }
+            }
+            update() {
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.alpha -= p.decay;
+                    if (p.alpha <= 0) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+            }
+            draw(ctx) {
+                ctx.save();
+                for (const p of this.particles) {
+                    ctx.globalAlpha = Math.max(0, p.alpha);
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+        const particles = new ParticleEngine();
+
+        // ==========================================
+        // 3. MAIN GAME STATE & ENTITIES
+        // ==========================================
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+
+        const hudCrowd = document.getElementById('val-crowd');
+        const hudGoal = document.getElementById('val-goal');
+        const hudScore = document.getElementById('val-score');
+        const hudLevel = document.getElementById('val-level');
+        const hudCoins = document.getElementById('val-coins');
+
+        const overlayMenu = document.getElementById('overlay-menu');
+        const overlayVictory = document.getElementById('overlay-victory');
+        const overlayDefeat = document.getElementById('overlay-defeat');
+
+        const state = {
+            level: 1,
+            score: 0,
+            coins: 0,
+            crowdCount: 15,
+            goalCount: 100,
+            isPlaying: false,
+            pointerX: window.innerWidth / 2,
+            pointerY: window.innerHeight * 0.7,
+            isPointerDown: false,
+            lastShotTime: 0,
+            shotInterval: 140, // milliseconds between auto-shots
+            shake: 0,
+            shakeOffsetX: 0,
+            shakeOffsetY: 0
+        };
+
+        // Cannon
+        const cannon = {
+            x: window.innerWidth / 2,
+            y: window.innerHeight - 80,
+            angle: -Math.PI / 2,
+            length: 50
+        };
+
+        // Arrays
+        let projectiles = [];
+        let gates = [];
+        let enemies = [];
+        let playerUnits = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            cannon.x = canvas.width / 2;
+            cannon.y = canvas.height - 70;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Pointer tracking
+        function updatePointer(e) {
+            const rect = canvas.getBoundingClientRect();
+            state.pointerX = e.clientX - rect.left;
+            state.pointerY = e.clientY - rect.top;
+            cannon.angle = Math.atan2(state.pointerY - cannon.y, state.pointerX - cannon.x);
+        }
+        window.addEventListener('mousemove', (e) => updatePointer(e));
+        window.addEventListener('mousedown', (e) => {
+            sound.init();
+            state.isPointerDown = true;
+            updatePointer(e);
+        });
+        window.addEventListener('mouseup', () => { state.isPointerDown = false; });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                updatePointer(e.touches[0]);
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchstart', (e) => {
+            sound.init();
+            state.isPointerDown = true;
+            if (e.touches.length > 0) updatePointer(e.touches[0]);
+        }, { passive: false });
+
+        window.addEventListener('touchend', () => { state.isPointerDown = false; });
+
+        // Gate Spawner
+        function spawnGatePair(yPos) {
+            const width = Math.min(180, canvas.width * 0.38);
+            const height = 48;
+            const leftX = canvas.width / 2 - width - 15;
+            const rightX = canvas.width / 2 + 15;
+
+            // Generate types
+            const types = [
+                { text: '+5', type: 'add', val: 5, color: '#22c55e' },
+                { text: '+10', type: 'add', val: 10, color: '#22c55e' },
+                { text: '×2', type: 'mult', val: 2, color: '#38bdf8' },
+                { text: '×3', type: 'mult', val: 3, color: '#818cf8' },
+                { text: '-5', type: 'sub', val: 5, color: '#ef4444' }
+            ];
+
+            const g1 = types[Math.floor(Math.random() * 4)]; // favorable on left
+            let g2 = types[Math.floor(Math.random() * types.length)];
+            if (g1.type === g2.type && g1.val === g2.val) {
+                g2 = types[4]; // add challenge
+            }
+
+            gates.push({
+                x: leftX,
+                y: yPos,
+                w: width,
+                h: height,
+                data: g1,
+                hp: g1.type === 'mult' ? 12 : 6,
+                maxHp: g1.type === 'mult' ? 12 : 6,
+                active: true
+            });
+
+            gates.push({
+                x: rightX,
+                y: yPos,
+                w: width,
+                h: height,
+                data: g2,
+                hp: g2.type === 'mult' ? 12 : 6,
+                maxHp: g2.type === 'mult' ? 12 : 6,
+                active: true
+            });
+        }
+
+        // Enemy Spawner
+        function spawnEnemyWave(count, yPos) {
+            const spread = Math.min(canvas.width * 0.7, 500);
+            const startX = (canvas.width - spread) / 2;
+            for (let i = 0; i < count; i++) {
+                enemies.push({
+                    x: startX + (i / Math.max(1, count - 1)) * spread + (Math.random() - 0.5) * 30,
+                    y: yPos + (Math.random() - 0.5) * 40,
+                    radius: 12,
+                    speed: 0.8 + state.level * 0.15,
+                    hp: 2 + state.level,
+                    color: '#f43f5e'
+                });
+            }
+        }
+
+        // Initialize Level
+        function startLevel(lvl = 1) {
+            state.level = lvl;
+            state.goalCount = 80 + lvl * 35;
+            state.crowdCount = 15;
+            state.isPlaying = true;
+            projectiles = [];
+            gates = [];
+            enemies = [];
+            playerUnits = [];
+
+            // Spawn player crowd units around cannon
+            for (let i = 0; i < state.crowdCount; i++) {
+                addPlayerUnit(cannon.x + (Math.random() - 0.5) * 80, cannon.y - 40 + (Math.random() - 0.5) * 40);
+            }
+
+            // Spawn waves of gates
+            spawnGatePair(canvas.height * 0.55);
+            spawnGatePair(canvas.height * 0.35);
+            spawnGatePair(canvas.height * 0.15);
+
+            // Spawn enemy mobs
+            spawnEnemyWave(10 + lvl * 4, -50);
+            spawnEnemyWave(14 + lvl * 5, -200);
+
+            // Hide overlays
+            overlayMenu.classList.add('hidden');
+            overlayVictory.classList.add('hidden');
+            overlayDefeat.classList.add('hidden');
+
+            updateHUD();
+        }
+
+        function addPlayerUnit(x, y) {
+            playerUnits.push({
+                x, y,
+                targetX: x,
+                targetY: y,
+                radius: 7,
+                speed: 3.5,
+                color: '#38bdf8',
+                bob: Math.random() * Math.PI * 2
+            });
+        }
+
+        function updateHUD() {
+            hudCrowd.textContent = state.crowdCount;
+            hudGoal.textContent = state.goalCount;
+            hudScore.textContent = state.score;
+            hudLevel.textContent = state.level;
+            hudCoins.textContent = state.coins;
+
+            if (state.crowdCount >= state.goalCount) {
+                hudCrowd.style.color = '#4ade80';
+            } else {
+                hudCrowd.style.color = '#38bdf8';
+            }
+        }
+
+        // ==========================================
+        // 4. GAME LOOP & LOGIC
+        // ==========================================
+        let lastTimestamp = performance.now();
+
+        function gameLoop(timestamp) {
+            const dt = Math.min((timestamp - lastTimestamp) / 1000, 0.1);
+            lastTimestamp = timestamp;
+
+            update(dt);
+            render();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function update(dt) {
+            // Screen shake dampening
+            if (state.shake > 0) {
+                state.shakeOffsetX = (Math.random() - 0.5) * state.shake;
+                state.shakeOffsetY = (Math.random() - 0.5) * state.shake;
+                state.shake *= 0.9;
+                if (state.shake < 0.5) state.shake = 0;
+            } else {
+                state.shakeOffsetX = 0;
+                state.shakeOffsetY = 0;
+            }
+
+            particles.update();
+
+            if (!state.isPlaying) return;
+
+            // Auto-shoot towards cursor
+            const now = performance.now();
+            if (now - state.lastShotTime > state.shotInterval) {
+                state.lastShotTime = now;
+                const spd = 12;
+                projectiles.push({
+                    x: cannon.x + Math.cos(cannon.angle) * cannon.length,
+                    y: cannon.y + Math.sin(cannon.angle) * cannon.length,
+                    vx: Math.cos(cannon.angle) * spd,
+                    vy: Math.sin(cannon.angle) * spd,
+                    radius: 5,
+                    color: '#facc15'
+                });
+                sound.playShoot();
+            }
+
+            // Update Projectiles
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                const p = projectiles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+
+                // Hit gates
+                for (const g of gates) {
+                    if (g.active && p.x > g.x && p.x < g.x + g.w && p.y > g.y && p.y < g.y + g.h) {
+                        g.hp--;
+                        particles.spawn(p.x, p.y, g.data.color, 6, 2);
+                        projectiles.splice(i, 1);
+
+                        if (g.hp <= 0) {
+                            g.active = false;
+                            sound.playGate();
+                            particles.spawn(g.x + g.w / 2, g.y + g.h / 2, g.data.color, 35, 6);
+                            state.shake = 8;
+
+                            // Apply gate multiplier to crowd
+                            if (g.data.type === 'add') {
+                                for (let k = 0; k < g.data.val; k++) {
+                                    state.crowdCount++;
+                                    addPlayerUnit(g.x + Math.random() * g.w, g.y + g.h);
+                                }
+                            } else if (g.data.type === 'mult') {
+                                const addCount = Math.min(100, state.crowdCount * (g.data.val - 1));
+                                for (let k = 0; k < addCount; k++) {
+                                    state.crowdCount++;
+                                    addPlayerUnit(g.x + Math.random() * g.w, g.y + g.h);
+                                }
+                            } else if (g.data.type === 'sub') {
+                                state.crowdCount = Math.max(1, state.crowdCount - g.data.val);
+                                playerUnits.splice(0, Math.min(g.data.val, playerUnits.length - 1));
+                            }
+
+                            state.score += 150 * state.level;
+                            state.coins += 5;
+                            updateHUD();
+                        }
+                        break;
+                    }
+                }
+
+                // Hit enemies
+                if (projectiles[i]) {
+                    for (let j = enemies.length - 1; j >= 0; j--) {
+                        const e = enemies[j];
+                        const dist = Math.hypot(p.x - e.x, p.y - e.y);
+                        if (dist < p.radius + e.radius) {
+                            e.hp--;
+                            particles.spawn(p.x, p.y, '#f43f5e', 5, 2);
+                            projectiles.splice(i, 1);
+
+                            if (e.hp <= 0) {
+                                particles.spawn(e.x, e.y, '#f43f5e', 20, 5);
+                                sound.playExplosion();
+                                enemies.splice(j, 1);
+                                state.score += 50;
+                                state.coins += 1;
+                                updateHUD();
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                // Bounds check
+                if (p.x < 0 || p.x > canvas.width || p.y < 0 || p.y > canvas.height) {
+                    projectiles.splice(i, 1);
+                }
+            }
+
+            // Move gates slowly downward
+            for (const g of gates) {
+                if (g.active) g.y += 0.35;
+            }
+
+            // Move enemies downward
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const e = enemies[i];
+                e.y += e.speed;
+
+                // Clash with crowd units
+                for (let j = playerUnits.length - 1; j >= 0; j--) {
+                    const u = playerUnits[j];
+                    const dist = Math.hypot(e.x - u.x, e.y - u.y);
+                    if (dist < e.radius + u.radius) {
+                        particles.spawn(u.x, u.y, '#38bdf8', 8, 3);
+                        playerUnits.splice(j, 1);
+                        state.crowdCount = Math.max(0, state.crowdCount - 1);
+                        e.hp -= 2;
+                        if (e.hp <= 0) {
+                            enemies.splice(i, 1);
+                            particles.spawn(e.x, e.y, '#f43f5e', 14, 4);
+                        }
+                        updateHUD();
+                        break;
+                    }
+                }
+
+                // Breach defense
+                if (e.y > canvas.height - 30) {
+                    enemies.splice(i, 1);
+                    state.crowdCount = Math.max(0, state.crowdCount - 5);
+                    state.shake = 12;
+                    sound.playExplosion();
+                    updateHUD();
+                }
+            }
+
+            // Crowd flocking / movement
+            const centerX = canvas.width / 2;
+            const centerY = cannon.y - 60;
+            playerUnits.forEach((u, idx) => {
+                u.bob += dt * 8;
+                // Circle formation around cannon
+                const angle = (idx / Math.max(1, playerUnits.length)) * Math.PI * 2;
+                const radius = Math.min(130, Math.sqrt(idx) * 16);
+                const targetX = centerX + Math.cos(angle) * radius;
+                const targetY = centerY + Math.sin(angle) * (radius * 0.45);
+
+                u.x += (targetX - u.x) * 0.08;
+                u.y += (targetY - u.y) * 0.08;
+            });
+
+            // Check Win / Loss
+            if (state.crowdCount >= state.goalCount) {
+                state.isPlaying = false;
+                sound.playVictory();
+                document.getElementById('txt-victory-desc').textContent = 
+                    `Spectacular! You assembled ${state.crowdCount} units and conquered Level ${state.level}!`;
+                overlayVictory.classList.remove('hidden');
+            } else if (state.crowdCount <= 0) {
+                state.isPlaying = false;
+                sound.playExplosion();
+                overlayDefeat.classList.remove('hidden');
+            }
+        }
+
+        // ==========================================
+        // 5. RENDERING
+        // ==========================================
+        function render() {
+            ctx.save();
+            ctx.translate(state.shakeOffsetX, state.shakeOffsetY);
+
+            // Background depth grid
+            ctx.fillStyle = '#070913';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 3D Perspective Road Grid
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.15)';
+            ctx.lineWidth = 1;
+            const horizon = 60;
+            const roadLeft = canvas.width * 0.1;
+            const roadRight = canvas.width * 0.9;
+
+            // Longitudinal lines
+            for (let i = 0; i <= 10; i++) {
+                const t = i / 10;
+                const topX = canvas.width / 2 + (t - 0.5) * canvas.width * 0.35;
+                const botX = roadLeft + t * (roadRight - roadLeft);
+                ctx.beginPath();
+                ctx.moveTo(topX, horizon);
+                ctx.lineTo(botX, canvas.height);
+                ctx.stroke();
+            }
+
+            // Horizontal moving grid lines
+            const offset = (performance.now() * 0.05) % 40;
+            for (let y = horizon + offset; y < canvas.height; y += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Draw Multiplier Gates
+            for (const g of gates) {
+                if (!g.active) continue;
+
+                // Glow backdrop
+                ctx.shadowColor = g.data.color;
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+                ctx.strokeStyle = g.data.color;
+                ctx.lineWidth = 2.5;
+
+                ctx.beginPath();
+                ctx.roundRect(g.x, g.y, g.w, g.h, 12);
+                ctx.fill();
+                ctx.stroke();
+
+                // HP bar behind text
+                const hpPercent = g.hp / g.maxHp;
+                ctx.fillStyle = g.data.color + '44';
+                ctx.beginPath();
+                ctx.roundRect(g.x, g.y, g.w * hpPercent, g.h, 12);
+                ctx.fill();
+
+                // Gate text
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 22px system-ui, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(g.data.text, g.x + g.w / 2, g.y + g.h / 2);
+            }
+
+            // Draw Enemies
+            for (const e of enemies) {
+                ctx.shadowColor = e.color;
+                ctx.shadowBlur = 12;
+                ctx.fillStyle = e.color;
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Enemy horns / glow
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(e.x - 4, e.y - 2, 2.5, 0, Math.PI * 2);
+                ctx.arc(e.x + 4, e.y - 2, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw Player Crowd Units
+            ctx.shadowBlur = 8;
+            for (const u of playerUnits) {
+                ctx.shadowColor = u.color;
+                ctx.fillStyle = u.color;
+                const bobY = Math.sin(u.bob) * 3;
+                ctx.beginPath();
+                ctx.arc(u.x, u.y + bobY, u.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw Projectiles
+            ctx.shadowColor = '#facc15';
+            ctx.shadowBlur = 10;
+            ctx.fillStyle = '#facc15';
+            for (const p of projectiles) {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw Aim Cannon
+            ctx.shadowColor = '#3b82f6';
+            ctx.shadowBlur = 15;
+            ctx.save();
+            ctx.translate(cannon.x, cannon.y);
+            ctx.rotate(cannon.angle);
+
+            // Cannon barrel
+            ctx.fillStyle = '#1e293b';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 3;
+            ctx.fillRect(0, -10, cannon.length, 20);
+            ctx.strokeRect(0, -10, cannon.length, 20);
+
+            // Cannon base
+            ctx.restore();
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(cannon.x, cannon.y, 24, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Particles
+            particles.draw(ctx);
+
+            ctx.restore();
+        }
+
+        // ==========================================
+        // 6. UI BUTTON WIRING & INIT
+        // ==========================================
+        document.getElementById('btn-start').addEventListener('click', () => {
+            sound.init();
+            startLevel(1);
+        });
+
+        document.getElementById('btn-how').addEventListener('click', () => {
+            alert("🎮 HOW TO PLAY:\n\n1. Aim your cannon with your mouse or finger.\n2. Projectiles fire automatically towards your cursor.\n3. Shoot Green (+) and Blue (×) gates to multiply your army.\n4. Avoid Red (-) gates!\n5. Destroy incoming enemy mobs before they breach your base!\n6. Reach the Crowd Goal to advance to the next level!");
+        });
+
+        document.getElementById('btn-next-level').addEventListener('click', () => {
+            sound.init();
+            startLevel(state.level + 1);
+        });
+
+        document.getElementById('btn-retry').addEventListener('click', () => {
+            sound.init();
+            startLevel(state.level);
+        });
+
+        const btnSound = document.getElementById('btn-sound');
+        btnSound.addEventListener('click', () => {
+            sound.enabled = !sound.enabled;
+            btnSound.textContent = sound.enabled ? '🔊' : '🔇';
+        });
+
+        // Start animation loop
+        requestAnimationFrame(gameLoop);
+
+    })();
+    </script>
+</body>
+</html>

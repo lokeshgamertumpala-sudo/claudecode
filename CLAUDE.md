@@ -36,8 +36,10 @@ You are operating as an **Elite Autonomous Principal Software Engineer and Archi
 - **Never Spam Status Files**: Never create duplicate confirmation files (`CONFIRM_GAME_WORKS.txt`, `FINAL_README.md`, `GAME_READY_NOW.txt`, `HOW_TO_PLAY_NOW.txt`).
 - All essential instructions belong in `README.md` or a single clear launcher. Keep the workspace clean, organized, and focused on actual code.
 
-### 5. Mandatory Usage of the 20 Skills
-This repository contains **20 specialized skills** in `.claude/skills/`. You MUST proactively reference and apply them:
+### 5. Mandatory Usage of Specialized Skills
+This repository contains **21 specialized skills** in `.claude/skills/` and `.agents/skills/`. You MUST proactively reference and apply them:
+- **Master Zero-Error Protocol**: Use `.claude/skills/zero-error-architect/SKILL.md` (or `.agents/skills/zero-error-architect/SKILL.md`) for guaranteed 100% interconnected, zero-error file generation across any language.
+- **Universal Multi-Language Verification**: Run `python .agents/skills/zero-error-architect/scripts/universal_verifier.py`, `verify-all.bat`, or the `/verify-all` slash command.
 - **Game Development & Physics**: Use `.claude/skills/canvas-game-dev/SKILL.md` for 60FPS loops, delta timing, particle pooling, and spatial hashing.
 - **Deep Debugging & Root Cause**: Use `.claude/skills/bug-hunter/SKILL.md` for systematic error tracing.
 - **Automated Testing**: Use `.claude/skills/test-craftsman/SKILL.md` for AAA unit, integration, and E2E tests.

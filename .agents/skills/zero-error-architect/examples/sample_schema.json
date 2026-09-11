@@ -1,0 +1,15 @@
+{
+  "name": "sample_schema",
+  "version": "1.0.0",
+  "description": "Configuration specification",
+  "status": "active",
+  "settings": {
+    "zeroErrorEnforced": true,
+    "maxConcurrency": 1,
+    "timeoutMs": 5000
+  },
+  "metadata": {
+    "createdWith": "zero-error-architect",
+    "verified": true
+  }
+}
