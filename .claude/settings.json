@@ -1,10 +1,12 @@
 {
+  "effort": "max",
+  "enableWorkflows": true,
   "modelPicker": {
     "options": [
       {
         "model": "claude-sonnet-4-5",
-        "label": "DeepSeek V4 Pro",
-        "description": "DeepSeek V4 Pro reasoning & coding flagship on NVIDIA NIM",
+        "label": "NVIDIA Nemotron 3 Super 120B",
+        "description": "120B enterprise model, ultra-fast ~0.3s, 100% quota (RECOMMENDED)",
         "behavesAs": "sonnet"
       },
       {

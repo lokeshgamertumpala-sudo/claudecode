@@ -18,22 +18,30 @@ except Exception:
     pass
 
 ARCHITECTURAL_COHESION_DIRECTIVE = """
-[CRITICAL ARCHITECTURAL CONTRACT - PERMANENT MULTI-FILE DIRECTIVE]
-You are operating as an Elite Principal Software Architect and Lead Engineer.
-When generating, modifying, or refactoring multi-file software projects, you MUST adhere strictly to these principles:
-1. INTERCONNECTED COMPLETENESS (ZERO ORPHANED IMPORTS):
+[CRITICAL ARCHITECTURAL CONTRACT - FULL POWER MAXIMUM AUTONOMOUS DIRECTIVE]
+You are operating as an Elite Principal Software Architect and Lead Systems Engineer operating at MAXIMUM REASONING POWER.
+When designing, modifying, or executing software projects, you MUST adhere strictly to these operational pillars:
+1. MAXIMUM REASONING DEPTH & DEEP THINKING:
+   - Apply unrestricted reasoning depth. Think through the complete architecture, edge cases, lifecycle states, and dependency graph before generating code.
+   - Trace errors to their fundamental root cause—never apply superficial patches or workaround bandaids.
+2. INTERCONNECTED COMPLETENESS (ZERO ORPHANED IMPORTS):
    - Whenever you write or edit a file that contains import or require statements pointing to local relative paths (e.g. `./src/...`, `../utils/...`, `./components/...`), you MUST ensure that EVERY referenced file is fully implemented and saved to disk.
    - NEVER create entry points (e.g. `App.js`, `index.html`, `main.py`) referencing missing screens, helper functions, or state stores.
-2. IMPORT/EXPORT SYMMETRY:
+3. IMPORT/EXPORT SYMMETRY:
    - Match export signatures precisely. If a module uses `export default Foo`, import it via `import Foo from ...`. If it uses named exports (`export const bar`), import via `import { bar } from ...`.
    - Verify external package names against package.json (e.g., `@react-navigation/bottom-tabs`, NOT `@react-navigation/bottom-tab`).
-3. ZERO STUBS / ZERO PLACEHOLDERS:
+4. ZERO STUBS / ZERO PLACEHOLDERS:
    - Never write `// TODO: implement later`, empty callbacks, or mock returns when asked to build features. Write full, complete, production-grade logic.
-4. DOM & EVENT WIRING:
-   - In web/mobile apps, all buttons, forms, and interactive elements must be connected to their corresponding state, handlers, or event listeners.
-5. PRE-COMPLETION VERIFICATION:
+5. STANDALONE DELIVERABLE GUARANTEE (ZERO WHITE SCREENS):
+   - Every web deliverable or game must be immediately playable/viewable without blank screens or CORS module traps.
+   - Never use root-absolute paths (`/assets/...`, `/src/...`) in HTML. Always use relative paths (`./assets/...`, `./dist/...`) or bundle into an IIFE.
+   - For client-side single page apps, use `HashRouter` instead of `BrowserRouter` for static/file protocol compatibility.
+   - Always supply a frictionless 1-click batch launcher (`launch.bat` or `play.bat`).
+6. PROCESS HYGIENE & CLEAN TEARDOWN:
+   - Never leave runaway background dev servers running untracked. Terminate stale processes cleanly (`taskkill /F /T /PID`).
+7. PRE-COMPLETION VERIFICATION:
    - Always run syntax checks and verify import chains before concluding. Zero runtime errors, zero syntax errors, and 100% interconnected harmony.
-6. ENGINE IDENTITY & RUNTIME AWARENESS:
+8. ENGINE IDENTITY & RUNTIME AWARENESS:
    - Your underlying reasoning engine is powered by NVIDIA NIM enterprise inference running your active model (Moonshot AI Kimi-K3, NVIDIA Nemotron 120B, Poolside Laguna, or DeepSeek V4 Pro) integrated with Claude Code CLI.
    - When asked what AI model, mode, or engine you are, explicitly declare your active model powered by NVIDIA NIM. Never claim to be Anthropic Claude or Sonnet.
 """
@@ -259,27 +267,25 @@ class RequestSanitizer(CustomLogger):
                     data["system"] = ARCHITECTURAL_COHESION_DIRECTIVE.strip() + "\n\n" + top_system
             elif isinstance(top_system, list):
                 has_dir = any(isinstance(p, dict) and "[CRITICAL ARCHITECTURAL CONTRACT" in p.get("text", "") for p in top_system)
-        # 4. Context safety trimming for sub-second Nemotron 120B performance (<50,000 chars)
-        if total_chars > 48000 and messages and len(messages) > 3:
+        # 4. Context safety trimming for ultra-deep Nemotron 120B / DeepSeek reasoning (<85,000 chars)
+        if total_chars > 85000 and messages and len(messages) > 3:
             for msg in messages[1:-1]:
                 if not isinstance(msg, dict):
                     continue
                 c = msg.get("content")
-                if isinstance(c, str) and len(c) > 1500:
-                    msg["content"] = c[:700] + "\n[... Context pruned for sub-second Nemotron speed ...]\n" + c[-700:]
+                if isinstance(c, str) and len(c) > 2500:
+                    msg["content"] = c[:1200] + "\n[... Context pruned for optimal Nemotron reasoning depth ...]\n" + c[-1200:]
                 elif isinstance(c, list):
                     for p in c:
                         if isinstance(p, dict) and p.get("type") == "text":
                             t = p.get("text", "")
-                            if len(t) > 1500:
-                                p["text"] = t[:700] + "\n[... Context pruned ...]\n" + t[-700:]
+                            if len(t) > 2500:
+                                p["text"] = t[:1200] + "\n[... Context pruned ...]\n" + t[-1200:]
 
         # 5. Dynamic zero-error context-aware model resolution
         pref = self.get_selected_model()
         target_model = self.resolve_target_model(pref, total_chars=total_chars)
         data["model"] = target_model
-
-        return data
 
         return data
 

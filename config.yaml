@@ -148,6 +148,7 @@ litellm_settings:
   retry_after: 0.5
   request_timeout: 300
   stream_timeout: 300
+  max_tokens: 8192
   callbacks: ["sanitize_hook.proxy_handler_instance"]
 
 general_settings:

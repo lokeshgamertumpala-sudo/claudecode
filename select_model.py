@@ -83,8 +83,13 @@ def update_claude_settings(canonical, display_name):
             spath = os.path.join(sdir, "settings.json")
             existing = {}
             if os.path.exists(spath):
-                with open(spath, "r", encoding="utf-8") as f:
-                    existing = json.load(f)
+                try:
+                    with open(spath, "r", encoding="utf-8") as f:
+                        existing = json.load(f)
+                except Exception:
+                    existing = {}
+            existing["effort"] = "max"
+            existing["enableWorkflows"] = True
             existing["modelPicker"] = {"options": options}
             with open(spath, "w", encoding="utf-8") as f:
                 json.dump(existing, f, indent=2)

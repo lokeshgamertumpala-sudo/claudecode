@@ -92,15 +92,23 @@ $env:ANTHROPIC_CUSTOM_MODEL_OPTION = $chosenModel
 $env:ANTHROPIC_CUSTOM_MODEL_OPTION_NAME = $activeLabel
 $env:ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION = "$activeLabel via local NIM proxy"
 $env:CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT = "1"
+$env:CLAUDE_CODE_EFFORT_LEVEL = "max"
+$env:CLAUDE_CODE_WORKFLOWS = "1"
+$env:MAX_THINKING_TOKENS = "64000"
+$env:ANTHROPIC_MAX_TOKENS = "8192"
+$env:CLAUDE_CODE_DISABLE_THINKING_LIMIT = "1"
 
-# 5. Autonomous Flags:
+# 5. Autonomous Maximum Power Flags:
 # --dangerously-skip-permissions: Never blocks or waits for user keystrokes on shell commands/file edits
 # --autocompact auto: Automatically prunes and manages token context over long multi-hour runs
 # --model: Explicitly passes the chosen model so Claude Code UI reflects your selection immediately
-$baseFlags = @("--dangerously-skip-permissions", "--autocompact", "auto", "--model", $chosenModel)
+# --effort max: Allocates maximum thinking budget and reasoning depth
+$baseFlags = @("--dangerously-skip-permissions", "--autocompact", "auto", "--model", $chosenModel, "--effort", "max")
 
-Write-Host "`n[+] Configuration Active:" -ForegroundColor Cyan
-Write-Host "    - Permissions: Auto-Approved (Unrestricted Overnight Mode)" -ForegroundColor Gray
+Write-Host "`n[+] Configuration Active [FULL POWER MAXIMUM]:" -ForegroundColor Cyan
+Write-Host "    - Reasoning Depth: MAXIMUM EFFORT (max thinking tokens)" -ForegroundColor Magenta
+Write-Host "    - Workflows: ENABLED (Dynamic multi-agent orchestration)" -ForegroundColor Magenta
+Write-Host "    - Permissions: Auto-Approved (Unrestricted Autonomous Mode)" -ForegroundColor Gray
 Write-Host "    - Context Window: Auto-Compacted for infinite multi-day runs" -ForegroundColor Gray
 Write-Host "    - Active Engine: $activeLabel" -ForegroundColor Green
 Write-Host "    - Protocol Model: $chosenModel" -ForegroundColor Gray
