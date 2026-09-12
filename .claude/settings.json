@@ -3,8 +3,32 @@
     "options": [
       {
         "model": "claude-sonnet-4-5",
-        "label": "NVIDIA Nemotron 120B",
-        "description": "NVIDIA Nemotron 3 Super 120B via local NIM proxy",
+        "label": "Moonshot AI Kimi-K3",
+        "description": "Deep reasoning & coding (rate-limited on free tier)",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "nvidia/nemotron-3-super-120b-a12b",
+        "label": "NVIDIA Nemotron 3 Super 120B",
+        "description": "120B enterprise model, ultra-fast ~0.3s, 100% quota (RECOMMENDED)",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "poolside/laguna-xs-2.1",
+        "label": "Poolside Laguna XS 2.1",
+        "description": "High-speed code specialist, ~0.3s latency",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "deepseek-ai/deepseek-v4-pro-0813",
+        "label": "DeepSeek V4 Pro",
+        "description": "DeepSeek V4 Pro reasoning & coding flagship on NVIDIA NIM",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "moonshotai/kimi-k3",
+        "label": "Moonshot AI Kimi-K3",
+        "description": "Deep reasoning & coding (rate-limited on free tier)",
         "behavesAs": "sonnet"
       }
     ]

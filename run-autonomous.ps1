@@ -50,6 +50,29 @@ if (Test-Path $activeModelFile) {
     if ($raw) { $backendEngine = $raw }
 }
 
+$modelDisplayNames = @{
+    "auto" = "Auto Smart-Failover (Nemotron 120B)"
+    "1" = "Auto Smart-Failover (Nemotron 120B)"
+    "nvidia/nemotron-3-super-120b-a12b" = "NVIDIA Nemotron 3 Super 120B"
+    "nemotron" = "NVIDIA Nemotron 3 Super 120B"
+    "2" = "NVIDIA Nemotron 3 Super 120B"
+    "poolside/laguna-xs-2.1" = "Poolside Laguna XS 2.1"
+    "laguna" = "Poolside Laguna XS 2.1"
+    "3" = "Poolside Laguna XS 2.1"
+    "deepseek-ai/deepseek-v4-pro-0813" = "DeepSeek V4 Pro"
+    "deepseek" = "DeepSeek V4 Pro"
+    "4" = "DeepSeek V4 Pro"
+    "moonshotai/kimi-k3" = "Moonshot AI Kimi-K3"
+    "kimi" = "Moonshot AI Kimi-K3"
+    "kimi-k3" = "Moonshot AI Kimi-K3"
+    "5" = "Moonshot AI Kimi-K3"
+}
+
+$activeLabel = if ($modelDisplayNames.ContainsKey($backendEngine.ToLower())) { $modelDisplayNames[$backendEngine.ToLower()] } else { $backendEngine }
+
+# Sync Claude settings with current active model
+python "$ScriptDir\select_model.py" $backendEngine > $null 2>&1
+
 # Use standard Claude protocol model so Claude Code CLI runs without unrecognized_model warnings
 $chosenModel = "claude-sonnet-4-5"
 
@@ -66,8 +89,8 @@ $env:ANTHROPIC_DEFAULT_SONNET_MODEL = $chosenModel
 $env:ANTHROPIC_DEFAULT_HAIKU_MODEL = $chosenModel
 $env:ANTHROPIC_DEFAULT_OPUS_MODEL = $chosenModel
 $env:ANTHROPIC_CUSTOM_MODEL_OPTION = $chosenModel
-$env:ANTHROPIC_CUSTOM_MODEL_OPTION_NAME = "NVIDIA Nemotron 120B"
-$env:ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION = "NVIDIA Nemotron 3 Super 120B via local NIM proxy"
+$env:ANTHROPIC_CUSTOM_MODEL_OPTION_NAME = $activeLabel
+$env:ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION = "$activeLabel via local NIM proxy"
 $env:CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT = "1"
 
 # 5. Autonomous Flags:
@@ -79,12 +102,12 @@ $baseFlags = @("--dangerously-skip-permissions", "--autocompact", "auto", "--mod
 Write-Host "`n[+] Configuration Active:" -ForegroundColor Cyan
 Write-Host "    - Permissions: Auto-Approved (Unrestricted Overnight Mode)" -ForegroundColor Gray
 Write-Host "    - Context Window: Auto-Compacted for infinite multi-day runs" -ForegroundColor Gray
-Write-Host "    - Protocol Model: $chosenModel" -ForegroundColor Green
-Write-Host "    - Inference Engine: NVIDIA Nemotron 120B (nvidia/nemotron-3-super-120b-a12b)" -ForegroundColor Green
+Write-Host "    - Active Engine: $activeLabel" -ForegroundColor Green
+Write-Host "    - Protocol Model: $chosenModel" -ForegroundColor Gray
 Write-Host "    - Proxy: Self-Healing 24/7 Daemon Active on port $port`n" -ForegroundColor Gray
 
 Write-Host "====================================================" -ForegroundColor Magenta
-Write-Host "Starting Claude Code Session ($chosenModel via Nemotron 120B)..." -ForegroundColor Green
+Write-Host "Starting Claude Code Session ($activeLabel)..." -ForegroundColor Green
 Write-Host "====================================================`n" -ForegroundColor Magenta
 
 if ($args.Count -gt 0) {

@@ -48,6 +48,49 @@ def get_current():
             pass
     return "auto"
 
+def update_claude_settings(canonical, display_name):
+    import json
+    settings_dirs = [
+        os.path.join(os.path.dirname(__file__), ".claude"),
+        os.path.expanduser("~/.claude")
+    ]
+    active_desc = ""
+    for k, (name, slug, desc) in MODELS.items():
+        if canonical == slug:
+            active_desc = desc
+            break
+
+    options = [
+        {
+            "model": "claude-sonnet-4-5",
+            "label": display_name,
+            "description": active_desc or f"{display_name} via local NIM proxy",
+            "behavesAs": "sonnet"
+        }
+    ]
+    for k, (name, slug, desc) in MODELS.items():
+        if slug != "auto":
+            options.append({
+                "model": slug,
+                "label": name,
+                "description": desc,
+                "behavesAs": "sonnet"
+            })
+
+    for sdir in settings_dirs:
+        try:
+            os.makedirs(sdir, exist_ok=True)
+            spath = os.path.join(sdir, "settings.json")
+            existing = {}
+            if os.path.exists(spath):
+                with open(spath, "r", encoding="utf-8") as f:
+                    existing = json.load(f)
+            existing["modelPicker"] = {"options": options}
+            with open(spath, "w", encoding="utf-8") as f:
+                json.dump(existing, f, indent=2)
+        except Exception:
+            pass
+
 def set_model(choice_key_or_name):
     target = choice_key_or_name.lower().strip()
     canonical = ALIASES.get(target, target)
@@ -61,14 +104,13 @@ def set_model(choice_key_or_name):
     with open(pref_file, "w", encoding="utf-8") as f:
         f.write(canonical)
     
-    # Persist to Windows User environment so any new session picks it up automatically
-    os.system(f'setx ANTHROPIC_MODEL "{canonical}" >nul 2>&1')
-    os.system(f'setx ANTHROPIC_DEFAULT_SONNET_MODEL "{canonical}" >nul 2>&1')
+    # Sync Claude Code settings so the real model name displays in the terminal
+    update_claude_settings(canonical, display_name)
     
     print(f"\n[+] Active model switched to: {display_name}")
     print(f"    -> Canonical Model ID: {canonical}")
+    print(f"    -> Terminal Header Label: {display_name}")
     print("[+] All requests through port 4000 are pre-sanitized with zero errors.")
-    print("[*] Note for already-running Claude Code sessions: Type '/model " + canonical + "' inside Claude to switch immediately.")
     return canonical
 
 def show_menu():

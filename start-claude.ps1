@@ -150,11 +150,36 @@ if (-not $proxyReady) {
     Write-Host "[+] Proxy is up and ready! Model: NVIDIA Nemotron 120B (nvidia/nemotron-3-super-120b-a12b)" -ForegroundColor Green
 }
 
-# 5. Set active model preference (Auto Smart-Failover: Nemotron 120B 0.5s sub-second + DeepSeek Flash high-capacity)
+# 5. Resolve active model preference from active_model.txt across all 5 models
 $activeModelPath = Join-Path $ScriptDir "active_model.txt"
-if (-not (Test-Path $activeModelPath) -or (Get-Content $activeModelPath).Trim() -eq "") {
-    "auto" | Out-File -FilePath $activeModelPath -Encoding utf8
+$activeModel = "auto"
+if (Test-Path $activeModelPath) {
+    $raw = (Get-Content $activeModelPath -Raw).Trim()
+    if ($raw) { $activeModel = $raw }
 }
+
+$modelDisplayNames = @{
+    "auto" = "Auto Smart-Failover (Nemotron 120B)"
+    "1" = "Auto Smart-Failover (Nemotron 120B)"
+    "nvidia/nemotron-3-super-120b-a12b" = "NVIDIA Nemotron 3 Super 120B"
+    "nemotron" = "NVIDIA Nemotron 3 Super 120B"
+    "2" = "NVIDIA Nemotron 3 Super 120B"
+    "poolside/laguna-xs-2.1" = "Poolside Laguna XS 2.1"
+    "laguna" = "Poolside Laguna XS 2.1"
+    "3" = "Poolside Laguna XS 2.1"
+    "deepseek-ai/deepseek-v4-pro-0813" = "DeepSeek V4 Pro"
+    "deepseek" = "DeepSeek V4 Pro"
+    "4" = "DeepSeek V4 Pro"
+    "moonshotai/kimi-k3" = "Moonshot AI Kimi-K3"
+    "kimi" = "Moonshot AI Kimi-K3"
+    "kimi-k3" = "Moonshot AI Kimi-K3"
+    "5" = "Moonshot AI Kimi-K3"
+}
+
+$activeLabel = if ($modelDisplayNames.ContainsKey($activeModel.ToLower())) { $modelDisplayNames[$activeModel.ToLower()] } else { $activeModel }
+
+# Sync Claude Code settings so the real model label is displayed
+python "$ScriptDir\select_model.py" $activeModel > $null 2>&1
 
 # 6. Set Claude Code environment variables (routed locally to NVIDIA NIM)
 $targetModel = "claude-sonnet-4-5"
@@ -167,13 +192,13 @@ $env:ANTHROPIC_DEFAULT_SONNET_MODEL = $targetModel
 $env:ANTHROPIC_DEFAULT_HAIKU_MODEL = $targetModel
 $env:ANTHROPIC_DEFAULT_OPUS_MODEL = $targetModel
 $env:ANTHROPIC_CUSTOM_MODEL_OPTION = $targetModel
-$env:ANTHROPIC_CUSTOM_MODEL_OPTION_NAME = "NVIDIA Nemotron 120B"
-$env:ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION = "NVIDIA Nemotron 3 Super 120B via local NIM proxy"
+$env:ANTHROPIC_CUSTOM_MODEL_OPTION_NAME = $activeLabel
+$env:ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION = "$activeLabel via local NIM proxy"
 $env:CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT = "1"
 
 Write-Host "====================================================" -ForegroundColor Cyan
-Write-Host "Launching Claude Code with High-Speed NIM Engine..." -ForegroundColor Green
-Write-Host "Routing: Auto Smart-Failover (Nemotron 120B + DeepSeek Flash)" -ForegroundColor Gray
+Write-Host "Launching Claude Code ($activeLabel)..." -ForegroundColor Green
+Write-Host "Engine: $activeLabel on NVIDIA NIM" -ForegroundColor Gray
 Write-Host "Streaming: 100% Active (Native Thinking & Real-Time Seconds Timer)" -ForegroundColor Gray
 Write-Host "====================================================`n" -ForegroundColor Cyan
 
