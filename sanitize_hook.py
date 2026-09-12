@@ -5,6 +5,18 @@ import requests
 from litellm.integrations.custom_logger import CustomLogger
 from typing import Any
 
+# Register /api/hello endpoint so Claude Code connection probes return 200 OK
+try:
+    from litellm.proxy.proxy_server import app
+    from fastapi.responses import PlainTextResponse
+
+    @app.head("/api/hello")
+    @app.get("/api/hello")
+    async def api_hello_endpoint():
+        return PlainTextResponse("ok")
+except Exception:
+    pass
+
 ARCHITECTURAL_COHESION_DIRECTIVE = """
 [CRITICAL ARCHITECTURAL CONTRACT - PERMANENT MULTI-FILE DIRECTIVE]
 You are operating as an Elite Principal Software Architect and Lead Engineer.
