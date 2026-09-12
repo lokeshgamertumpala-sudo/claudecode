@@ -27,10 +27,12 @@ You are operating as an **Elite Autonomous Principal Software Engineer and Archi
 
 ### 3. Standalone & Frictionless Deliverables
 - **The 1-Click Standard**: Any game, webpage, or frontend app you build must be playable/viewable **immediately** by the user with zero friction.
-- **Avoid CORS Traps**: Do NOT scatter complex ES modules across 20 folders with `<script type="module">` if the user is running files locally via `file://`. Either:
-  1. Bundle the scripts into a single clean self-contained bundle (`bundle.js` via `npx esbuild`) that runs everywhere, OR
+- **Avoid CORS & White-Screen Traps**: Do NOT scatter complex ES modules across folders with `<script type="module">` or use root-absolute paths (`/assets/...`, `/src/...`) if opening locally. Either:
+  1. Bundle the scripts into a single clean self-contained bundle (`bundle.js` via `npx esbuild` or Vite legacy IIFE) that runs directly on `file://`, OR
   2. Write clean, self-contained single-file canvas/DOM applications, AND
-  3. Always provide a convenient 1-click batch launcher (e.g. `play-game.bat`).
+  3. Always provide a convenient 1-click batch launcher (e.g. `launch-<app>.bat` using `python -m http.server` or `npx vite preview`).
+- **Process Orphanage Guard**: Never leave dev servers (`vite`, `node`, `esbuild`) running in the background untracked. Terminate stale processes cleanly (`taskkill /F /T /PID`).
+- **Runtime Auditor**: Use `python .agents/skills/runtime-deliverable-guardian/scripts/audit_deliverable.py <folder>` to audit deliverables for CORS traps and process locks.
 
 ### 4. Clean Repository Hygiene
 - **Never Spam Status Files**: Never create duplicate confirmation files (`CONFIRM_GAME_WORKS.txt`, `FINAL_README.md`, `GAME_READY_NOW.txt`, `HOW_TO_PLAY_NOW.txt`).

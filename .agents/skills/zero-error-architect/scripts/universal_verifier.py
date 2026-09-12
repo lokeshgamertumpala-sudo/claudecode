@@ -58,9 +58,16 @@ class HTMLSyntaxValidator(HTMLParser):
         tag_lower = tag.lower()
         if tag_lower not in VOID_HTML_TAGS:
             self.tag_stack.append(tag_lower)
+            
+        attr_dict = dict(attrs)
+        src = attr_dict.get("src", "")
+        if src.startswith("/") and not src.startswith("//"):
+            self.errors.append(f"Absolute root path in src='{src}': Breaks under file:// protocols. Use relative './' paths.")
+            
         if tag_lower == "script":
+            if src.endswith(".jsx") or src.endswith(".tsx"):
+                self.errors.append(f"Raw JSX/TSX script '{src}': Browsers cannot execute JSX without compilation.")
             # Check script type
-            attr_dict = dict(attrs)
             script_type = attr_dict.get("type", "").lower()
             if not script_type or "javascript" in script_type or script_type == "module":
                 self.in_script = True
@@ -129,21 +136,40 @@ def check_node_js_file(path: Path):
     except Exception as e:
         return [f"Encoding read error: {e}"], []
 
-    # Fast syntax check via node --check
-    try:
-        proc = subprocess.run(
-            ["node", "--check", str(path)],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
-        if proc.returncode != 0:
-            err_msg = proc.stderr.strip() or proc.stdout.strip()
-            # Clean node error
-            first_err = err_msg.splitlines()[0] if err_msg else "Node syntax validation failed"
-            errors.append(first_err)
-    except Exception as ex:
-        errors.append(f"Could not run node --check: {ex}")
+    ext = path.suffix.lower()
+    is_jsx = ext in [".jsx", ".tsx"] or bool(re.search(r"<[A-Z][A-Za-z0-9]*\b|<div|<span|<button|<h\d", content))
+
+    if not is_jsx:
+        # Fast syntax check via node --check
+        try:
+            proc = subprocess.run(
+                ["node", "--check", str(path)],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            if proc.returncode != 0:
+                err_msg = proc.stderr.strip() or proc.stdout.strip()
+                first_err = err_msg.splitlines()[0] if err_msg else "Node syntax validation failed"
+                errors.append(first_err)
+        except Exception as ex:
+            errors.append(f"Could not run node --check: {ex}")
+    else:
+        # Fast JSX syntax check via esbuild
+        try:
+            proc = subprocess.run(
+                ["npx", "esbuild", str(path), "--log-level=error"],
+                capture_output=True,
+                text=True,
+                timeout=8
+            )
+            if proc.returncode != 0:
+                err_msg = proc.stderr.strip() or proc.stdout.strip()
+                clean_lines = [l for l in err_msg.splitlines() if "Warning:" not in l and l.strip()]
+                first_err = clean_lines[0] if clean_lines else "JSX syntax error"
+                errors.append(first_err)
+        except Exception:
+            pass
 
     # Check for orphaned relative imports
     base_dir = path.parent

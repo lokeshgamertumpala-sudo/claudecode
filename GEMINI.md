@@ -31,11 +31,25 @@ ode --check <file>) and import path verification.
   - **JSON / YAML**: Strict deserialization parse.
   - **CSS**: Balanced brace validation.
 - **Zero-Stub Mandate**: Zero // TODO: implement later, zero empty callbacks, zero mock dummy returns. All buttons, links, and forms must be wired to functional handlers.
-- **Verification Runner**: Run python .agents/skills/zero-error-architect/scripts/universal_verifier.py or erify-all.bat to verify 100% integrity.
+- **Verification Runner**: Run python .agents/skills/zero-error-architect/scripts/universal_verifier.py or  erify-all.bat to verify 100% integrity.
 
 ---
 
 ## 🎯 4. Final Output Standard
 - Every file must be production-ready and functional immediately upon creation.
-- For user-facing deliverables (games, web apps, tools), always provide a frictionless 1-click batch launcher (e.g. play-game.bat, erify-all.bat).
+- For user-facing deliverables (games, web apps, tools), always provide a frictionless 1-click batch launcher (e.g. `play-game.bat`, `verify-all.bat`).
 - When asked what model, engine, or system is running, state clearly and accurately: **NVIDIA Nemotron 3 Super 120B** powered by **NVIDIA NIM** via local proxy routing.
+
+---
+
+## 🌐 5. Standalone Runtime & Process Standard (Zero White-Screens & Zero Process Orphanage)
+- **Zero Blank-Screen Mandate**: Web deliverables must never produce a blank white screen when opened.
+  - **No Absolute Root Paths**: In HTML, never use `/assets/...` or `/src/...`. Always use relative paths (`./assets/...`, `./dist/...`) or bundle self-contained assets.
+  - **No Unbundled ES Modules on file://**: Browsers block `<script type="module">` under `file://` due to CORS. Always provide a 1-click localhost launcher (`launch.bat` using `python -m http.server` or `npx vite preview`) OR an IIFE bundle (`format: 'iife'`).
+  - **No Raw JSX in Script Tags**: Never point `<script>` tags to raw `.jsx` files without compiling.
+  - **HashRouter for Static Deliverables**: Use `HashRouter` instead of `BrowserRouter` when client-side routing must work under static or local protocols.
+- **Process Orphanage Guard**:
+  - Never leave runaway background dev servers (`vite`, `node`, `esbuild`, `webpack`) running untracked.
+  - Check port availability before starting servers; never cascade duplicate instances across multiple ports (3000, 3001, 3002...).
+  - Terminate background dev servers cleanly using full process-tree termination (`taskkill /F /T /PID`).
+  - Run `python .agents/skills/runtime-deliverable-guardian/scripts/audit_deliverable.py <folder>` to verify runtime integrity.

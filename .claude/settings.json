@@ -3,8 +3,8 @@
     "options": [
       {
         "model": "claude-sonnet-4-5",
-        "label": "Poolside Laguna XS 2.1",
-        "description": "High-speed code specialist, ~0.3s latency",
+        "label": "DeepSeek V4 Pro",
+        "description": "DeepSeek V4 Pro reasoning & coding flagship on NVIDIA NIM",
         "behavesAs": "sonnet"
       },
       {
