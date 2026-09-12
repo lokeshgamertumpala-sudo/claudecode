@@ -156,8 +156,8 @@ if (-not (Test-Path $activeModelPath) -or (Get-Content $activeModelPath).Trim() 
     "auto" | Out-File -FilePath $activeModelPath -Encoding utf8
 }
 
-# 6. Set Claude Code environment variables (Claude 3.7 protocol enables native thinking timer & streaming deltas)
-$targetModel = "claude-3-7-sonnet-20250219"
+# 6. Set Claude Code environment variables (routed locally to NVIDIA NIM)
+$targetModel = "claude-sonnet-4-5"
 $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:$port"
 $env:ANTHROPIC_API_KEY = "sk-litellm-proxy-key"
 Remove-Item env:ANTHROPIC_AUTH_TOKEN -ErrorAction SilentlyContinue
@@ -166,6 +166,9 @@ $env:ANTHROPIC_MODEL = $targetModel
 $env:ANTHROPIC_DEFAULT_SONNET_MODEL = $targetModel
 $env:ANTHROPIC_DEFAULT_HAIKU_MODEL = $targetModel
 $env:ANTHROPIC_DEFAULT_OPUS_MODEL = $targetModel
+$env:ANTHROPIC_CUSTOM_MODEL_OPTION = $targetModel
+$env:ANTHROPIC_CUSTOM_MODEL_OPTION_NAME = "NVIDIA Nemotron 120B"
+$env:ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION = "NVIDIA Nemotron 3 Super 120B via local NIM proxy"
 $env:CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT = "1"
 
 Write-Host "====================================================" -ForegroundColor Cyan

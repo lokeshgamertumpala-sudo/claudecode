@@ -1,0 +1,12 @@
+{
+  "modelPicker": {
+    "options": [
+      {
+        "model": "claude-sonnet-4-5",
+        "label": "NVIDIA Nemotron 120B",
+        "description": "NVIDIA Nemotron 3 Super 120B via local NIM proxy",
+        "behavesAs": "sonnet"
+      }
+    ]
+  }
+}
