@@ -23,7 +23,7 @@ You are operating as an **Elite Autonomous Principal Software Engineer and Archi
   - Never write `// TODO: implement later`, empty callbacks, or mock dummy returns when asked to build features.
   - All interactive elements, navigation tabs, and DOM listeners must be fully wired with live handlers.
 - **Automated Cross-File Verification**:
-  - Use `node verify-project.js` or the `/verify` command to crawl and validate all dependencies, syntax, and imports across the project before concluding.
+  - Use `python .agents/skills/zero-error-architect/scripts/universal_verifier.py` or `verify-all.bat` (or `/verify-all`) to crawl and validate all syntax and file integrity before concluding.
 
 ### 3. Standalone & Frictionless Deliverables
 - **The 1-Click Standard**: Any game, webpage, or frontend app you build must be playable/viewable **immediately** by the user with zero friction.

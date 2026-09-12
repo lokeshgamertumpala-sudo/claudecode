@@ -32,7 +32,10 @@ A high-performance autonomous engineering workspace integrating **Claude Code CL
 
 | Command / Script | Purpose |
 |---|---|
+| `.\ai.bat` (or `.\ai.ps1`) | Interactive model switcher to select from 5 NVIDIA NIM engines & launch |
 | `.\start-claude.ps1` | Launches Claude Code CLI with high-speed NIM routing and live thinking stream |
+| `.\start-claude.bat` | 1-click Windows batch launcher for Claude Code |
+| `.\run-autonomous.ps1` | Autonomous runner with continuous monitoring & auto-reconnect |
 | `.\start-proxy-independent.ps1` | Starts the detached 24/7 background proxy supervisor on port 4000 |
 | `.\stop-proxy.ps1` | Gracefully stops the proxy daemon and watchdog process tree |
 | `.\verify-all.bat` | 1-click universal integrity verification across all codebase files |
@@ -77,10 +80,12 @@ verify-all.bat
 ```
 ├── .agents/skills/zero-error-architect/  # Universal auditor & file generator
 ├── .claude/                             # Claude Code custom skills & commands
+├── ai.bat / ai.ps1                      # 1-click model switcher & runner
+├── select_model.py                      # Multi-model selection engine (5 NVIDIA NIM models)
+├── start-claude.ps1 / start-claude.bat  # Claude Code launcher with live thinking stream
+├── run-autonomous.ps1 / .bat            # Autonomous loop runner
 ├── config.yaml                          # LiteLLM proxy routing, fallbacks & timeouts
 ├── sanitize_hook.py                     # Dynamic model router & sanitization hook
-├── start-claude.ps1                     # Claude Code launcher with thinking stream
-├── start-claude.bat                     # 1-click launcher for Windows
 ├── start-proxy-independent.ps1          # Background proxy daemon launcher
 ├── stop-proxy.ps1                       # Process tree termination script
 ├── proxy-watchdog.ps1                   # 24/7 supervisor watchdog

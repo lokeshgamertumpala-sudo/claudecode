@@ -20,14 +20,3 @@ node_modules/
 # Local runtime state
 active_model.txt
 
-# External project folders (preserved locally, excluded from GitHub)
-apple/
-games/
-game_src/
-src/
-App.js
-app.json
-play-apple.bat
-play-game.bat
-PLAY_3D_GAME.bat
-README_3D.md

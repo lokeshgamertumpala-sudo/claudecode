@@ -1,6 +1,7 @@
-Execute the automated cross-file project verifier to inspect syntax, imports, exports, and dependencies across the workspace.
+Execute the universal cross-file project verifier to inspect syntax, imports, and file integrity across the workspace.
 
 Use the `Bash` tool to run:
-`node verify-project.js`
+`python .agents/skills/zero-error-architect/scripts/universal_verifier.py`
 
-If any orphaned imports, missing files, or syntax errors are detected, inspect them and fix the files immediately until 0 errors remain.
+If any syntax errors or issues are detected, inspect them and fix the files immediately until 0 errors remain.
+

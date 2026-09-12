@@ -3,8 +3,8 @@
     "options": [
       {
         "model": "claude-sonnet-4-5",
-        "label": "Moonshot AI Kimi-K3",
-        "description": "Deep reasoning & coding (rate-limited on free tier)",
+        "label": "Poolside Laguna XS 2.1",
+        "description": "High-speed code specialist, ~0.3s latency",
         "behavesAs": "sonnet"
       },
       {
