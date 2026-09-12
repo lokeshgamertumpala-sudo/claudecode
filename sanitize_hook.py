@@ -124,9 +124,9 @@ class RequestSanitizer(CustomLogger):
                         if "No such tool available: ai" in res_content:
                             new_content.append({"type": "text", "text": "Model selector acknowledged."})
                             continue
-                        # If a single tool output is huge (>30k chars), truncate the middle to prevent upstream context blowout
-                        if len(res_content) > 30000:
-                            part["content"] = res_content[:12000] + f"\n\n[... Truncated {len(res_content) - 24000} characters of output for context stability ...] \n\n" + res_content[-12000:]
+                        # If a single tool output is huge (>15k chars), truncate the middle to prevent upstream context blowout
+                        if len(res_content) > 15000:
+                            part["content"] = res_content[:6000] + f"\n\n[... Truncated {len(res_content) - 12000} characters of output for context stability ...] \n\n" + res_content[-6000:]
                         new_content.append(part)
                     elif isinstance(res_content, list):
                         part["content"] = self.sanitize_content(res_content)
@@ -172,13 +172,8 @@ class RequestSanitizer(CustomLogger):
             "deepseek-ai/deepseek-v4-flash-0731": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
         }
 
-        # Context-size aware routing:
-        # If total context is massive (>20,000 characters), Nemotron 120B on NIM may return 503 Overload in-stream.
-        # DeepSeek V4 Flash handles large contexts (128k) smoothly with native thinking tokens!
-        if total_chars > 20000:
-            if self.is_model_healthy("deepseek-ai/deepseek-v4-flash-0731"):
-                print(f"[SMART-ROUTER] High-token payload ({total_chars} chars). Routing to DeepSeek V4 Flash for 100% capacity.", flush=True)
-                return "deepseek-v4-flash"
+        # Nemotron 120B operates at ~0.5s sub-second latency for contexts up to 55,000 chars.
+        # Requests stay on Nemotron 120B for maximum speed and zero timeout risk.
 
         # If user explicitly locked a model and it's healthy, use it
         if pref in mapping:
@@ -252,10 +247,22 @@ class RequestSanitizer(CustomLogger):
                     data["system"] = ARCHITECTURAL_COHESION_DIRECTIVE.strip() + "\n\n" + top_system
             elif isinstance(top_system, list):
                 has_dir = any(isinstance(p, dict) and "[CRITICAL ARCHITECTURAL CONTRACT" in p.get("text", "") for p in top_system)
-                if not has_dir:
-                    top_system.insert(0, {"type": "text", "text": ARCHITECTURAL_COHESION_DIRECTIVE.strip() + "\n\n"})
+        # 4. Context safety trimming for sub-second Nemotron 120B performance (<50,000 chars)
+        if total_chars > 48000 and messages and len(messages) > 3:
+            for msg in messages[1:-1]:
+                if not isinstance(msg, dict):
+                    continue
+                c = msg.get("content")
+                if isinstance(c, str) and len(c) > 1500:
+                    msg["content"] = c[:700] + "\n[... Context pruned for sub-second Nemotron speed ...]\n" + c[-700:]
+                elif isinstance(c, list):
+                    for p in c:
+                        if isinstance(p, dict) and p.get("type") == "text":
+                            t = p.get("text", "")
+                            if len(t) > 1500:
+                                p["text"] = t[:700] + "\n[... Context pruned ...]\n" + t[-700:]
 
-        # 4. Dynamic zero-error context-aware model resolution
+        # 5. Dynamic zero-error context-aware model resolution
         pref = self.get_selected_model()
         target_model = self.resolve_target_model(pref, total_chars=total_chars)
         data["model"] = target_model

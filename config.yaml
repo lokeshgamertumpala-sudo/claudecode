@@ -66,50 +66,50 @@ model_list:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
 
-  # Claude Code model mappings
+  # Claude Code model mappings - routed directly to high-speed Nemotron 120B
   - model_name: "claude-sonnet-4"
     litellm_params:
-      model: "nvidia_nim/moonshotai/kimi-k3"
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
 
   - model_name: "claude-sonnet-4-5"
     litellm_params:
-      model: "nvidia_nim/moonshotai/kimi-k3"
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
 
   - model_name: "claude-3-7-sonnet-20250219"
     litellm_params:
-      model: "nvidia_nim/moonshotai/kimi-k3"
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
 
   - model_name: "claude-3-5-sonnet-20241022"
     litellm_params:
-      model: "nvidia_nim/moonshotai/kimi-k3"
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
 
   - model_name: "claude-3-5-haiku-20241022"
     litellm_params:
-      model: "nvidia_nim/moonshotai/kimi-k3"
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
 
   - model_name: "claude-haiku-4-5"
     litellm_params:
-      model: "nvidia_nim/moonshotai/kimi-k3"
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
 
   - model_name: "claude-opus-4"
     litellm_params:
-      model: "nvidia_nim/moonshotai/kimi-k3"
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
 
   - model_name: "claude-opus-4-5"
     litellm_params:
-      model: "nvidia_nim/moonshotai/kimi-k3"
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
 
   - model_name: "claude-3-opus-20240229"
     litellm_params:
-      model: "nvidia_nim/moonshotai/kimi-k3"
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
 
   - model_name: "*"

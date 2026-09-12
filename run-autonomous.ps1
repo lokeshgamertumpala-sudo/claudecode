@@ -33,49 +33,33 @@ if (-not $ready) {
 }
 Write-Host "[+] Self-healing proxy is online and healthy on port $port." -ForegroundColor Green
 
-# 3. Locate Claude
-$cmdClaude = Get-Command claude.cmd -ErrorAction SilentlyContinue
-$claudeCmd = if ($cmdClaude) { $cmdClaude.Source } else { "C:\Users\NEW\AppData\Roaming\npm\claude.cmd" }
+# 3. Locate Claude CLI (instant fast-path)
+$claudeCandidate = "C:\Users\NEW\AppData\Roaming\npm\claude.cmd"
+if (Test-Path $claudeCandidate) {
+    $claudeCmd = $claudeCandidate
+} else {
+    $cmdClaude = Get-Command claude.cmd -ErrorAction SilentlyContinue
+    $claudeCmd = if ($cmdClaude) { $cmdClaude.Source } else { "claude" }
+}
 
-# 4. Determine Active Model from Preference File
+# 4. Configure Protocol & Active Backend Engine
 $activeModelFile = Join-Path $ScriptDir "active_model.txt"
-$activeModel = "auto"
+$backendEngine = "auto"
 if (Test-Path $activeModelFile) {
     $raw = (Get-Content $activeModelFile -Raw).Trim()
-    if ($raw) { $activeModel = $raw }
+    if ($raw) { $backendEngine = $raw }
 }
 
-$modelMap = @{
-    "1" = "claude-sonnet-4-5"
-    "auto" = "claude-sonnet-4-5"
-    "2" = "nvidia/nemotron-3-super-120b-a12b"
-    "nemotron" = "nvidia/nemotron-3-super-120b-a12b"
-    "nvidia/nemotron-3-super-120b-a12b" = "nvidia/nemotron-3-super-120b-a12b"
-    "3" = "poolside/laguna-xs-2.1"
-    "laguna" = "poolside/laguna-xs-2.1"
-    "poolside/laguna-xs-2.1" = "poolside/laguna-xs-2.1"
-    "4" = "deepseek-ai/deepseek-v4-pro-0813"
-    "deepseek" = "deepseek-ai/deepseek-v4-pro-0813"
-    "deepseek-v4-pro" = "deepseek-ai/deepseek-v4-pro-0813"
-    "deepseek-v4pro" = "deepseek-ai/deepseek-v4-pro-0813"
-    "v4pro" = "deepseek-ai/deepseek-v4-pro-0813"
-    "deepseek-ai/deepseek-v4-pro-0813" = "deepseek-ai/deepseek-v4-pro-0813"
-    "5" = "moonshotai/kimi-k3"
-    "kimi" = "moonshotai/kimi-k3"
-    "kimi-k3" = "moonshotai/kimi-k3"
-    "moonshotai/kimi-k3" = "moonshotai/kimi-k3"
-}
+# Use standard Claude protocol model so Claude Code CLI runs without unrecognized_model warnings
+$chosenModel = "claude-sonnet-4-5"
 
-$chosenModel = if ($modelMap.ContainsKey($activeModel.ToLower())) { $modelMap[$activeModel.ToLower()] } else { "claude-sonnet-4-5" }
-
-# Set Environment Variables
+# Set Environment Variables for Current Process
 $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:$port"
 $env:ANTHROPIC_API_KEY = "sk-litellm-proxy-key"
 
-# Unset ANTHROPIC_AUTH_TOKEN to eliminate the yellow "Both ANTHROPIC_AUTH_TOKEN and ANTHROPIC_API_KEY set" warning
+# Unset ANTHROPIC_AUTH_TOKEN for process to avoid conflict warning (never touch User registry to prevent WM_SETTINGCHANGE hangs)
 Remove-Item env:ANTHROPIC_AUTH_TOKEN -ErrorAction SilentlyContinue
 [Environment]::SetEnvironmentVariable("ANTHROPIC_AUTH_TOKEN", $null, "Process")
-[Environment]::SetEnvironmentVariable("ANTHROPIC_AUTH_TOKEN", $null, "User")
 
 $env:ANTHROPIC_MODEL = $chosenModel
 $env:ANTHROPIC_DEFAULT_SONNET_MODEL = $chosenModel
@@ -92,11 +76,12 @@ $baseFlags = @("--dangerously-skip-permissions", "--autocompact", "auto", "--mod
 Write-Host "`n[+] Configuration Active:" -ForegroundColor Cyan
 Write-Host "    - Permissions: Auto-Approved (Unrestricted Overnight Mode)" -ForegroundColor Gray
 Write-Host "    - Context Window: Auto-Compacted for infinite multi-day runs" -ForegroundColor Gray
-Write-Host "    - Selected Model: $chosenModel" -ForegroundColor Green
+Write-Host "    - Protocol Model: $chosenModel" -ForegroundColor Green
+Write-Host "    - Inference Engine: NVIDIA Nemotron 120B (nvidia/nemotron-3-super-120b-a12b)" -ForegroundColor Green
 Write-Host "    - Proxy: Self-Healing 24/7 Daemon Active on port $port`n" -ForegroundColor Gray
 
 Write-Host "====================================================" -ForegroundColor Magenta
-Write-Host "Starting Claude Code Session ($chosenModel)..." -ForegroundColor Green
+Write-Host "Starting Claude Code Session ($chosenModel via Nemotron 120B)..." -ForegroundColor Green
 Write-Host "====================================================`n" -ForegroundColor Magenta
 
 if ($args.Count -gt 0) {
