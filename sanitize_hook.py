@@ -28,6 +28,46 @@ MODEL_DISPLAY_NAMES = {
     "auto": "Auto Smart-Failover (Nemotron 120B / DeepSeek V4.1 Flash)",
 }
 
+def clean_command_noise(text: str) -> str:
+    """Clean internal Claude Code command noise that confuses LLM templates."""
+    if not isinstance(text, str):
+        return text
+    import re
+    cleaned = re.sub(r'<local-command-caveat>.*?</local-command-caveat>', '', text, flags=re.DOTALL)
+    cleaned = re.sub(r'<command-name>.*?</command-name>', '', cleaned, flags=re.DOTALL)
+    cleaned = re.sub(r'<command-message>.*?</command-message>', '', cleaned, flags=re.DOTALL)
+    cleaned = re.sub(r'<local-command-stdout>.*?</local-command-stdout>', '', cleaned, flags=re.DOTALL)
+    cleaned = cleaned.strip()
+    return cleaned if cleaned else text
+
+def consolidate_messages(messages):
+    """Merge consecutive messages of the same role to prevent chat template breaks."""
+    if not messages or not isinstance(messages, list):
+        return messages
+    consolidated = []
+    for msg in messages:
+        if not isinstance(msg, dict):
+            continue
+        role = msg.get("role")
+        content = msg.get("content")
+        if not consolidated:
+            consolidated.append(dict(msg))
+            continue
+        prev = consolidated[-1]
+        if prev.get("role") == role and role in ("user", "assistant"):
+            p_content = prev.get("content")
+            if isinstance(p_content, str) and isinstance(content, str):
+                prev["content"] = p_content + "\n\n" + content
+            elif isinstance(p_content, list) and isinstance(content, list):
+                prev["content"] = p_content + content
+            elif isinstance(p_content, str) and isinstance(content, list):
+                prev["content"] = [{"type": "text", "text": p_content}] + content
+            elif isinstance(p_content, list) and isinstance(content, str):
+                prev["content"] = p_content + [{"type": "text", "text": content}]
+        else:
+            consolidated.append(dict(msg))
+    return consolidated
+
 def sanitize_claude_identity(text: str, active_name: str) -> str:
     if not isinstance(text, str):
         return text
@@ -274,6 +314,9 @@ class RequestSanitizer(CustomLogger):
             return None
 
         # 1. Resolve Target Model and Display Name FIRST
+        raw_msgs = data.get("messages")
+        if raw_msgs and isinstance(raw_msgs, list):
+            data["messages"] = consolidate_messages(raw_msgs)
         messages = data.get("messages")
         total_chars = 0
         if messages and isinstance(messages, list):
@@ -281,6 +324,9 @@ class RequestSanitizer(CustomLogger):
                 if not isinstance(msg, dict):
                     continue
                 content = msg.get("content")
+                if isinstance(content, str):
+                    msg["content"] = clean_command_noise(content)
+                    content = msg["content"]
                 if isinstance(content, list):
                     msg["content"] = self.sanitize_content(content)
                     for p in msg["content"]:

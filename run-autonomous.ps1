@@ -113,7 +113,8 @@ $env:ANTHROPIC_CUSTOM_MODEL_OPTION = $chosenModel
 $env:ANTHROPIC_CUSTOM_MODEL_OPTION_NAME = $activeLabel
 $env:ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION = "$activeLabel via local NIM proxy"
 $env:CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT = "1"
-$env:CLAUDE_CODE_EFFORT_LEVEL = "high"
+Remove-Item env:CLAUDE_CODE_EFFORT_LEVEL -ErrorAction SilentlyContinue
+[Environment]::SetEnvironmentVariable("CLAUDE_CODE_EFFORT_LEVEL", $null, "Process")
 $env:CLAUDE_CODE_WORKFLOWS = "1"
 $env:MAX_THINKING_TOKENS = "2048"
 $env:ANTHROPIC_MAX_TOKENS = "8192"
@@ -124,7 +125,7 @@ $env:CLAUDE_CODE_DISABLE_THINKING_LIMIT = "1"
 # --autocompact auto: Automatically prunes and manages token context over long multi-hour runs
 # --model: Explicitly passes the chosen model so Claude Code UI reflects your selection immediately
 # --effort max: Allocates maximum thinking budget and reasoning depth
-$baseFlags = @("--dangerously-skip-permissions", "--autocompact", "auto", "--model", $chosenModel, "--effort", "high")
+$baseFlags = @("--dangerously-skip-permissions", "--autocompact", "auto", "--model", $chosenModel)
 
 Write-Host "`n[+] Configuration Active [FULL POWER MAXIMUM]:" -ForegroundColor Cyan
 Write-Host "    - Reasoning Depth: MAXIMUM EFFORT (max thinking tokens)" -ForegroundColor Magenta

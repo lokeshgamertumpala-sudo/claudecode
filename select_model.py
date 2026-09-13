@@ -102,7 +102,8 @@ def update_claude_settings(canonical, display_name):
                         existing = json.load(f)
                 except Exception:
                     existing = {}
-            existing["effort"] = "max"
+            if "effort" in existing:
+                del existing["effort"]
             existing["enableWorkflows"] = True
             existing["modelPicker"] = {"options": options}
             with open(spath, "w", encoding="utf-8") as f:
