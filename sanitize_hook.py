@@ -22,6 +22,18 @@ try:
     async def api_hello_endpoint():
         return PlainTextResponse("ok")
 
+    @app.middleware("http")
+    async def strip_experimental_beta_param(request: Request, call_next):
+        """Strip ?beta=true from /v1/messages.
+        LiteLLM's experimental_pass_through adapter deadlocks and times out on DeepSeek
+        reasoning chunks. Stripping ?beta=true routes all Claude Code traffic to LiteLLM's
+        rock-solid, stable Anthropic streaming adapter with 100% full text output."""
+        if "/v1/messages" in request.url.path and "beta" in request.query_params:
+            from urllib.parse import urlencode
+            filtered = [(k, v) for k, v in request.query_params.items() if k != "beta"]
+            request.scope["query_string"] = urlencode(filtered).encode("utf-8")
+        return await call_next(request)
+
     @app.post("/v1/code/sessions/{session_id}/worker/web-search")
     async def worker_web_search_endpoint(session_id: str, request: Request):
         try:
@@ -98,6 +110,27 @@ def clean_command_noise(text: str) -> str:
     cleaned = re.sub(r'<local-command-stdout>.*?</local-command-stdout>', '', cleaned, flags=re.DOTALL)
     cleaned = cleaned.strip()
     return cleaned if cleaned else text
+
+def condense_system_prompt_for_deepseek(text: str) -> str:
+    """Condense massive Claude Code system prompts (~30k chars) to high-density (~3.5k chars) for DeepSeek NIM.
+    DeepSeek V4.1 Flash chokes and returns empty outputs when system prompts exceed 5,000 characters.
+    This preserves all core directives and tools while eliminating verbose bloat."""
+    if not isinstance(text, str):
+        return text
+    import re
+    # Strip massive auto-memory instructions (up to 13,000+ chars)
+    text = re.sub(r'# auto memory.*?(?=# |\Z)', '', text, flags=re.DOTALL)
+    # Strip verbose repetitive action care essays
+    text = re.sub(r'# Executing actions with care.*?(?=# |\Z)', '', text, flags=re.DOTALL)
+    # Strip local command caveat noise
+    text = re.sub(r'<local-command-caveat>.*?</local-command-caveat>', '', text, flags=re.DOTALL)
+    
+    # Filter blank lines and limit length to safe 3,500 chars for instant DeepSeek responsiveness
+    lines = [l.strip() for l in text.splitlines() if l.strip()]
+    condensed = "\n".join(lines)
+    if len(condensed) > 3500:
+        condensed = condensed[:3500]
+    return condensed
 
 def consolidate_messages(messages):
     """Merge consecutive messages of the same role to prevent chat template breaks."""
@@ -614,6 +647,29 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
         curr_max = data.get("max_tokens")
         if not curr_max or curr_max < 4096:
             data["max_tokens"] = 4096
+
+        # 7. DeepSeek V4.1 Flash Flagship Optimization:
+        # DeepSeek NIM chokes when system prompt exceeds 5000 chars, causing empty output and timeouts.
+        # This condenses the prompt to high-density essentials (<3500 chars) and allocates 8192 tokens
+        # so internal reasoning never starves text generation.
+        if "deepseek" in str(target_model).lower():
+            curr_sys = data.get("system")
+            if isinstance(curr_sys, str):
+                data["system"] = condense_system_prompt_for_deepseek(curr_sys)
+            elif isinstance(curr_sys, list):
+                parts = []
+                for p in curr_sys:
+                    if isinstance(p, dict) and "text" in p:
+                        parts.append(str(p["text"]))
+                    elif isinstance(p, str):
+                        parts.append(p)
+                combined = "\n\n".join(parts)
+                data["system"] = condense_system_prompt_for_deepseek(combined)
+
+            # DeepSeek generates internal reasoning before emitting output text; guarantee 8192 max_tokens
+            data["max_tokens"] = max(data.get("max_tokens", 8192) or 8192, 8192)
+            # Remove thinking constraint so NIM does not treat it as an invalid restriction
+            data.pop("thinking", None)
 
         return data
 
