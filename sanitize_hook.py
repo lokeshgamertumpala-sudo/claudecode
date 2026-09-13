@@ -56,23 +56,19 @@ class RequestSanitizer(CustomLogger):
         # Kimi-K3 is heavily rate-limited on free tier, so it goes last.
         # (litellm_slug, nim_model_id, human_name)
         self.model_pool = [
-            ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b", "Nemotron 120B"),
-            ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731", "DeepSeek V4 Flash"),
-            ("backup-laguna", "poolside/laguna-xs-2.1", "Poolside Laguna XS 2.1"),
-            ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813", "DeepSeek V4 Pro"),
             ("moonshotai/kimi-k3", "moonshotai/kimi-k3", "Moonshot Kimi-K3"),
+            ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b", "Nemotron 120B"),
+            ("backup-laguna", "poolside/laguna-xs-2.1", "Poolside Laguna XS 2.1"),
+            ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731", "DeepSeek V4 Flash"),
+            ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813", "DeepSeek V4 Pro"),
         ]
 
-        now = time.time()
         self.health = {}
         for _, nim_id, _ in self.model_pool:
-            # Nemotron 120B and DeepSeek V4 Flash are active and verified.
-            is_active = ("nemotron" in nim_id or "flash" in nim_id)
-            init_cooldown = 0.0 if is_active else (now + 600.0)
             self.health[nim_id] = {
-                "healthy": is_active,
-                "cooldown_until": init_cooldown,
-                "consecutive_failures": 0 if is_active else 1,
+                "healthy": True,
+                "cooldown_until": 0.0,
+                "consecutive_failures": 0,
                 "last_success": 0.0,
             }
 
@@ -100,19 +96,19 @@ class RequestSanitizer(CustomLogger):
         return True
 
     def _set_cooldown(self, nim_id: str, reason: str):
-        """Adaptive cooldown: longer cooldowns for models that keep failing."""
+        """Adaptive fast-recovery cooldown: temporary pause for throttled models."""
         now = time.time()
         record = self.health.get(nim_id)
         if not record:
             return
         record["consecutive_failures"] = record.get("consecutive_failures", 0) + 1
         record["healthy"] = False
-        # Graduated cooldown: 60s -> 120s -> 300s -> 600s
-        base_cooldowns = [60, 120, 300, 600]
+        # Fast recovery: 15s -> 30s -> 60s -> 120s max
+        base_cooldowns = [15, 30, 60, 120]
         idx = min(record["consecutive_failures"] - 1, len(base_cooldowns) - 1)
-        cooldown_secs = 600 if ("timeout" in reason.lower() or "readtimedout" in reason.lower()) else base_cooldowns[idx]
+        cooldown_secs = base_cooldowns[idx]
         record["cooldown_until"] = now + cooldown_secs
-        print(f"[SMART-ROUTER] {nim_id} -> {reason}. Cooldown {cooldown_secs}s (failure #{record['consecutive_failures']}).", flush=True)
+        print(f"[SMART-ROUTER] {nim_id} -> {reason}. Fast recovery in {cooldown_secs}s (failure #{record['consecutive_failures']}).", flush=True)
 
     def _mark_success(self, nim_id: str):
         """Reset failure counter on success to restore short cooldowns."""
@@ -176,20 +172,29 @@ class RequestSanitizer(CustomLogger):
         mapping = {
             "kimi": ("moonshotai/kimi-k3", "moonshotai/kimi-k3"),
             "kimi-k3": ("moonshotai/kimi-k3", "moonshotai/kimi-k3"),
+            "k3": ("moonshotai/kimi-k3", "moonshotai/kimi-k3"),
+            "moonshot": ("moonshotai/kimi-k3", "moonshotai/kimi-k3"),
             "moonshotai/kimi-k3": ("moonshotai/kimi-k3", "moonshotai/kimi-k3"),
+            "5": ("moonshotai/kimi-k3", "moonshotai/kimi-k3"),
             "nemotron": ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b"),
+            "nvidia": ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b"),
+            "120b": ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b"),
             "nvidia/nemotron-3-super-120b-a12b": ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b"),
+            "2": ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b"),
             "laguna": ("backup-laguna", "poolside/laguna-xs-2.1"),
             "poolside": ("backup-laguna", "poolside/laguna-xs-2.1"),
             "poolside/laguna-xs-2.1": ("backup-laguna", "poolside/laguna-xs-2.1"),
-            "deepseek": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
+            "3": ("backup-laguna", "poolside/laguna-xs-2.1"),
+            "deepseek": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "deepseek-v4": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "flash": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "deepseek-v4-flash": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "deepseek-ai/deepseek-v4-flash-0731": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "4": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
             "deepseek-v4-pro": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
             "deepseek-v4pro": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
             "v4pro": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
             "deepseek-ai/deepseek-v4-pro-0813": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
-            "flash": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
-            "deepseek-v4-flash": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
-            "deepseek-ai/deepseek-v4-flash-0731": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
         }
 
         # Nemotron 120B operates at ~0.5s sub-second latency for contexts up to 55,000 chars.
@@ -283,8 +288,19 @@ class RequestSanitizer(CustomLogger):
                                 p["text"] = t[:1200] + "\n[... Context pruned ...]\n" + t[-1200:]
 
         # 5. Dynamic zero-error context-aware model resolution
-        pref = self.get_selected_model()
-        target_model = self.resolve_target_model(pref, total_chars=total_chars)
+        req_model = str(data.get("model", "")).strip().lower()
+        generic_claude_models = (
+            "claude-sonnet-4-5", "claude-sonnet-4", "claude-3-7-sonnet-20250219",
+            "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-haiku-4-5",
+            "claude-opus-4", "claude-opus-4-5", "claude-3-opus-20240229", "*", "auto", ""
+        )
+        if req_model and req_model not in generic_claude_models:
+            # Client explicitly requested a specific model (e.g. via Claude Code /model picker)
+            target_model = self.resolve_target_model(req_model, total_chars=total_chars)
+        else:
+            # Generic Claude Code request -> route according to active preference
+            pref = self.get_selected_model()
+            target_model = self.resolve_target_model(pref, total_chars=total_chars)
         data["model"] = target_model
 
         return data

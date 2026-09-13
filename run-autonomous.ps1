@@ -1,6 +1,15 @@
 # Autonomous Runner for Claude Code - Built to run for hours/days without stopping
+param(
+    [Parameter(Position=0)]
+    [string]$Model = ""
+)
+
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+if ($Model) {
+    python "$ScriptDir\select_model.py" $Model
+}
 
 Write-Host "====================================================" -ForegroundColor Magenta
 Write-Host "   Claude Code AUTONOMOUS RUNNER (Unrestricted Mode)" -ForegroundColor Magenta
@@ -51,21 +60,24 @@ if (Test-Path $activeModelFile) {
 }
 
 $modelDisplayNames = @{
-    "auto" = "Auto Smart-Failover (Nemotron 120B)"
-    "1" = "Auto Smart-Failover (Nemotron 120B)"
+    "auto" = "Auto Smart-Failover (Zero API Errors)"
+    "1" = "Auto Smart-Failover (Zero API Errors)"
+    "moonshotai/kimi-k3" = "Moonshot AI Kimi-K3"
+    "kimi" = "Moonshot AI Kimi-K3"
+    "kimi-k3" = "Moonshot AI Kimi-K3"
+    "k3" = "Moonshot AI Kimi-K3"
+    "moonshot" = "Moonshot AI Kimi-K3"
+    "5" = "Moonshot AI Kimi-K3"
     "nvidia/nemotron-3-super-120b-a12b" = "NVIDIA Nemotron 3 Super 120B"
     "nemotron" = "NVIDIA Nemotron 3 Super 120B"
     "2" = "NVIDIA Nemotron 3 Super 120B"
     "poolside/laguna-xs-2.1" = "Poolside Laguna XS 2.1"
     "laguna" = "Poolside Laguna XS 2.1"
     "3" = "Poolside Laguna XS 2.1"
+    "deepseek-ai/deepseek-v4-flash-0731" = "DeepSeek V4"
     "deepseek-ai/deepseek-v4-pro-0813" = "DeepSeek V4 Pro"
-    "deepseek" = "DeepSeek V4 Pro"
-    "4" = "DeepSeek V4 Pro"
-    "moonshotai/kimi-k3" = "Moonshot AI Kimi-K3"
-    "kimi" = "Moonshot AI Kimi-K3"
-    "kimi-k3" = "Moonshot AI Kimi-K3"
-    "5" = "Moonshot AI Kimi-K3"
+    "deepseek" = "DeepSeek V4"
+    "4" = "DeepSeek V4"
 }
 
 $activeLabel = if ($modelDisplayNames.ContainsKey($backendEngine.ToLower())) { $modelDisplayNames[$backendEngine.ToLower()] } else { $backendEngine }

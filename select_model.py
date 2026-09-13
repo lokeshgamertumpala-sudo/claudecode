@@ -2,13 +2,14 @@ import sys
 import os
 import time
 import requests
+import json
 
 MODELS = {
-    "1": ("Auto Smart-Failover", "auto", "Prioritizes Nemotron 120B; adaptive failover across all models (Zero Errors)"),
-    "2": ("NVIDIA Nemotron 3 Super 120B", "nvidia/nemotron-3-super-120b-a12b", "120B enterprise model, ultra-fast ~0.3s, 100% quota (RECOMMENDED)"),
-    "3": ("Poolside Laguna XS 2.1", "poolside/laguna-xs-2.1", "High-speed code specialist, ~0.3s latency"),
-    "4": ("DeepSeek V4 Pro", "deepseek-ai/deepseek-v4-pro-0813", "DeepSeek V4 Pro reasoning & coding flagship on NVIDIA NIM"),
-    "5": ("Moonshot AI Kimi-K3", "moonshotai/kimi-k3", "Deep reasoning & coding (rate-limited on free tier)")
+    "1": ("Auto Smart-Failover", "auto", "Seamless resilience mesh across all 4 flagship models (Zero API Errors)"),
+    "2": ("NVIDIA Nemotron 3 Super 120B", "nvidia/nemotron-3-super-120b-a12b", "120B enterprise powerhouse, ultra-fast ~0.3s latency (RECOMMENDED)"),
+    "3": ("Poolside Laguna XS 2.1", "poolside/laguna-xs-2.1", "High-speed software engineering & code specialist, ~0.3s latency"),
+    "4": ("DeepSeek V4", "deepseek-ai/deepseek-v4-flash-0731", "High-speed flagship reasoning & massive context coding powerhouse"),
+    "5": ("Moonshot AI Kimi-K3", "moonshotai/kimi-k3", "Ultra-deep reasoning & advanced multi-step problem solving (Kimi Flagship)")
 }
 
 ALIASES = {
@@ -17,20 +18,27 @@ ALIASES = {
     "1": "auto",
     "nemotron": "nvidia/nemotron-3-super-120b-a12b",
     "nvidia": "nvidia/nemotron-3-super-120b-a12b",
+    "120b": "nvidia/nemotron-3-super-120b-a12b",
     "nvidia/nemotron-3-super-120b-a12b": "nvidia/nemotron-3-super-120b-a12b",
     "2": "nvidia/nemotron-3-super-120b-a12b",
     "laguna": "poolside/laguna-xs-2.1",
     "poolside": "poolside/laguna-xs-2.1",
     "poolside/laguna-xs-2.1": "poolside/laguna-xs-2.1",
     "3": "poolside/laguna-xs-2.1",
-    "deepseek": "deepseek-ai/deepseek-v4-pro-0813",
+    "deepseek": "deepseek-ai/deepseek-v4-flash-0731",
+    "deepseek-v4": "deepseek-ai/deepseek-v4-flash-0731",
+    "flash": "deepseek-ai/deepseek-v4-flash-0731",
+    "deepseek-v4-flash": "deepseek-ai/deepseek-v4-flash-0731",
+    "deepseek-ai/deepseek-v4-flash-0731": "deepseek-ai/deepseek-v4-flash-0731",
+    "4": "deepseek-ai/deepseek-v4-flash-0731",
     "deepseek-v4-pro": "deepseek-ai/deepseek-v4-pro-0813",
     "deepseek-v4pro": "deepseek-ai/deepseek-v4-pro-0813",
     "v4pro": "deepseek-ai/deepseek-v4-pro-0813",
     "deepseek-ai/deepseek-v4-pro-0813": "deepseek-ai/deepseek-v4-pro-0813",
-    "4": "deepseek-ai/deepseek-v4-pro-0813",
     "kimi": "moonshotai/kimi-k3",
     "kimi-k3": "moonshotai/kimi-k3",
+    "k3": "moonshotai/kimi-k3",
+    "moonshot": "moonshotai/kimi-k3",
     "moonshotai/kimi-k3": "moonshotai/kimi-k3",
     "5": "moonshotai/kimi-k3"
 }
@@ -49,7 +57,6 @@ def get_current():
     return "auto"
 
 def update_claude_settings(canonical, display_name):
-    import json
     settings_dirs = [
         os.path.join(os.path.dirname(__file__), ".claude"),
         os.path.expanduser("~/.claude")
@@ -115,19 +122,20 @@ def set_model(choice_key_or_name):
     print(f"\n[+] Active model switched to: {display_name}")
     print(f"    -> Canonical Model ID: {canonical}")
     print(f"    -> Terminal Header Label: {display_name}")
-    print("[+] All requests through port 4000 are pre-sanitized with zero errors.")
+    print("[+] All requests through port 4000 are pre-sanitized with zero API errors.")
     return canonical
 
 def show_menu():
     curr = get_current()
-    print("=" * 65)
-    print("           CLAUDE CODE - AI MODEL SELECTOR (NVIDIA NIM)          ")
-    print("=" * 65)
+    print("=" * 70)
+    print("      CLAUDE CODE - COMPLETE 4-MODEL TERMINAL SELECTOR (NVIDIA NIM)    ")
+    print("=" * 70)
     for k, (name, slug, desc) in MODELS.items():
         tag = " [ACTIVE]" if slug == curr or (k == "1" and curr == "auto") else ""
-        print(f" [{k}] {name:<32} {tag}")
+        print(f" [{k}] {name:<36} {tag}")
         print(f"     -> {desc}")
-    print("-" * 65)
+    print("-" * 70)
+    print(" Quick switch commands: model kimi | model nemotron | model laguna | model deepseek")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

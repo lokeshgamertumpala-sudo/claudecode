@@ -1,6 +1,30 @@
-# PowerShell Launcher for Claude Code with NVIDIA NIM (Nemotron 120B)
+# PowerShell Launcher for Claude Code with NVIDIA NIM (Complete 4-Model Terminal Access)
+param(
+    [Parameter(Position=0)]
+    [string]$Model = "",
+    [switch]$DangerouslySkipPermissions,
+    [switch]$Unrestricted,
+    [switch]$Help
+)
+
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+if ($Help -or $Model -in @("-h", "--help", "help")) {
+    Write-Host "====================================================" -ForegroundColor Cyan
+    Write-Host "   Claude Code -> NVIDIA NIM Launcher Help" -ForegroundColor Cyan
+    Write-Host "====================================================" -ForegroundColor Cyan
+    Write-Host "Usage: .\start-claude.ps1 [Model] [-Unrestricted]" -ForegroundColor Cyan
+    Write-Host "`nModels:" -ForegroundColor Yellow
+    Write-Host "  kimi     / 5  : Moonshot AI Kimi-K3 (Ultra-deep reasoning & advanced problem solving)"
+    Write-Host "  nemotron / 2  : NVIDIA Nemotron 3 Super 120B (Enterprise powerhouse ~0.3s)"
+    Write-Host "  laguna   / 3  : Poolside Laguna XS 2.1 (High-speed software engineering specialist)"
+    Write-Host "  deepseek / 4  : DeepSeek V4 (High-speed reasoning & coding flagship)"
+    Write-Host "  auto     / 1  : Auto Smart-Failover (Zero API Errors across all 4 models)"
+    Write-Host "`nFlags:" -ForegroundColor Yellow
+    Write-Host "  -Unrestricted : Run in full autonomous terminal mode (bypasses permission prompts)"
+    exit 0
+}
 
 Write-Host "====================================================" -ForegroundColor Cyan
 Write-Host "   Claude Code -> NVIDIA NIM (Nemotron 120B)" -ForegroundColor Cyan
@@ -150,8 +174,14 @@ if (-not $proxyReady) {
     Write-Host "[+] Proxy is up and ready! Model: NVIDIA Nemotron 120B (nvidia/nemotron-3-super-120b-a12b)" -ForegroundColor Green
 }
 
-# 5. Resolve active model preference from active_model.txt across all 5 models
+# 5. Resolve or switch active model preference across all 4 flagship models
 $activeModelPath = Join-Path $ScriptDir "active_model.txt"
+
+if ($Model) {
+    # User passed a model directly in terminal command line
+    python "$ScriptDir\select_model.py" $Model
+}
+
 $activeModel = "auto"
 if (Test-Path $activeModelPath) {
     $raw = (Get-Content $activeModelPath -Raw).Trim()
@@ -159,21 +189,24 @@ if (Test-Path $activeModelPath) {
 }
 
 $modelDisplayNames = @{
-    "auto" = "Auto Smart-Failover (Nemotron 120B)"
-    "1" = "Auto Smart-Failover (Nemotron 120B)"
+    "auto" = "Auto Smart-Failover (Zero API Errors)"
+    "1" = "Auto Smart-Failover (Zero API Errors)"
+    "moonshotai/kimi-k3" = "Moonshot AI Kimi-K3"
+    "kimi" = "Moonshot AI Kimi-K3"
+    "kimi-k3" = "Moonshot AI Kimi-K3"
+    "k3" = "Moonshot AI Kimi-K3"
+    "moonshot" = "Moonshot AI Kimi-K3"
+    "5" = "Moonshot AI Kimi-K3"
     "nvidia/nemotron-3-super-120b-a12b" = "NVIDIA Nemotron 3 Super 120B"
     "nemotron" = "NVIDIA Nemotron 3 Super 120B"
     "2" = "NVIDIA Nemotron 3 Super 120B"
     "poolside/laguna-xs-2.1" = "Poolside Laguna XS 2.1"
     "laguna" = "Poolside Laguna XS 2.1"
     "3" = "Poolside Laguna XS 2.1"
+    "deepseek-ai/deepseek-v4-flash-0731" = "DeepSeek V4"
     "deepseek-ai/deepseek-v4-pro-0813" = "DeepSeek V4 Pro"
-    "deepseek" = "DeepSeek V4 Pro"
-    "4" = "DeepSeek V4 Pro"
-    "moonshotai/kimi-k3" = "Moonshot AI Kimi-K3"
-    "kimi" = "Moonshot AI Kimi-K3"
-    "kimi-k3" = "Moonshot AI Kimi-K3"
-    "5" = "Moonshot AI Kimi-K3"
+    "deepseek" = "DeepSeek V4"
+    "4" = "DeepSeek V4"
 }
 
 $activeLabel = if ($modelDisplayNames.ContainsKey($activeModel.ToLower())) { $modelDisplayNames[$activeModel.ToLower()] } else { $activeModel }
@@ -210,6 +243,9 @@ Write-Host "Streaming: 100% Active (Native Thinking & Real-Time Seconds Timer)" 
 Write-Host "====================================================`n" -ForegroundColor Cyan
 
 $claudeArgs = @("--model", $targetModel, "--effort", "max")
+if ($DangerouslySkipPermissions -or $Unrestricted) {
+    $claudeArgs += "--dangerously-skip-permissions"
+}
 if ($args.Count -gt 0) {
     $claudeArgs += $args
 }

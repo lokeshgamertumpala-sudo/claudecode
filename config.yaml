@@ -1,150 +1,216 @@
 model_list:
-  # Primary model: Moonshot AI Kimi-K3
+  # 1. Moonshot AI Kimi-K3 (Deep Reasoning & Multi-Step Logic)
   - model_name: "moonshotai/kimi-k3"
     litellm_params:
       model: "nvidia_nim/moonshotai/kimi-k3"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "kimi-k3"
     litellm_params:
       model: "nvidia_nim/moonshotai/kimi-k3"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
-  # Automatic high-reliability fallbacks & models on NVIDIA NIM
+  - model_name: "kimi"
+    litellm_params:
+      model: "nvidia_nim/moonshotai/kimi-k3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
+
+  # 2. NVIDIA Nemotron 3 Super 120B (Enterprise Flagship ~0.3s Latency)
   - model_name: "nvidia/nemotron-3-super-120b-a12b"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "nemotron"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "backup-nemotron"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
+  # 3. Poolside Laguna XS 2.1 (High-Speed Software Engineering Specialist)
   - model_name: "poolside/laguna-xs-2.1"
     litellm_params:
       model: "nvidia_nim/poolside/laguna-xs-2.1"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "laguna"
     litellm_params:
       model: "nvidia_nim/poolside/laguna-xs-2.1"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "backup-laguna"
     litellm_params:
       model: "nvidia_nim/poolside/laguna-xs-2.1"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
-  - model_name: "deepseek-ai/deepseek-v4-pro-0813"
+  # 4. DeepSeek V4 (High-Speed Flash & Pro Flagships)
+  - model_name: "deepseek-ai/deepseek-v4-flash-0731"
     litellm_params:
-      model: "nvidia_nim/deepseek-ai/deepseek-v4-pro-0813"
+      model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-
-  - model_name: "deepseek-v4-pro"
-    litellm_params:
-      model: "nvidia_nim/deepseek-ai/deepseek-v4-pro-0813"
-      api_key: "os.environ/NVIDIA_API_KEY"
-
-  - model_name: "deepseek"
-    litellm_params:
-      model: "nvidia_nim/deepseek-ai/deepseek-v4-pro-0813"
-      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "deepseek-v4-flash"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
+  - model_name: "deepseek"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
+
+  - model_name: "deepseek-ai/deepseek-v4-pro-0813"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-v4-pro-0813"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
+
+  - model_name: "deepseek-v4-pro"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-v4-pro-0813"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
+
+  # Auto Smart Routing
   - model_name: "auto"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
-  # Claude Code model mappings - routed directly to high-speed Nemotron 120B
+  # Claude Code model mappings - routed dynamically through proxy sanitize hook
   - model_name: "claude-sonnet-4"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "claude-sonnet-4-5"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "claude-3-7-sonnet-20250219"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "claude-3-5-sonnet-20241022"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "claude-3-5-haiku-20241022"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "claude-haiku-4-5"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "claude-opus-4"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "claude-opus-4-5"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "claude-3-opus-20240229"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
   - model_name: "*"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
 
 router_settings:
-  num_retries: 2
+  num_retries: 3
   retry_after: 0.5
   fallbacks:
-    - moonshotai/kimi-k3: ["backup-nemotron", "deepseek-v4-flash"]
-    - kimi-k3: ["backup-nemotron", "deepseek-v4-flash"]
-    - backup-nemotron: ["deepseek-v4-flash"]
-    - nemotron: ["deepseek-v4-flash"]
-    - backup-laguna: ["backup-nemotron", "deepseek-v4-flash"]
-    - laguna: ["backup-nemotron", "deepseek-v4-flash"]
-    - deepseek-ai/deepseek-v4-pro-0813: ["backup-nemotron", "deepseek-v4-flash"]
-    - deepseek-v4-pro: ["backup-nemotron", "deepseek-v4-flash"]
-    - deepseek: ["backup-nemotron", "deepseek-v4-flash"]
-    - claude-sonnet-4: ["backup-nemotron", "deepseek-v4-flash"]
-    - claude-sonnet-4-5: ["backup-nemotron", "deepseek-v4-flash"]
-    - claude-3-7-sonnet-20250219: ["backup-nemotron", "deepseek-v4-flash"]
-    - claude-3-5-sonnet-20241022: ["backup-nemotron", "deepseek-v4-flash"]
-    - claude-3-5-haiku-20241022: ["backup-nemotron", "deepseek-v4-flash"]
-    - claude-haiku-4-5: ["backup-nemotron", "deepseek-v4-flash"]
-    - claude-opus-4: ["backup-nemotron", "deepseek-v4-flash"]
-    - claude-opus-4-5: ["backup-nemotron", "deepseek-v4-flash"]
-    - claude-3-opus-20240229: ["backup-nemotron", "deepseek-v4-flash"]
-    - "*": ["backup-nemotron", "deepseek-v4-flash"]
+    - moonshotai/kimi-k3: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
+    - kimi-k3: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
+    - kimi: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
+    - backup-nemotron: ["deepseek-v4-flash", "backup-laguna", "moonshotai/kimi-k3"]
+    - nemotron: ["deepseek-v4-flash", "backup-laguna", "moonshotai/kimi-k3"]
+    - backup-laguna: ["backup-nemotron", "deepseek-v4-flash", "moonshotai/kimi-k3"]
+    - laguna: ["backup-nemotron", "deepseek-v4-flash", "moonshotai/kimi-k3"]
+    - deepseek-ai/deepseek-v4-pro-0813: ["deepseek-v4-flash", "backup-nemotron", "backup-laguna"]
+    - deepseek-v4-pro: ["deepseek-v4-flash", "backup-nemotron", "backup-laguna"]
+    - deepseek-ai/deepseek-v4-flash-0731: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
+    - deepseek-v4-flash: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
+    - deepseek: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
+    - claude-sonnet-4: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
+    - claude-sonnet-4-5: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
+    - claude-3-7-sonnet-20250219: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
+    - claude-3-5-sonnet-20241022: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
+    - claude-3-5-haiku-20241022: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
+    - claude-haiku-4-5: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
+    - claude-opus-4: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
+    - claude-opus-4-5: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
+    - claude-3-opus-20240229: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
+    - "*": ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
 
 litellm_settings:
   drop_params: true
   set_verbose: false
-  num_retries: 2
+  num_retries: 3
   retry_after: 0.5
   request_timeout: 300
   stream_timeout: 300
@@ -153,4 +219,3 @@ litellm_settings:
 
 general_settings:
   master_key: "sk-litellm-proxy-key"
-
