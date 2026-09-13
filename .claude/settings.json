@@ -4,8 +4,8 @@
     "options": [
       {
         "model": "claude-sonnet-5",
-        "label": "Auto Smart-Failover",
-        "description": "Seamless resilience mesh across all 4 flagship models (Zero API Errors)",
+        "label": "DeepSeek V4.1 Flash",
+        "description": "High-speed flagship reasoning & massive context coding powerhouse (DeepSeek V4.1 Flash on NVIDIA NIM)",
         "behavesAs": "sonnet"
       },
       {

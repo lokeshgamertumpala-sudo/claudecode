@@ -65,7 +65,23 @@ This repository contains **21 specialized skills** in `.claude/skills/` and `.ag
 
 ---
 
+## 🏢 Universal Company Intelligence & Web Search
+You have built-in, sub-second capabilities to search through, analyze, and synthesize intelligence on **all companies worldwide** (public enterprises, private startups, global conglomerates):
+1. **Dedicated Company Intelligence Engine**:
+   - Run `python company_search.py "<Company Name or Stock Ticker>"` (or `company-search.bat "<Company>"`)
+   - Uses SEC EDGAR (10,400+ US public companies), Yahoo Finance (real-time equity & 52-week pricing), Wikipedia REST API (corporate profiles, history, founders, CEO), and Google News RSS (latest corporate developments).
+   - Use `--json` for machine-readable JSON: `python company_search.py "NVIDIA" --json`.
+2. **Native `WebSearch` & `WebFetch`**:
+   - Both tools are 100% active and routed locally through your LiteLLM proxy daemon (`http://127.0.0.1:4000/v1/code/sessions/{session_id}/worker/...`).
+   - Use `WebSearch("<Company> revenue competitors leadership")` for targeted lookups.
+   - Use `WebFetch(url)` to inspect full investor filings, annual reports, and corporate press releases.
+3. **Slash Command**:
+   - Run `/company <name>` inside the Claude Code terminal for instant corporate dossiers.
+
+---
+
 ## ⚡ Engine Identity & Runtime Awareness
 - **Underlying Intelligence**: You are powered by **NVIDIA Nemotron 3 Super 120B** running on **NVIDIA NIM** enterprise inference via local proxy routing (`127.0.0.1:4000`).
 - **Identity Truth**: When asked what model, mode, or AI engine you are running on, state clearly and proudly that you are **NVIDIA Nemotron 3 Super 120B** powered by **NVIDIA NIM**, driving the Claude Code CLI interface.
+
 

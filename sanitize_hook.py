@@ -5,17 +5,76 @@ import requests
 from litellm.integrations.custom_logger import CustomLogger
 from typing import Any
 
-# Register /api/hello endpoint so Claude Code connection probes return 200 OK
+# Register custom endpoints on FastAPI app (hello, web-search, web-fetch)
 try:
     from litellm.proxy.proxy_server import app
-    from fastapi.responses import PlainTextResponse
+    from fastapi import Request
+    from fastapi.responses import JSONResponse, PlainTextResponse
+    import re
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    if current_dir not in sys.path:
+        sys.path.insert(0, current_dir)
+    import search_engine
 
     @app.head("/api/hello")
     @app.get("/api/hello")
     async def api_hello_endpoint():
         return PlainTextResponse("ok")
-except Exception:
-    pass
+
+    @app.post("/v1/code/sessions/{session_id}/worker/web-search")
+    async def worker_web_search_endpoint(session_id: str, request: Request):
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        query = body.get("query", "")
+        allowed_domains = body.get("allowed_domains")
+        blocked_domains = body.get("blocked_domains")
+        print(f"[CCR-WORKER] WebSearch request: query='{query}' session='{session_id}'", flush=True)
+        results = search_engine.unified_web_search(
+            query=query,
+            max_results=8,
+            allowed_domains=allowed_domains,
+            blocked_domains=blocked_domains
+        )
+        print(f"[CCR-WORKER] WebSearch returning {len(results)} results", flush=True)
+        return JSONResponse({"results": results})
+
+    @app.post("/v1/code/sessions/{session_id}/worker/web-fetch")
+    async def worker_web_fetch_endpoint(session_id: str, request: Request):
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        url = body.get("url", "")
+        print(f"[CCR-WORKER] WebFetch request: url='{url}' session='{session_id}'", flush=True)
+        if not url:
+            return JSONResponse({"error": {"error_type": "invalid_url", "error_message": "Missing URL"}}, status_code=400)
+        try:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            }
+            resp = requests.get(url, headers=headers, timeout=12)
+            text = search_engine.clean_html(resp.text)
+            title_match = re.search(r"<title[^>]*>(.*?)</title>", resp.text, re.IGNORECASE | re.DOTALL)
+            title = search_engine.clean_html(title_match.group(1)) if title_match else ""
+            return JSONResponse({
+                "url": url,
+                "destination_url": str(resp.url),
+                "title": title,
+                "text": text[:50000],
+                "content_type": resp.headers.get("content-type", "text/plain")
+            })
+        except Exception as e:
+            return JSONResponse({
+                "error": {
+                    "error_type": "fetch_failed",
+                    "error_message": str(e)
+                }
+            }, status_code=502)
+except Exception as e:
+    print(f"[WARNING] Could not register custom FastAPI endpoints: {e}", flush=True)
 
 MODEL_DISPLAY_NAMES = {
     "moonshotai/kimi-k3": "Moonshot AI Kimi-K3",
