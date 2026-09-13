@@ -518,11 +518,13 @@ class RequestSanitizer(CustomLogger):
             "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-haiku-4-5",
             "claude-opus-4", "claude-opus-4-5", "claude-3-opus-20240229", "*", "auto", ""
         )
-        if req_model and req_model not in generic_claude_models:
+        pref = self.get_selected_model()
+        if pref and pref != "auto":
+            target_model = self.resolve_target_model(pref, total_chars=total_chars)
+        elif req_model and req_model not in generic_claude_models:
             target_model = self.resolve_target_model(req_model, total_chars=total_chars)
         else:
-            pref = self.get_selected_model()
-            target_model = self.resolve_target_model(pref, total_chars=total_chars)
+            target_model = self.resolve_target_model("auto", total_chars=total_chars)
         data["model"] = target_model
 
         active_name = MODEL_DISPLAY_NAMES.get(target_model, "NVIDIA NIM AI")
