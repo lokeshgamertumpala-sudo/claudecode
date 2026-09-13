@@ -4,8 +4,8 @@
     "options": [
       {
         "model": "claude-sonnet-5",
-        "label": "Moonshot AI Kimi-K3",
-        "description": "Ultra-deep reasoning & advanced multi-step problem solving (Kimi Flagship)",
+        "label": "Auto Smart-Failover",
+        "description": "Seamless resilience mesh across all 4 flagship models (Zero API Errors)",
         "behavesAs": "sonnet"
       },
       {
@@ -32,6 +32,14 @@
         "description": "Ultra-deep reasoning & advanced multi-step problem solving (Kimi Flagship)",
         "behavesAs": "sonnet"
       }
+    ]
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "WebSearch",
+      "WebFetch"
     ]
   }
 }

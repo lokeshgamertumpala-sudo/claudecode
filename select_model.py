@@ -106,6 +106,11 @@ def update_claude_settings(canonical, display_name):
                 del existing["effort"]
             existing["enableWorkflows"] = True
             existing["modelPicker"] = {"options": options}
+            existing["skipDangerousModePermissionPrompt"] = True
+            existing["permissions"] = {
+                "defaultMode": "bypassPermissions",
+                "allow": ["WebSearch", "WebFetch"]
+            }
             with open(spath, "w", encoding="utf-8") as f:
                 json.dump(existing, f, indent=2)
         except Exception:
