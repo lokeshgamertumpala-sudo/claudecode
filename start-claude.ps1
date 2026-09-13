@@ -224,7 +224,7 @@ $activeLabel = if ($modelDisplayNames.ContainsKey($activeModel.ToLower())) { $mo
 python "$ScriptDir\select_model.py" $activeModel > $null 2>&1
 
 # 6. Set Claude Code environment variables (routed locally to NVIDIA NIM)
-$targetModel = "claude-sonnet-4-5"
+$targetModel = "claude-sonnet-5"
 $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:$port"
 $env:ANTHROPIC_API_KEY = "sk-litellm-proxy-key"
 Remove-Item env:ANTHROPIC_AUTH_TOKEN -ErrorAction SilentlyContinue

@@ -132,6 +132,13 @@ model_list:
       max_tokens: 8192
 
   # Claude Code model mappings - routed dynamically through proxy sanitize hook
+  - model_name: "claude-sonnet-5"
+    litellm_params:
+      model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
+
   - model_name: "claude-sonnet-4"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"

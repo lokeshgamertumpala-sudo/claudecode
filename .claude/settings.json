@@ -4,7 +4,7 @@
   "modelPicker": {
     "options": [
       {
-        "model": "claude-sonnet-4-5",
+        "model": "claude-sonnet-5",
         "label": "DeepSeek V4.1 Flash",
         "description": "High-speed flagship reasoning & massive context coding powerhouse (DeepSeek V4.1 Flash on NVIDIA NIM)",
         "behavesAs": "sonnet"

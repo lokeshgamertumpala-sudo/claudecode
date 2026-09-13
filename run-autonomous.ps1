@@ -95,7 +95,7 @@ $activeLabel = if ($modelDisplayNames.ContainsKey($backendEngine.ToLower())) { $
 python "$ScriptDir\select_model.py" $backendEngine > $null 2>&1
 
 # Use standard Claude protocol model so Claude Code CLI runs without unrecognized_model warnings
-$chosenModel = "claude-sonnet-4-5"
+$chosenModel = "claude-sonnet-5"
 
 # Set Environment Variables for Current Process
 $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:$port"

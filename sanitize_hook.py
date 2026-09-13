@@ -296,7 +296,7 @@ class RequestSanitizer(CustomLogger):
         # 5. Dynamic zero-error context-aware model resolution
         req_model = str(data.get("model", "")).strip().lower()
         generic_claude_models = (
-            "claude-sonnet-4-5", "claude-sonnet-4", "claude-3-7-sonnet-20250219",
+            "claude-sonnet-5", "claude-sonnet-4-5", "claude-sonnet-4", "claude-3-7-sonnet-20250219",
             "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-haiku-4-5",
             "claude-opus-4", "claude-opus-4-5", "claude-3-opus-20240229", "*", "auto", ""
         )
