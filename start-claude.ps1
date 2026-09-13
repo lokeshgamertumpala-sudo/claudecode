@@ -237,9 +237,9 @@ $env:ANTHROPIC_CUSTOM_MODEL_OPTION = $targetModel
 $env:ANTHROPIC_CUSTOM_MODEL_OPTION_NAME = $activeLabel
 $env:ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION = "$activeLabel via local NIM proxy"
 $env:CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT = "1"
-$env:CLAUDE_CODE_EFFORT_LEVEL = "max"
+$env:CLAUDE_CODE_EFFORT_LEVEL = "high"
 $env:CLAUDE_CODE_WORKFLOWS = "1"
-$env:MAX_THINKING_TOKENS = "64000"
+$env:MAX_THINKING_TOKENS = "2048"
 $env:ANTHROPIC_MAX_TOKENS = "8192"
 $env:CLAUDE_CODE_DISABLE_THINKING_LIMIT = "1"
 
@@ -251,7 +251,7 @@ Write-Host "Workflows: ENABLED (Dynamic multi-agent orchestration)" -ForegroundC
 Write-Host "Streaming: 100% Active (Native Thinking & Real-Time Seconds Timer)" -ForegroundColor Gray
 Write-Host "====================================================`n" -ForegroundColor Cyan
 
-$claudeArgs = @("--model", $targetModel, "--effort", "max")
+$claudeArgs = @("--model", $targetModel, "--effort", "high")
 if ($DangerouslySkipPermissions -or $Unrestricted) {
     $claudeArgs += "--dangerously-skip-permissions"
 }

@@ -4,21 +4,21 @@ model_list:
     litellm_params:
       model: "nvidia_nim/moonshotai/kimi-k3"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "kimi-k3"
     litellm_params:
       model: "nvidia_nim/moonshotai/kimi-k3"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "kimi"
     litellm_params:
       model: "nvidia_nim/moonshotai/kimi-k3"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   # 2. NVIDIA Nemotron 3 Super 120B (Enterprise Flagship ~0.3s Latency)
@@ -26,21 +26,21 @@ model_list:
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "nemotron"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "backup-nemotron"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   # 3. Poolside Laguna XS 2.1 (High-Speed Software Engineering Specialist)
@@ -48,21 +48,21 @@ model_list:
     litellm_params:
       model: "nvidia_nim/poolside/laguna-xs-2.1"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "laguna"
     litellm_params:
       model: "nvidia_nim/poolside/laguna-xs-2.1"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "backup-laguna"
     litellm_params:
       model: "nvidia_nim/poolside/laguna-xs-2.1"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   # 4. DeepSeek V4.1 Flash (High-Speed Reasoning & Massive Context Flagship)
@@ -70,42 +70,42 @@ model_list:
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "deepseek-v4.1-flash"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "deepseek-v4.1"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "deepseek-v4-flash"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "deepseek-flash"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "deepseek"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   # Legacy alias re-route to DeepSeek V4.1 Flash
@@ -113,14 +113,14 @@ model_list:
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "deepseek-v4-pro"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   # Auto Smart Routing
@@ -128,7 +128,7 @@ model_list:
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   # Claude Code model mappings - routed dynamically through proxy sanitize hook
@@ -136,83 +136,84 @@ model_list:
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "claude-sonnet-4"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "claude-sonnet-4-5"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "claude-3-7-sonnet-20250219"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "claude-3-5-sonnet-20241022"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "claude-3-5-haiku-20241022"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "claude-haiku-4-5"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "claude-opus-4"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "claude-opus-4-5"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "claude-3-opus-20240229"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
   - model_name: "*"
     litellm_params:
       model: "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 300
+      timeout: 45
       max_tokens: 8192
 
 router_settings:
   num_retries: 3
   retry_after: 0.5
   fallbacks:
+    - claude-sonnet-5: ["backup-nemotron", "backup-laguna", "deepseek-v4-flash"]
     - moonshotai/kimi-k3: ["backup-nemotron", "deepseek-v4.1-flash", "deepseek-v4-flash", "backup-laguna"]
     - kimi-k3: ["backup-nemotron", "deepseek-v4.1-flash", "deepseek-v4-flash", "backup-laguna"]
     - kimi: ["backup-nemotron", "deepseek-v4.1-flash", "deepseek-v4-flash", "backup-laguna"]
@@ -244,8 +245,8 @@ litellm_settings:
   set_verbose: false
   num_retries: 3
   retry_after: 0.5
-  request_timeout: 300
-  stream_timeout: 300
+  request_timeout: 45
+  stream_timeout: 45
   max_tokens: 8192
   callbacks: ["sanitize_hook.proxy_handler_instance"]
 

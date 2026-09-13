@@ -384,6 +384,21 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                             if len(t) > 2500:
                                 p["text"] = t[:1200] + "\n[... Context pruned ...]\n" + t[-1200:]
 
+
+        # 6. Clamp thinking budget to prevent token exhaustion and blank outputs
+        thinking = data.get("thinking")
+        if isinstance(thinking, dict) and thinking.get("type") == "enabled":
+            max_tok = data.get("max_tokens", 8192)
+            budget = thinking.get("budget_tokens", 2048)
+            # Cap thinking budget to at most 2048 tokens (or 45% of max_tokens)
+            # so the model ALWAYS completes reasoning and emits full text output!
+            thinking["budget_tokens"] = max(1024, min(budget, 2048, int(max_tok * 0.45)))
+
+        # Guarantee max_tokens is at least 4096 for ample output headroom
+        curr_max = data.get("max_tokens")
+        if not curr_max or curr_max < 4096:
+            data["max_tokens"] = 4096
+
         return data
 
     async def async_post_call_failure_hook(self, request_data: dict = None, original_exception: Exception = None, user_api_key_dict: Any = None, *args, **kwargs):
