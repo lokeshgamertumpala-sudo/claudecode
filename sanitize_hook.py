@@ -17,6 +17,43 @@ try:
 except Exception:
     pass
 
+MODEL_DISPLAY_NAMES = {
+    "moonshotai/kimi-k3": "Moonshot AI Kimi-K3",
+    "nvidia/nemotron-3-super-120b-a12b": "NVIDIA Nemotron 3 Super 120B",
+    "backup-nemotron": "NVIDIA Nemotron 3 Super 120B",
+    "poolside/laguna-xs-2.1": "Poolside Laguna XS 2.1",
+    "backup-laguna": "Poolside Laguna XS 2.1",
+    "deepseek-ai/deepseek-v4-flash-0731": "DeepSeek V4.1 Flash",
+    "deepseek-v4-flash": "DeepSeek V4.1 Flash",
+    "auto": "Auto Smart-Failover (Nemotron 120B / DeepSeek V4.1 Flash)",
+}
+
+def sanitize_claude_identity(text: str, active_name: str) -> str:
+    if not isinstance(text, str):
+        return text
+    replacements = [
+        ("You are Claude Code, Anthropic's official CLI for Claude, running within the Claude Agent SDK.",
+         f"You are Claude Code CLI powered by {active_name} on NVIDIA NIM enterprise inference."),
+        ("You are Claude Code, Anthropic's official CLI for Claude.",
+         f"You are Claude Code CLI powered by {active_name} on NVIDIA NIM enterprise inference."),
+        ("You are a Claude agent, built on Anthropic's Claude Agent SDK.",
+         f"You are an AI coding assistant powered by {active_name} on NVIDIA NIM."),
+        ("running as Claude Sonnet 4.5", f"powered by {active_name} on NVIDIA NIM"),
+        ("running as Claude Sonnet 5", f"powered by {active_name} on NVIDIA NIM"),
+        ("I'm Claude Sonnet 4.5", f"I'm powered by {active_name}"),
+        ("I am Claude Sonnet 4.5", f"I am powered by {active_name}"),
+        ("Claude Sonnet 4.5", f"{active_name} (NVIDIA NIM)"),
+        ("Claude Sonnet 5", f"{active_name} (NVIDIA NIM)"),
+        ("claude-sonnet-4-5", f"{active_name}"),
+        ("claude-sonnet-5", f"{active_name}"),
+        ("Anthropic's model", f"{active_name} running on NVIDIA NIM"),
+        ("built by Anthropic", "powered by NVIDIA NIM"),
+        ("Anthropic's official CLI", "Claude Code CLI"),
+    ]
+    for old, new in replacements:
+        text = text.replace(old, new)
+    return text
+
 ARCHITECTURAL_COHESION_DIRECTIVE = """
 [CRITICAL ARCHITECTURAL CONTRACT - FULL POWER MAXIMUM AUTONOMOUS DIRECTIVE]
 You are operating as an Elite Principal Software Architect and Lead Systems Engineer operating at MAXIMUM REASONING POWER.
@@ -56,10 +93,10 @@ class RequestSanitizer(CustomLogger):
         # Kimi-K3 is heavily rate-limited on free tier, so it goes last.
         # (litellm_slug, nim_model_id, human_name)
         self.model_pool = [
-            ("moonshotai/kimi-k3", "moonshotai/kimi-k3", "Moonshot Kimi-K3"),
             ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b", "Nemotron 120B"),
-            ("backup-laguna", "poolside/laguna-xs-2.1", "Poolside Laguna XS 2.1"),
             ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731", "DeepSeek V4.1 Flash"),
+            ("backup-laguna", "poolside/laguna-xs-2.1", "Poolside Laguna XS 2.1"),
+            ("moonshotai/kimi-k3", "moonshotai/kimi-k3", "Moonshot Kimi-K3"),
         ]
 
         self.health = {}
@@ -175,6 +212,9 @@ class RequestSanitizer(CustomLogger):
             "moonshot": ("moonshotai/kimi-k3", "moonshotai/kimi-k3"),
             "moonshotai/kimi-k3": ("moonshotai/kimi-k3", "moonshotai/kimi-k3"),
             "5": ("moonshotai/kimi-k3", "moonshotai/kimi-k3"),
+            "backup-nemotron": ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b"),
+            "backup-laguna": ("backup-laguna", "poolside/laguna-xs-2.1"),
+            "deepseek-v4-flash": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
             "nemotron": ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b"),
             "nvidia": ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b"),
             "120b": ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b"),
@@ -232,8 +272,8 @@ class RequestSanitizer(CustomLogger):
     async def async_pre_call_hook(self, user_api_key_dict: Any = None, cache: Any = None, data: dict = None, call_type: str = "", *args, **kwargs):
         if not isinstance(data, dict):
             return None
-        
-        # 1. Sanitize messages to prevent multimodal crash and context blowout
+
+        # 1. Resolve Target Model and Display Name FIRST
         messages = data.get("messages")
         total_chars = 0
         if messages and isinstance(messages, list):
@@ -249,51 +289,15 @@ class RequestSanitizer(CustomLogger):
                 elif isinstance(content, str):
                     total_chars += len(content)
 
-            # 2. Inject Permanent Architectural Cohesion Directive into system prompt
-            directive_text = ARCHITECTURAL_COHESION_DIRECTIVE.strip()
-            system_msg = None
-            for msg in messages:
-                if isinstance(msg, dict) and msg.get("role") in ("system", "developer"):
-                    system_msg = msg
-                    break
-            
-            if system_msg:
-                s_content = system_msg.get("content")
-                if isinstance(s_content, str):
-                    if "[CRITICAL ARCHITECTURAL CONTRACT" not in s_content:
-                        system_msg["content"] = directive_text + "\n\n" + s_content
-                elif isinstance(s_content, list):
-                    has_dir = any(isinstance(p, dict) and "[CRITICAL ARCHITECTURAL CONTRACT" in p.get("text", "") for p in s_content)
-                    if not has_dir:
-                        s_content.insert(0, {"type": "text", "text": directive_text + "\n\n"})
-            else:
-                messages.insert(0, {"role": "system", "content": directive_text})
-
-        # 3. If top-level system parameter is passed
         top_system = data.get("system")
         if top_system:
             if isinstance(top_system, str):
                 total_chars += len(top_system)
-                if "[CRITICAL ARCHITECTURAL CONTRACT" not in top_system:
-                    data["system"] = ARCHITECTURAL_COHESION_DIRECTIVE.strip() + "\n\n" + top_system
             elif isinstance(top_system, list):
-                has_dir = any(isinstance(p, dict) and "[CRITICAL ARCHITECTURAL CONTRACT" in p.get("text", "") for p in top_system)
-        # 4. Context safety trimming for ultra-deep Nemotron 120B / DeepSeek reasoning (<85,000 chars)
-        if total_chars > 85000 and messages and len(messages) > 3:
-            for msg in messages[1:-1]:
-                if not isinstance(msg, dict):
-                    continue
-                c = msg.get("content")
-                if isinstance(c, str) and len(c) > 2500:
-                    msg["content"] = c[:1200] + "\n[... Context pruned for optimal Nemotron reasoning depth ...]\n" + c[-1200:]
-                elif isinstance(c, list):
-                    for p in c:
-                        if isinstance(p, dict) and p.get("type") == "text":
-                            t = p.get("text", "")
-                            if len(t) > 2500:
-                                p["text"] = t[:1200] + "\n[... Context pruned ...]\n" + t[-1200:]
+                for p in top_system:
+                    if isinstance(p, dict):
+                        total_chars += len(str(p.get("text", "")))
 
-        # 5. Dynamic zero-error context-aware model resolution
         req_model = str(data.get("model", "")).strip().lower()
         generic_claude_models = (
             "claude-sonnet-5", "claude-sonnet-4-5", "claude-sonnet-4", "claude-3-7-sonnet-20250219",
@@ -301,13 +305,84 @@ class RequestSanitizer(CustomLogger):
             "claude-opus-4", "claude-opus-4-5", "claude-3-opus-20240229", "*", "auto", ""
         )
         if req_model and req_model not in generic_claude_models:
-            # Client explicitly requested a specific model (e.g. via Claude Code /model picker)
             target_model = self.resolve_target_model(req_model, total_chars=total_chars)
         else:
-            # Generic Claude Code request -> route according to active preference
             pref = self.get_selected_model()
             target_model = self.resolve_target_model(pref, total_chars=total_chars)
         data["model"] = target_model
+
+        active_name = MODEL_DISPLAY_NAMES.get(target_model, "NVIDIA NIM AI")
+
+        # 2. Build Injected Directives
+        identity_directive = f"""[CRITICAL ENGINE SPECIFICATION & RUNTIME IDENTITY]
+You are an advanced AI software engineer running inside Claude Code CLI.
+Your underlying reasoning and coding engine is {active_name} powered by NVIDIA NIM enterprise inference via local proxy routing.
+When asked what model, mode, or engine you are, or who built/powers you, you MUST state clearly and accurately:
+"{active_name} powered by NVIDIA NIM via local proxy routing."
+Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
+"""
+        full_directive = identity_directive.strip() + "\n\n" + ARCHITECTURAL_COHESION_DIRECTIVE.strip()
+
+        # 3. Sanitize System Prompt (both string and list)
+        if top_system:
+            if isinstance(top_system, str):
+                cleaned = sanitize_claude_identity(top_system, active_name)
+                if "[CRITICAL ENGINE SPECIFICATION" not in cleaned:
+                    data["system"] = full_directive + "\n\n" + cleaned
+                else:
+                    data["system"] = cleaned
+            elif isinstance(top_system, list):
+                for p in top_system:
+                    if isinstance(p, dict) and "text" in p and isinstance(p["text"], str):
+                        p["text"] = sanitize_claude_identity(p["text"], active_name)
+                has_dir = any(isinstance(p, dict) and "[CRITICAL ENGINE SPECIFICATION" in p.get("text", "") for p in top_system)
+                if not has_dir:
+                    top_system.insert(0, {"type": "text", "text": full_directive + "\n\n"})
+
+        # 4. Sanitize Messages and History
+        if messages and isinstance(messages, list):
+            system_msg = None
+            for msg in messages:
+                if not isinstance(msg, dict):
+                    continue
+                role = msg.get("role")
+                if role in ("system", "developer"):
+                    system_msg = msg
+                # Also cleanse any previous assistant messages in the chat history that had old Claude identity
+                content = msg.get("content")
+                if isinstance(content, str):
+                    msg["content"] = sanitize_claude_identity(content, active_name)
+                elif isinstance(content, list):
+                    for p in content:
+                        if isinstance(p, dict) and "text" in p and isinstance(p["text"], str):
+                            p["text"] = sanitize_claude_identity(p["text"], active_name)
+
+            if system_msg:
+                s_content = system_msg.get("content")
+                if isinstance(s_content, str):
+                    if "[CRITICAL ENGINE SPECIFICATION" not in s_content:
+                        system_msg["content"] = full_directive + "\n\n" + s_content
+                elif isinstance(s_content, list):
+                    has_dir = any(isinstance(p, dict) and "[CRITICAL ENGINE SPECIFICATION" in p.get("text", "") for p in s_content)
+                    if not has_dir:
+                        s_content.insert(0, {"type": "text", "text": full_directive + "\n\n"})
+            elif not top_system:
+                messages.insert(0, {"role": "system", "content": full_directive})
+
+        # 5. Context safety trimming for ultra-deep Nemotron 120B / DeepSeek reasoning (<85,000 chars)
+        if total_chars > 85000 and messages and len(messages) > 3:
+            for msg in messages[1:-1]:
+                if not isinstance(msg, dict):
+                    continue
+                c = msg.get("content")
+                if isinstance(c, str) and len(c) > 2500:
+                    msg["content"] = c[:1200] + "\n[... Context pruned for optimal reasoning depth ...]\n" + c[-1200:]
+                elif isinstance(c, list):
+                    for p in c:
+                        if isinstance(p, dict) and p.get("type") == "text":
+                            t = p.get("text", "")
+                            if len(t) > 2500:
+                                p["text"] = t[:1200] + "\n[... Context pruned ...]\n" + t[-1200:]
 
         return data
 
