@@ -19,7 +19,7 @@ if ($Help -or $Model -in @("-h", "--help", "help")) {
     Write-Host "  kimi     / 5  : Moonshot AI Kimi-K3 (Ultra-deep reasoning & advanced problem solving)"
     Write-Host "  nemotron / 2  : NVIDIA Nemotron 3 Super 120B (Enterprise powerhouse ~0.3s)"
     Write-Host "  laguna   / 3  : Poolside Laguna XS 2.1 (High-speed software engineering specialist)"
-    Write-Host "  deepseek / 4  : DeepSeek V4 (High-speed reasoning & coding flagship)"
+    Write-Host "  deepseek / 4  : DeepSeek V4.1 Flash (High-speed reasoning & coding flagship)"
     Write-Host "  auto     / 1  : Auto Smart-Failover (Zero API Errors across all 4 models)"
     Write-Host "`nFlags:" -ForegroundColor Yellow
     Write-Host "  -Unrestricted : Run in full autonomous terminal mode (bypasses permission prompts)"
@@ -203,10 +203,19 @@ $modelDisplayNames = @{
     "poolside/laguna-xs-2.1" = "Poolside Laguna XS 2.1"
     "laguna" = "Poolside Laguna XS 2.1"
     "3" = "Poolside Laguna XS 2.1"
-    "deepseek-ai/deepseek-v4-flash-0731" = "DeepSeek V4"
-    "deepseek-ai/deepseek-v4-pro-0813" = "DeepSeek V4 Pro"
-    "deepseek" = "DeepSeek V4"
-    "4" = "DeepSeek V4"
+    "deepseek-ai/deepseek-v4-flash-0731" = "DeepSeek V4.1 Flash"
+    "deepseek-ai/deepseek-v4-pro-0813" = "DeepSeek V4.1 Flash"
+    "deepseek-v4.1-flash" = "DeepSeek V4.1 Flash"
+    "deepseek-v4.1" = "DeepSeek V4.1 Flash"
+    "deepseek-4.1" = "DeepSeek V4.1 Flash"
+    "v4.1-flash" = "DeepSeek V4.1 Flash"
+    "v4.1" = "DeepSeek V4.1 Flash"
+    "4.1" = "DeepSeek V4.1 Flash"
+    "deepseek-flash" = "DeepSeek V4.1 Flash"
+    "deepseek-v4-flash" = "DeepSeek V4.1 Flash"
+    "deepseek-v4-pro" = "DeepSeek V4.1 Flash"
+    "deepseek" = "DeepSeek V4.1 Flash"
+    "4" = "DeepSeek V4.1 Flash"
 }
 
 $activeLabel = if ($modelDisplayNames.ContainsKey($activeModel.ToLower())) { $modelDisplayNames[$activeModel.ToLower()] } else { $activeModel }

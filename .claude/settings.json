@@ -5,8 +5,8 @@
     "options": [
       {
         "model": "claude-sonnet-4-5",
-        "label": "Moonshot AI Kimi-K3",
-        "description": "Ultra-deep reasoning & advanced multi-step problem solving (Kimi Flagship)",
+        "label": "DeepSeek V4.1 Flash",
+        "description": "High-speed flagship reasoning & massive context coding powerhouse (DeepSeek V4.1 Flash on NVIDIA NIM)",
         "behavesAs": "sonnet"
       },
       {
@@ -23,8 +23,8 @@
       },
       {
         "model": "deepseek-ai/deepseek-v4-flash-0731",
-        "label": "DeepSeek V4",
-        "description": "High-speed flagship reasoning & massive context coding powerhouse",
+        "label": "DeepSeek V4.1 Flash",
+        "description": "High-speed flagship reasoning & massive context coding powerhouse (DeepSeek V4.1 Flash on NVIDIA NIM)",
         "behavesAs": "sonnet"
       },
       {

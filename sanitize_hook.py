@@ -42,7 +42,7 @@ When designing, modifying, or executing software projects, you MUST adhere stric
 7. PRE-COMPLETION VERIFICATION:
    - Always run syntax checks and verify import chains before concluding. Zero runtime errors, zero syntax errors, and 100% interconnected harmony.
 8. ENGINE IDENTITY & RUNTIME AWARENESS:
-   - Your underlying reasoning engine is powered by NVIDIA NIM enterprise inference running your active model (Moonshot AI Kimi-K3, NVIDIA Nemotron 120B, Poolside Laguna, or DeepSeek V4 Pro) integrated with Claude Code CLI.
+   - Your underlying reasoning engine is powered by NVIDIA NIM enterprise inference running your active model (Moonshot AI Kimi-K3, NVIDIA Nemotron 120B, Poolside Laguna, or DeepSeek V4.1 Flash) integrated with Claude Code CLI.
    - When asked what AI model, mode, or engine you are, explicitly declare your active model powered by NVIDIA NIM. Never claim to be Anthropic Claude or Sonnet.
 """
 
@@ -59,8 +59,7 @@ class RequestSanitizer(CustomLogger):
             ("moonshotai/kimi-k3", "moonshotai/kimi-k3", "Moonshot Kimi-K3"),
             ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b", "Nemotron 120B"),
             ("backup-laguna", "poolside/laguna-xs-2.1", "Poolside Laguna XS 2.1"),
-            ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731", "DeepSeek V4 Flash"),
-            ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813", "DeepSeek V4 Pro"),
+            ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731", "DeepSeek V4.1 Flash"),
         ]
 
         self.health = {}
@@ -131,7 +130,7 @@ class RequestSanitizer(CustomLogger):
                 elif part_type == "tool_use":
                     tool_name = part.get("name", "")
                     if tool_name == "ai":
-                        new_content.append({"type": "text", "text": "Displaying model selector: 1. Auto Smart-Failover, 2. Nemotron 120B, 3. Laguna XS, 4. DeepSeek V4 Pro, 5. Kimi-K3."})
+                        new_content.append({"type": "text", "text": "Displaying model selector: 1. Auto Smart-Failover, 2. Nemotron 120B, 3. Laguna XS, 4. DeepSeek V4.1 Flash, 5. Kimi-K3."})
                     else:
                         new_content.append(part)
                 elif part_type == "tool_result":
@@ -186,15 +185,22 @@ class RequestSanitizer(CustomLogger):
             "poolside/laguna-xs-2.1": ("backup-laguna", "poolside/laguna-xs-2.1"),
             "3": ("backup-laguna", "poolside/laguna-xs-2.1"),
             "deepseek": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "deepseek-v4.1-flash": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "deepseek-v4.1": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "deepseek-4.1": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "v4.1-flash": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "v4.1": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "4.1": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "deepseek-flash": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
             "deepseek-v4": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
             "flash": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
             "deepseek-v4-flash": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
             "deepseek-ai/deepseek-v4-flash-0731": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
             "4": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
-            "deepseek-v4-pro": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
-            "deepseek-v4pro": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
-            "v4pro": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
-            "deepseek-ai/deepseek-v4-pro-0813": ("deepseek-v4-pro", "deepseek-ai/deepseek-v4-pro-0813"),
+            "deepseek-v4-pro": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "deepseek-v4pro": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "v4pro": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
+            "deepseek-ai/deepseek-v4-pro-0813": ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731"),
         }
 
         # Nemotron 120B operates at ~0.5s sub-second latency for contexts up to 55,000 chars.

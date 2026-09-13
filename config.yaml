@@ -65,8 +65,22 @@ model_list:
       timeout: 300
       max_tokens: 8192
 
-  # 4. DeepSeek V4 (High-Speed Flash & Pro Flagships)
+  # 4. DeepSeek V4.1 Flash (High-Speed Reasoning & Massive Context Flagship)
   - model_name: "deepseek-ai/deepseek-v4-flash-0731"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
+
+  - model_name: "deepseek-v4.1-flash"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
+
+  - model_name: "deepseek-v4.1"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
@@ -80,6 +94,13 @@ model_list:
       timeout: 300
       max_tokens: 8192
 
+  - model_name: "deepseek-flash"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 300
+      max_tokens: 8192
+
   - model_name: "deepseek"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
@@ -87,16 +108,17 @@ model_list:
       timeout: 300
       max_tokens: 8192
 
+  # Legacy alias re-route to DeepSeek V4.1 Flash
   - model_name: "deepseek-ai/deepseek-v4-pro-0813"
     litellm_params:
-      model: "nvidia_nim/deepseek-ai/deepseek-v4-pro-0813"
+      model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
       timeout: 300
       max_tokens: 8192
 
   - model_name: "deepseek-v4-pro"
     litellm_params:
-      model: "nvidia_nim/deepseek-ai/deepseek-v4-pro-0813"
+      model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
       timeout: 300
       max_tokens: 8192
@@ -184,28 +206,31 @@ router_settings:
   num_retries: 3
   retry_after: 0.5
   fallbacks:
-    - moonshotai/kimi-k3: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
-    - kimi-k3: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
-    - kimi: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
-    - backup-nemotron: ["deepseek-v4-flash", "backup-laguna", "moonshotai/kimi-k3"]
-    - nemotron: ["deepseek-v4-flash", "backup-laguna", "moonshotai/kimi-k3"]
-    - backup-laguna: ["backup-nemotron", "deepseek-v4-flash", "moonshotai/kimi-k3"]
-    - laguna: ["backup-nemotron", "deepseek-v4-flash", "moonshotai/kimi-k3"]
-    - deepseek-ai/deepseek-v4-pro-0813: ["deepseek-v4-flash", "backup-nemotron", "backup-laguna"]
-    - deepseek-v4-pro: ["deepseek-v4-flash", "backup-nemotron", "backup-laguna"]
+    - moonshotai/kimi-k3: ["backup-nemotron", "deepseek-v4.1-flash", "deepseek-v4-flash", "backup-laguna"]
+    - kimi-k3: ["backup-nemotron", "deepseek-v4.1-flash", "deepseek-v4-flash", "backup-laguna"]
+    - kimi: ["backup-nemotron", "deepseek-v4.1-flash", "deepseek-v4-flash", "backup-laguna"]
+    - backup-nemotron: ["deepseek-v4.1-flash", "deepseek-v4-flash", "backup-laguna", "moonshotai/kimi-k3"]
+    - nemotron: ["deepseek-v4.1-flash", "deepseek-v4-flash", "backup-laguna", "moonshotai/kimi-k3"]
+    - backup-laguna: ["backup-nemotron", "deepseek-v4.1-flash", "deepseek-v4-flash", "moonshotai/kimi-k3"]
+    - laguna: ["backup-nemotron", "deepseek-v4.1-flash", "deepseek-v4-flash", "moonshotai/kimi-k3"]
     - deepseek-ai/deepseek-v4-flash-0731: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
+    - deepseek-v4.1-flash: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
+    - deepseek-v4.1: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
     - deepseek-v4-flash: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
+    - deepseek-flash: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
     - deepseek: ["backup-nemotron", "backup-laguna", "moonshotai/kimi-k3"]
-    - claude-sonnet-4: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
-    - claude-sonnet-4-5: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
-    - claude-3-7-sonnet-20250219: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
-    - claude-3-5-sonnet-20241022: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
-    - claude-3-5-haiku-20241022: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
-    - claude-haiku-4-5: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
-    - claude-opus-4: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
-    - claude-opus-4-5: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
-    - claude-3-opus-20240229: ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
-    - "*": ["backup-nemotron", "deepseek-v4-flash", "backup-laguna"]
+    - deepseek-ai/deepseek-v4-pro-0813: ["deepseek-v4.1-flash", "backup-nemotron", "backup-laguna"]
+    - deepseek-v4-pro: ["deepseek-v4.1-flash", "backup-nemotron", "backup-laguna"]
+    - claude-sonnet-4: ["backup-nemotron", "deepseek-v4.1-flash", "backup-laguna"]
+    - claude-sonnet-4-5: ["backup-nemotron", "deepseek-v4.1-flash", "backup-laguna"]
+    - claude-3-7-sonnet-20250219: ["backup-nemotron", "deepseek-v4.1-flash", "backup-laguna"]
+    - claude-3-5-sonnet-20241022: ["backup-nemotron", "deepseek-v4.1-flash", "backup-laguna"]
+    - claude-3-5-haiku-20241022: ["backup-nemotron", "deepseek-v4.1-flash", "backup-laguna"]
+    - claude-haiku-4-5: ["backup-nemotron", "deepseek-v4.1-flash", "backup-laguna"]
+    - claude-opus-4: ["backup-nemotron", "deepseek-v4.1-flash", "backup-laguna"]
+    - claude-opus-4-5: ["backup-nemotron", "deepseek-v4.1-flash", "backup-laguna"]
+    - claude-3-opus-20240229: ["backup-nemotron", "deepseek-v4.1-flash", "backup-laguna"]
+    - "*": ["backup-nemotron", "deepseek-v4.1-flash", "backup-laguna"]
 
 litellm_settings:
   drop_params: true

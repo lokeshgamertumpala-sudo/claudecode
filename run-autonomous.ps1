@@ -74,10 +74,19 @@ $modelDisplayNames = @{
     "poolside/laguna-xs-2.1" = "Poolside Laguna XS 2.1"
     "laguna" = "Poolside Laguna XS 2.1"
     "3" = "Poolside Laguna XS 2.1"
-    "deepseek-ai/deepseek-v4-flash-0731" = "DeepSeek V4"
-    "deepseek-ai/deepseek-v4-pro-0813" = "DeepSeek V4 Pro"
-    "deepseek" = "DeepSeek V4"
-    "4" = "DeepSeek V4"
+    "deepseek-ai/deepseek-v4-flash-0731" = "DeepSeek V4.1 Flash"
+    "deepseek-ai/deepseek-v4-pro-0813" = "DeepSeek V4.1 Flash"
+    "deepseek-v4.1-flash" = "DeepSeek V4.1 Flash"
+    "deepseek-v4.1" = "DeepSeek V4.1 Flash"
+    "deepseek-4.1" = "DeepSeek V4.1 Flash"
+    "v4.1-flash" = "DeepSeek V4.1 Flash"
+    "v4.1" = "DeepSeek V4.1 Flash"
+    "4.1" = "DeepSeek V4.1 Flash"
+    "deepseek-flash" = "DeepSeek V4.1 Flash"
+    "deepseek-v4-flash" = "DeepSeek V4.1 Flash"
+    "deepseek-v4-pro" = "DeepSeek V4.1 Flash"
+    "deepseek" = "DeepSeek V4.1 Flash"
+    "4" = "DeepSeek V4.1 Flash"
 }
 
 $activeLabel = if ($modelDisplayNames.ContainsKey($backendEngine.ToLower())) { $modelDisplayNames[$backendEngine.ToLower()] } else { $backendEngine }
