@@ -402,6 +402,75 @@ class RequestSanitizer(CustomLogger):
         ):
             data.pop(bad_key, None)
 
+        # FIX 1: Strip tool_choice that references internal tool names NVIDIA NIM rejects.
+        # DeepSeek/NIM rejects "400: tool named 'web_search' in tool_choice is not present in tools"
+        # when Claude Code's web search loop injects tool_choice: {type:"tool", name:"web_search"}.
+        tool_choice = data.get("tool_choice")
+        if isinstance(tool_choice, dict):
+            tc_type = tool_choice.get("type", "")
+            tc_name = tool_choice.get("name", "")
+            if tc_type == "tool" or tc_name in ("web_search", "web_search_20250305"):
+                data["tool_choice"] = {"type": "auto"}
+                print(f"[SANITIZE] Converted tool_choice {{type:{tc_type!r}, name:{tc_name!r}}} -> {{type:auto}} to prevent NIM 400", flush=True)
+
+        # FIX 2: Coerce concatenated JSON tool inputs emitted by DeepSeek parallel tool calls.
+        # When DeepSeek emits multiple tool calls it may produce: {"query":"A"}{"query":"B"}
+        # instead of a proper single JSON object. Claude Code's coerceInput fails -> InputValidationError.
+        import json as _json
+        messages_pre = data.get("messages", [])
+        if isinstance(messages_pre, list):
+            for msg in messages_pre:
+                if not isinstance(msg, dict):
+                    continue
+                content = msg.get("content")
+                if not isinstance(content, list):
+                    continue
+                patched_content = []
+                for block in content:
+                    if not isinstance(block, dict) or block.get("type") != "tool_use":
+                        patched_content.append(block)
+                        continue
+                    raw_input = block.get("input")
+                    # Detect concatenated JSON: raw string containing multiple {...}{...}
+                    if isinstance(raw_input, str):
+                        raw_stripped = raw_input.strip()
+                        if raw_stripped.startswith("{"):
+                            decoder = _json.JSONDecoder()
+                            parsed_objects = []
+                            idx = 0
+                            try:
+                                while idx < len(raw_stripped):
+                                    while idx < len(raw_stripped) and raw_stripped[idx] in " \t\r\n":
+                                        idx += 1
+                                    if idx >= len(raw_stripped):
+                                        break
+                                    obj, end_idx = decoder.raw_decode(raw_stripped, idx)
+                                    parsed_objects.append(obj)
+                                    idx = end_idx
+                            except (_json.JSONDecodeError, ValueError):
+                                pass
+                            if len(parsed_objects) >= 1:
+                                if len(parsed_objects) > 1:
+                                    print(f"[SANITIZE] Split {len(parsed_objects)} concatenated tool inputs for '{block.get('name')}' -> using first", flush=True)
+                                block["input"] = parsed_objects[0]
+                        patched_content.append(block)
+                    elif isinstance(raw_input, dict) and "__unparsedToolInput" in str(raw_input):
+                        # LiteLLM internal marker for unparsed tool input - try to extract raw field
+                        raw_val = raw_input.get("raw", "")
+                        if raw_val and isinstance(raw_val, str):
+                            try:
+                                block["input"] = _json.loads(raw_val)
+                            except _json.JSONDecodeError:
+                                try:
+                                    obj, _ = _json.JSONDecoder().raw_decode(raw_val.strip())
+                                    block["input"] = obj
+                                except Exception:
+                                    pass
+                        patched_content.append(block)
+                    else:
+                        patched_content.append(block)
+                msg["content"] = patched_content
+
         # If an auto mode classifier request is detected, guarantee instant allow verdict:
         if is_classifier:
             data["model"] = "backup-nemotron"
