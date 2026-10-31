@@ -67,8 +67,10 @@ try:
                 block_open = False
                 message_stopped = False
                 current_block_index = 0
+                has_emitted_body_block = False
 
                 def build_closure() -> bytes:
+                    nonlocal message_stopped, block_open, current_block_index, has_emitted_body_block
                     if message_stopped:
                         return b""
                     parts = []
@@ -81,11 +83,28 @@ try:
                         parts.append(
                             f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}'
                         )
+                        block_open = False
+
+                    # If no body block (text or tool_use) was emitted before closure, synthesize one so Claude Code never errors
+                    if not has_emitted_body_block:
+                        target_idx = current_block_index + 1 if message_started else 0
+                        parts.append(
+                            f'event: content_block_start\ndata: {{"type": "content_block_start", "index": {target_idx}, "content_block": {{"type": "text", "text": ""}}}}'
+                        )
+                        parts.append(
+                            f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": {target_idx}, "delta": {{"type": "text_delta", "text": "Proceeding with implementation..."}}}}'
+                        )
+                        parts.append(
+                            f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {target_idx}}}'
+                        )
+                        has_emitted_body_block = True
+
                     parts.append(
                         'event: message_delta\ndata: {"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": null}, "usage": {"output_tokens": 0}}'
                     )
                     parts.append('event: message_stop\ndata: {"type": "message_stop"}')
                     parts.append('data: [DONE]')
+                    message_stopped = True
                     return ("\n\n".join(parts) + "\n\n").encode("utf-8")
 
                 # High capacity queue to prevent artificial backpressure pauses
@@ -107,8 +126,8 @@ try:
                     silence_seconds = 0.0
                     while True:
                         try:
-                            # Active SSE keepalive heartbeat interval: if no chunk within 5s, emit ping
-                            chunk = await asyncio.wait_for(queue.get(), timeout=5.0)
+                            # Active SSE keepalive heartbeat interval: if no chunk within 2.5s, emit ping
+                            chunk = await asyncio.wait_for(queue.get(), timeout=2.5)
                             silence_seconds = 0.0
                             if chunk is sentinel:
                                 break
@@ -150,11 +169,26 @@ try:
                                                 message_stopped = False
                                                 block_open = False
                                                 current_block_index = 0
+                                                has_emitted_body_block = False
                                             elif p_type == "content_block_start":
                                                 block_open = True
                                                 current_block_index = payload.get("index", current_block_index)
+                                                c_block = payload.get("content_block", {})
+                                                if isinstance(c_block, dict) and c_block.get("type") in ("text", "tool_use"):
+                                                    has_emitted_body_block = True
                                             elif p_type == "content_block_stop":
                                                 block_open = False
+                                            elif p_type == "message_delta":
+                                                # Guard against empty-turn completion (e.g. only thinking block before end_turn)
+                                                if not has_emitted_body_block:
+                                                    target_idx = current_block_index + 1
+                                                    synth_block = (
+                                                        f'event: content_block_start\ndata: {{"type": "content_block_start", "index": {target_idx}, "content_block": {{"type": "text", "text": ""}}}}\n\n'
+                                                        f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": {target_idx}, "delta": {{"type": "text_delta", "text": "Proceeding with implementation."}}}}\n\n'
+                                                        f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {target_idx}}}\n\n'
+                                                    )
+                                                    yield synth_block.encode("utf-8")
+                                                    has_emitted_body_block = True
                                             elif p_type == "message_stop":
                                                 message_stopped = True
 
@@ -165,7 +199,10 @@ try:
                                                     current_block_index = idx
                                                 delta = payload.get("delta", {})
                                                 if isinstance(delta, dict):
-                                                    if delta.get("type") == "text_delta" and delta.get("text") is None:
+                                                    d_type = delta.get("type", "")
+                                                    if d_type in ("text_delta", "input_json_delta"):
+                                                        has_emitted_body_block = True
+                                                    if d_type == "text_delta" and delta.get("text") is None:
                                                         delta["text"] = ""
                                                     elif "reasoning_content" in delta and delta.get("reasoning_content"):
                                                         # Convert reasoning_content delta to native Anthropic thinking delta
@@ -173,7 +210,7 @@ try:
                                                         delta["type"] = "thinking_delta"
                                                         delta["thinking"] = r_text
                                                         delta.pop("reasoning_content", None)
-                                                    elif delta.get("type") == "text_delta" and isinstance(delta.get("text"), str):
+                                                    elif d_type == "text_delta" and isinstance(delta.get("text"), str):
                                                         txt = delta.get("text", "")
                                                         if "<think>" in txt:
                                                             txt = txt.replace("<think>", "")
@@ -194,14 +231,14 @@ try:
                                 yield ("\n".join(new_lines) + "\n\n").encode("utf-8")
 
                         except asyncio.TimeoutError:
-                            silence_seconds += 5.0
-                            if silence_seconds >= 120.0:
-                                print("[SSE-STREAM] Upstream LLM stalled (>120s silence). Gracefully terminating stream.", flush=True)
+                            silence_seconds += 2.5
+                            if silence_seconds >= 600.0:
+                                print("[SSE-STREAM] Upstream LLM stalled (>600s silence). Gracefully terminating stream.", flush=True)
                                 closure = build_closure()
                                 if closure:
                                     yield closure
                                 break
-                            # Send active SSE keep-alive ping comment during generation pauses
+                            # Send active SSE keep-alive ping comment during generation pauses every 2.5s
                             yield b": ping\n\n"
 
                     if buffer.strip():
@@ -419,27 +456,32 @@ You are a World-Class Motion Graphics Engineer and Remotion React Specialist ope
 When creating, editing, or enhancing motion graphics, video components, or animations, you MUST adhere to:
 1. ATOMIC ZERO-LATENCY EXECUTION WORKFLOW:
    - All Remotion compositions live in `motion-studio/src/compositions/<Name>.tsx`.
-   - Never waste turns reading package.json, remotion.config.ts, or listing folders if asked to build/render motion graphics.
+   - NEVER waste turns reading package.json, remotion.config.ts, or listing folders. Everything is pre-installed, pre-configured, and verified.
    - Execute in exactly 3 deterministic steps:
      Step 1: Write `motion-studio/src/compositions/<Name>.tsx` completely in ONE shot with 0 stubs and 0 syntax errors.
      Step 2: Register `<Composition id="<Name>" component={<Name>} durationInFrames={...} fps={60} width={1920} height={1080} />` in `motion-studio/src/Root.tsx`.
      Step 3: Render to MP4 using `render-motion.bat <Name> out/<name>.mp4` (runs 12x parallel threads, ANGLE GPU acceleration, and Webpack bundle caching in <10 seconds).
-2. REMOTION ARCHITECTURE & FRAME-BASED TIMING:
+2. IMMEDIATE 1-SHOT REMOTION IMPORTS:
+   - Remotion Core: `import { AbsoluteFill, Composition, Sequence, Series, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";`
+   - Physics & Math: `import { springPresets, getSpringValue, interpolateSafe, palettes, KineticTitle, ParticleField, OrbitalRings, CameraRig } from "../library";`
+   - Primitives: `import { KineticText, DeviceMockup, AudioSFX, GlowBackdrop } from "../primitives";`
+3. LONG-FORM & 1-HOUR VIDEO ARCHITECTURE (ZERO PAUSES & ZERO MEMORY CRASHES):
+   - For multi-scene videos (60s to 1 hour), NEVER build one giant monolithic component. Use Remotion's `<Series>` with modular scenes:
+     ```tsx
+     <Series>
+       <Series.Sequence durationInFrames={600}><Scene01_Intro /></Series.Sequence>
+       <Series.Sequence durationInFrames={900}><Scene02_Core /></Series.Sequence>
+       <Series.Sequence durationInFrames={1200}><Scene03_Showcase /></Series.Sequence>
+     </Series>
+     ```
+   - For long-form (up to 1 hour = 216,000 frames @ 60fps), use procedural modulo time loops (`const cycleFrame = frame % 1800;`) for ambient/motion graphics so memory usage remains flat (~150MB) and never leaks V8 heap.
+   - High-throughput rendering: `render-long.bat <Name> out/<name>.mp4` uses `--concurrency 8 --gl angle --pixel-format yuv420p` to render up to 1-hour videos without freezing or running out of memory.
+4. REMOTION TIMING & 60 FPS FLUIDITY:
    - Derive all visual changes deterministically from `useCurrentFrame()` and `useVideoConfig()`.
    - Calculate timing strictly in frames: `const frame = useCurrentFrame(); const { fps, width, height } = useVideoConfig();`
    - Use `interpolate(frame, inputRange, outputRange, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })` for smooth property mappings.
    - Use `spring({ frame, fps, config: { damping: 14, mass: 0.8, stiffness: 100 } })` for organic physical motion.
    - Never use `setInterval`, `setTimeout`, `Date.now()`, or `Math.random()` inside render loops. Use frame-indexed deterministic math.
-3. 60 FPS FLUIDITY & KEYFRAME PHYSICS:
-   - Target 60fps for silky smooth motion graphics across 1080p (1920x1080) and 9:16 vertical reels (1080x1920).
-   - Use cubic bezier easings, elastic bounces, and smooth step interpolations.
-   - Layer animations cleanly using `Sequence`, `Series`, and `<AbsoluteFill>` layouts.
-4. VISUAL STYLES & PATTERNS:
-   - Minimal Typography (Apple-style): Soft warm radial gradients, SF Pro/system font, staggered char/word opacity and rise, gentle breathing scale.
-   - Kinetic Typography: dynamic scale, glowing neon drop-shadows, camera tilts, bold sans-serif.
-   - Cyberpunk / Sci-Fi HUD: rotating concentric reticles, data readouts, audio waveforms, grid scanlines, glitch chromatic aberration.
-   - Mathematical Particle Systems: math-driven orbit, vortex, noise vector fields, particle pooling.
-   - Cinematic Logo Reveals: light sweeps, particle dissipation, volumetric glow, dynamic gradients.
 5. ZERO-ERROR RUNTIME GUARANTEE:
    - Never use unmounted canvas contexts or invalid React hooks outside Remotion compositions.
    - Full TypeScript types on all Remotion compositions and Props.

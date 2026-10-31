@@ -10,6 +10,9 @@ import { MinimalMotion } from "./compositions/MinimalMotion";
 import { HiGreeting } from "./compositions/HiGreeting";
 import { GoodMorning } from "./compositions/GoodMorning";
 import { GoodEvening } from "./compositions/GoodEvening";
+import { BeyondEarth } from "./compositions/BeyondEarth";
+import { OpenClaudeX } from "./compositions/OpenClaudeX";
+import { HourLongVideo } from "./compositions/HourLongVideo";
 import { VersatileShowcase } from "./primitives/VersatileShowcase";
 import "./styles.css";
 
@@ -303,6 +306,119 @@ export const RemotionRoot: React.FC = () => {
         id="showcase"
         component={VersatileShowcase}
         durationInFrames={600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+
+      {/* 12. Beyond Earth Space Odyssey — 10 seconds (600 frames @ 60fps) */}
+      <Composition
+        id="BeyondEarth"
+        component={BeyondEarth}
+        durationInFrames={600}
+        fps={60}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          primaryColor: "#0284c7",
+          accentColor: "#38bdf8",
+        }}
+      />
+      <Composition
+        id="beyond-earth"
+        component={BeyondEarth}
+        durationInFrames={600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="beyondearth"
+        component={BeyondEarth}
+        durationInFrames={600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+
+      {/* 13. OpenClaudeX Cinematic Multi-Agent Video — 60 seconds (3,600 frames @ 60fps) */}
+      <Composition
+        id="OpenClaudeX"
+        component={OpenClaudeX}
+        durationInFrames={3600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="open-claudex"
+        component={OpenClaudeX}
+        durationInFrames={3600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="openclaudex"
+        component={OpenClaudeX}
+        durationInFrames={3600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+
+      {/* 14. 1-Hour Long-Form Continuous Motion Production — 3,600s (216,000 frames @ 60fps) */}
+      <Composition
+        id="HourLongVideo"
+        component={HourLongVideo}
+        durationInFrames={216000}
+        fps={60}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          title: "HORIZON: 1-HOUR AUTONOMOUS JOURNEY",
+          subtitle: "CONTINUOUS PROCEDURAL 60FPS MOTION GENERATION",
+          accentColor: "#38bdf8",
+        }}
+      />
+      <Composition
+        id="hour-long-video"
+        component={HourLongVideo}
+        durationInFrames={216000}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="one-hour"
+        component={HourLongVideo}
+        durationInFrames={216000}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="onehour"
+        component={HourLongVideo}
+        durationInFrames={216000}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+
+      {/* 15. HourLongPreview (Fast 60-second test preview of the 1-hour engine) */}
+      <Composition
+        id="HourLongPreview"
+        component={HourLongVideo}
+        durationInFrames={3600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="hour-long-preview"
+        component={HourLongVideo}
+        durationInFrames={3600}
         fps={60}
         width={1920}
         height={1080}

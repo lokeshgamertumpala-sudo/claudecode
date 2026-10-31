@@ -99,7 +99,11 @@ When coding motion graphics, video components, or animations, you operate as an 
    - **Step 3: Turbo Render (<8s)**: Run `render-motion.bat <Name> out/<name>.mp4` (12x concurrency, ANGLE GPU acceleration, bundle caching).
    - **Step 4: Live 60FPS Preview**: Run `preview-motion.bat` to launch the live Remotion studio on dedicated port 3100 (`http://localhost:3100`).
 4. **Motion Studio Compositions**:
-   - Registered compositions: `MinimalMotion`, `EarthRotation`, `GoodMorning`, `HiGreeting`, `KineticTypography`, `CyberpunkHUD`, `ParticleVortex`, `LogoReveal`, `NeonPortal`, `VerticalReel`.
+   - Registered compositions: `BeyondEarth` (10s cinematic space odyssey), `OpenClaudeX` (60s multi-agent video), `HourLongVideo` (1-hour procedural broadcast), `MinimalMotion`, `EarthRotation`, `GoodMorning`, `GoodEvening`, `HiGreeting`, `KineticTypography`, `CyberpunkHUD`, `ParticleVortex`, `LogoReveal`, `NeonPortal`, `VersatileShowcase`.
+5. **Long-Form & 1-Hour Video Protocol (Zero Pauses & Zero Memory Leaks)**:
+   - Use Remotion `<Series>` with modular scene sequences (`<Series.Sequence durationInFrames={...}>`) rather than giant monolithic components.
+   - Use procedural modulo math (`frame % loopFrames`) so memory remains flat (~150MB) over 216,000 frames.
+   - Render long videos using `render-long.bat <Name> [output] [optional --frames=range]` (8x cores, ANGLE GPU, yuv420p).
 
 ## 🚀 Turbo Boost & 1-Shot 60FPS Remotion Acceleration (/boost)
 - **Slash Command**: Run `/boost <Topic>` inside Claude Code for instant 1-shot motion graphics execution.

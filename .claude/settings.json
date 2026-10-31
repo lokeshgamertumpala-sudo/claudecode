@@ -4,8 +4,8 @@
     "options": [
       {
         "model": "claude-sonnet-5",
-        "label": "MiniMax M3.1 Flash",
-        "description": "428B MoE, Ultra-Fast Agentic & Code Specialist",
+        "label": "NVIDIA Nemotron Ultra 550B MoE",
+        "description": "550B Flagship Reasoning Giant, Sub-Second Latency (RECOMMENDED DEFAULT)",
         "behavesAs": "sonnet"
       },
       {

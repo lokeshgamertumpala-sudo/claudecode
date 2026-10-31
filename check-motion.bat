@@ -29,6 +29,15 @@ if /i "%COMP_ID%"=="cyberpunkhud" set "COMP_ID=CyberpunkHUD"
 if /i "%COMP_ID%"=="cyberpunk-hud" set "COMP_ID=CyberpunkHUD"
 if /i "%COMP_ID%"=="neonportal" set "COMP_ID=NeonPortal"
 if /i "%COMP_ID%"=="neon-portal" set "COMP_ID=NeonPortal"
+if /i "%COMP_ID%"=="beyondearth" set "COMP_ID=BeyondEarth"
+if /i "%COMP_ID%"=="beyond-earth" set "COMP_ID=BeyondEarth"
+if /i "%COMP_ID%"=="space" set "COMP_ID=BeyondEarth"
+if /i "%COMP_ID%"=="openclaudex" set "COMP_ID=OpenClaudeX"
+if /i "%COMP_ID%"=="open-claudex" set "COMP_ID=OpenClaudeX"
+if /i "%COMP_ID%"=="hourlongvideo" set "COMP_ID=HourLongVideo"
+if /i "%COMP_ID%"=="hour-long-video" set "COMP_ID=HourLongVideo"
+if /i "%COMP_ID%"=="hourlongpreview" set "COMP_ID=HourLongPreview"
+if /i "%COMP_ID%"=="hour-preview" set "COMP_ID=HourLongPreview"
 
 echo ====================================================
 echo   FAST-VERIFY MOTION GRAPHIC: %COMP_ID%
