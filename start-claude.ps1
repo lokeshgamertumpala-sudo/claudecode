@@ -16,10 +16,10 @@ if ($Help -or $Model -in @("-h", "--help", "help")) {
     Write-Host "====================================================" -ForegroundColor Cyan
     Write-Host "Usage: .\start-claude.ps1 [Model] [-Unrestricted]" -ForegroundColor Cyan
     Write-Host "`nModels:" -ForegroundColor Yellow
-    Write-Host "  mistral  / 2  : Mistral Large 4 (1.05T MoE, 52B Active, ~0.4s Latency) [DEFAULT]"
+    Write-Host "  ultra    / 5  : NVIDIA Nemotron Ultra 550B MoE (550B MoE, TTFT 0.48s, Fast Reasoning) [DEFAULT]"
+    Write-Host "  mistral  / 2  : Mistral Large 4 (1.05T MoE, 52B Active)"
     Write-Host "  step     / 3  : Step 5 Preview (600B MoE, 1M Context Window, Multimodal Reasoning)"
     Write-Host "  minimax  / 4  : MiniMax M3.1 Flash (428B MoE, Ultra-Fast Agentic & Code Specialist)"
-    Write-Host "  ultra    / 5  : NVIDIA Nemotron Ultra 550B MoE (NVIDIA Flagship Reasoning Giant)"
     Write-Host "  deepseek / 6  : DeepSeek V4.1 Flash (High-speed reasoning & coding powerhouse)"
     Write-Host "  auto     / 1  : Auto Smart-Failover (Zero API Errors resilience mesh)"
     Write-Host "`nFlags:" -ForegroundColor Yellow
@@ -143,7 +143,7 @@ if (-not $proxyReady) {
         Write-Error "LiteLLM proxy failed to start. Check logs or config.yaml."
         exit 1
     }
-    Write-Host "[+] Proxy is up and ready! Model: Mistral Large 4 (mistralai/mistral-large-4-1t-a52b)" -ForegroundColor Green
+    Write-Host "[+] Proxy is up and ready! Model: NVIDIA Nemotron Ultra 550B MoE (nvidia/nemotron-3-ultra-550b-a55b)" -ForegroundColor Green
 }
 
 # 5. Resolve or switch active model preference across all 5 flagship models
@@ -234,7 +234,7 @@ $env:CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT = "1"
 Remove-Item env:CLAUDE_CODE_EFFORT_LEVEL -ErrorAction SilentlyContinue
 [Environment]::SetEnvironmentVariable("CLAUDE_CODE_EFFORT_LEVEL", $null, "Process")
 $env:CLAUDE_CODE_WORKFLOWS = "1"
-$env:MAX_THINKING_TOKENS = if ($Boost) { "1024" } else { "2048" }
+$env:MAX_THINKING_TOKENS = "1024"
 $env:ANTHROPIC_MAX_TOKENS = "8192"
 $env:CLAUDE_CODE_DISABLE_THINKING_LIMIT = "1"
 $env:CLAUDE_CODE_WEBSEARCH_USE_CCR_PROXY = "1"
@@ -244,11 +244,11 @@ if ($Boost) {
     $Unrestricted = $true
 }
 
-$modeHeader = if ($Boost) { "TURBO BOOST ACCELERATED" } else { "FULL POWER MAXIMUM" }
+$modeHeader = if ($Boost) { "TURBO BOOST ACCELERATED" } else { "RAPID EXECUTION" }
 Write-Host "====================================================" -ForegroundColor Cyan
 Write-Host "Launching Claude Code [$modeHeader] ($activeLabel)..." -ForegroundColor Green
 Write-Host "Engine: $activeLabel on NVIDIA NIM" -ForegroundColor Gray
-Write-Host "Reasoning: $(if ($Boost) { 'TURBO BOOST (1024 snappy thinking budget)' } else { 'MAXIMUM EFFORT (2048 thinking budget)' })" -ForegroundColor Magenta
+Write-Host "Reasoning: $(if ($Boost) { 'TURBO BOOST (1024 snappy thinking budget)' } else { 'RAPID EXECUTION (1024 high-speed thinking budget, <10s reasoning)' })" -ForegroundColor Magenta
 Write-Host "Workflows: ENABLED (Dynamic multi-agent orchestration)" -ForegroundColor Magenta
 Write-Host "Streaming: 100% Active (Native Thinking & Real-Time Seconds Timer)" -ForegroundColor Gray
 Write-Host "====================================================`n" -ForegroundColor Cyan

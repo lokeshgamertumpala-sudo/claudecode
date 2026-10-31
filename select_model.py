@@ -5,11 +5,11 @@ import requests
 import json
 
 MODELS = {
-    "1": ("Auto Smart-Failover", "auto", "Seamless resilience mesh (Mistral Large 4 -> Nemotron Ultra -> Step 5 -> MiniMax)"),
-    "2": ("Mistral Large 4", "mistralai/mistral-large-4-1t-a52b", "1.05T Frontier MoE, 52B Active, ~0.4s Latency (RECOMMENDED DEFAULT)"),
+    "1": ("Auto Smart-Failover", "auto", "Seamless resilience mesh (Nemotron Ultra -> Laguna XS -> Mistral Large 4 -> Step 5)"),
+    "2": ("Mistral Large 4", "mistralai/mistral-large-4-1t-a52b", "1.05T Frontier MoE, 52B Active"),
     "3": ("Step 5 Preview", "stepfun-ai/step-5-preview", "600B MoE, 1M Context Window, Advanced Multimodal Reasoning"),
     "4": ("MiniMax M3.1 Flash", "minimaxai/minimax-m3.1-flash", "428B MoE, Ultra-Fast Agentic & Code Specialist"),
-    "5": ("NVIDIA Nemotron Ultra 550B MoE", "nvidia/nemotron-3-ultra-550b-a55b", "550B Flagship Reasoning Giant (Ultra-Deep Logic)"),
+    "5": ("NVIDIA Nemotron Ultra 550B MoE", "nvidia/nemotron-3-ultra-550b-a55b", "550B Flagship Reasoning Giant, Sub-Second Latency (RECOMMENDED DEFAULT)"),
     "6": ("DeepSeek V4.1 Flash", "deepseek-ai/deepseek-v4.1-flash", "High-speed reasoning & massive context coding powerhouse"),
     "7": ("Poolside Laguna XS 2.1", "poolside/laguna-xs-2.1", "High-speed software engineering & code specialist")
 }
@@ -75,7 +75,7 @@ def get_current():
                     return ALIASES.get(c.lower(), c)
         except Exception:
             pass
-    return "mistralai/mistral-large-4-1t-a52b"
+    return "nvidia/nemotron-3-ultra-550b-a55b"
 
 def update_claude_settings(canonical, display_name):
     settings_dirs = [
@@ -164,7 +164,7 @@ def show_menu():
     print("   CLAUDE CODE - FRONTIER MODEL TERMINAL SELECTOR (NVIDIA NIM)   ")
     print("=" * 75)
     for k, (name, slug, desc) in MODELS.items():
-        tag = " [ACTIVE]" if slug == curr or (k == "2" and curr == "mistralai/mistral-large-4-1t-a52b") else ""
+        tag = " [ACTIVE]" if slug == curr or (k == "5" and curr == "nvidia/nemotron-3-ultra-550b-a55b") else ""
         print(f" [{k}] {name:<35} {tag}")
         print(f"     -> {desc}")
     print("-" * 75)

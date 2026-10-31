@@ -8,7 +8,7 @@ This workspace operates under the **Zero-Error Architecture Protocol**. Every to
 - **Sub-Second Latency**: Model routing, cooldowns, and request sanitization run entirely in-memory without blocking network probes or disk bottlenecks.
 - **Fast Readiness Probing**: Always check health via http://127.0.0.1:4000/health/readiness (responds in <5ms without touching upstream LLMs). Never poll /v1/models in tight loops.
 - **Single-Instance Daemon Guard**: Never spawn multiple litellm or proxy daemons. Port 4000 must be owned by exactly one process pair. Clean stale processes using full process-tree termination (`taskkill /F /T /PID`).
-- **High-Capacity Routing**: Primary traffic routes to `mistralai/mistral-large-4-1t-a52b` (1.05T MoE, ~0.4s latency). Overloaded models (429 or concurrency exhaustion) enter adaptive cooldowns.
+- **High-Capacity Routing**: Primary traffic routes to `nvidia/nemotron-3-ultra-550b-a55b` (NVIDIA Nemotron Ultra 550B MoE, TTFT 0.48s latency, sub-3s completion). Overloaded models (429 or concurrency exhaustion) enter adaptive cooldowns.
 
 ---
 
@@ -35,7 +35,7 @@ This workspace operates under the **Zero-Error Architecture Protocol**. Every to
 ## 🎯 4. Final Output Standard
 - Every file must be production-ready and functional immediately upon creation.
 - For user-facing deliverables (games, web apps, tools), always provide a frictionless 1-click batch launcher (e.g. `play-game.bat`, `verify-all.bat`).
-- When asked what model, engine, or system is running, state clearly and accurately: **Mistral Large 4 (1.05T MoE)** powered by **NVIDIA NIM** via local proxy routing.
+- When asked what model, engine, or system is running, state clearly and accurately: **NVIDIA Nemotron Ultra 550B MoE** powered by **NVIDIA NIM** via local proxy routing.
 
 ---
 

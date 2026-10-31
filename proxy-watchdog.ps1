@@ -108,7 +108,7 @@ while ($true) {
 
             try {
                 $proc = Start-Process -FilePath $litellmCmd `
-                    -ArgumentList "--config `"$configFile`" --port $port --host 127.0.0.1 --request_timeout 45 --keepalive_timeout 45" `
+                    -ArgumentList "--config `"$configFile`" --port $port --host 127.0.0.1 --request_timeout 120 --keepalive_timeout 120" `
                     -WorkingDirectory $ScriptDir `
                     -RedirectStandardOutput $outLog `
                     -RedirectStandardError $errLog `

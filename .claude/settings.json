@@ -4,14 +4,14 @@
     "options": [
       {
         "model": "claude-sonnet-5",
-        "label": "Mistral Large 4",
-        "description": "1.05T Frontier MoE, 52B Active, ~0.4s Latency (RECOMMENDED DEFAULT)",
+        "label": "MiniMax M3.1 Flash",
+        "description": "428B MoE, Ultra-Fast Agentic & Code Specialist",
         "behavesAs": "sonnet"
       },
       {
         "model": "mistralai/mistral-large-4-1t-a52b",
         "label": "Mistral Large 4",
-        "description": "1.05T Frontier MoE, 52B Active, ~0.4s Latency (RECOMMENDED DEFAULT)",
+        "description": "1.05T Frontier MoE, 52B Active",
         "behavesAs": "sonnet"
       },
       {
@@ -29,7 +29,7 @@
       {
         "model": "nvidia/nemotron-3-ultra-550b-a55b",
         "label": "NVIDIA Nemotron Ultra 550B MoE",
-        "description": "550B Flagship Reasoning Giant (Ultra-Deep Logic)",
+        "description": "550B Flagship Reasoning Giant, Sub-Second Latency (RECOMMENDED DEFAULT)",
         "behavesAs": "sonnet"
       },
       {

@@ -12,7 +12,7 @@ try {
         
         # Check active model
         $prefFile = Join-Path $ScriptDir "active_model.txt"
-        $model = "Mistral Large 4 (Primary Default)"
+        $model = "NVIDIA Nemotron Ultra 550B MoE (Primary Default)"
         if (Test-Path $prefFile) {
             $m = (Get-Content $prefFile -Raw).Trim()
             if ($m) { $model = $m }
@@ -59,7 +59,7 @@ if ($ready) {
     Write-Host "[+] Fast health endpoint: http://127.0.0.1:$port/health/readiness" -ForegroundColor Gray
     
     $prefFile = Join-Path $ScriptDir "active_model.txt"
-    $model = "Mistral Large 4"
+    $model = "NVIDIA Nemotron Ultra 550B MoE"
     if (Test-Path $prefFile) {
         $m = (Get-Content $prefFile -Raw).Trim()
         if ($m) { $model = $m }

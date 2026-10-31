@@ -63,9 +63,30 @@ try:
 
             async def sse_transformer():
                 buffer = ""
-                thinking_block_opened = False
-                text_block_opened = False
+                message_started = False
+                block_open = False
+                message_stopped = False
                 current_block_index = 0
+
+                def build_closure() -> bytes:
+                    if message_stopped:
+                        return b""
+                    parts = []
+                    if not message_started:
+                        parts.append(
+                            'event: message_start\n'
+                            'data: {"type": "message_start", "message": {"id": "msg_fallback", "type": "message", "role": "assistant", "content": [], "model": "nvidia/nemotron-3-ultra-550b-a55b", "stop_reason": null, "stop_sequence": null, "usage": {"input_tokens": 0, "output_tokens": 0}}}'
+                        )
+                    if block_open:
+                        parts.append(
+                            f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}'
+                        )
+                    parts.append(
+                        'event: message_delta\ndata: {"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": null}, "usage": {"output_tokens": 0}}'
+                    )
+                    parts.append('event: message_stop\ndata: {"type": "message_stop"}')
+                    parts.append('data: [DONE]')
+                    return ("\n\n".join(parts) + "\n\n").encode("utf-8")
 
                 # High capacity queue to prevent artificial backpressure pauses
                 queue = asyncio.Queue(maxsize=2000)
@@ -92,7 +113,11 @@ try:
                             if chunk is sentinel:
                                 break
                             if isinstance(chunk, Exception):
-                                raise chunk
+                                print(f"[SSE-STREAM] Upstream exception caught: {chunk}. Gracefully terminating stream.", flush=True)
+                                closure = build_closure()
+                                if closure:
+                                    yield closure
+                                break
 
                             if isinstance(chunk, bytes):
                                 chunk_str = chunk.decode("utf-8", errors="replace")
@@ -112,14 +137,32 @@ try:
                                     if line.startswith("data:"):
                                         data_str = line[5:].strip()
                                         if data_str == "[DONE]":
+                                            message_stopped = True
                                             new_lines.append(line)
                                             continue
                                         try:
                                             payload = json.loads(data_str)
                                             p_type = payload.get("type", "")
 
+                                            # Track message lifecycle
+                                            if p_type == "message_start":
+                                                message_started = True
+                                                message_stopped = False
+                                                block_open = False
+                                                current_block_index = 0
+                                            elif p_type == "content_block_start":
+                                                block_open = True
+                                                current_block_index = payload.get("index", current_block_index)
+                                            elif p_type == "content_block_stop":
+                                                block_open = False
+                                            elif p_type == "message_stop":
+                                                message_stopped = True
+
                                             # Fix null text delta in content_block_delta
                                             if p_type == "content_block_delta":
+                                                idx = payload.get("index")
+                                                if idx is not None:
+                                                    current_block_index = idx
                                                 delta = payload.get("delta", {})
                                                 if isinstance(delta, dict):
                                                     if delta.get("type") == "text_delta" and delta.get("text") is None:
@@ -142,12 +185,6 @@ try:
                                                             delta["type"] = "text_delta"
                                                             delta["text"] = txt
 
-                                            # If message_start, track state
-                                            elif p_type == "message_start":
-                                                thinking_block_opened = False
-                                                text_block_opened = False
-                                                current_block_index = 0
-
                                             new_lines.append(f"data: {json.dumps(payload)}")
                                         except Exception:
                                             new_lines.append(line)
@@ -158,14 +195,23 @@ try:
 
                         except asyncio.TimeoutError:
                             silence_seconds += 5.0
-                            if silence_seconds >= 600.0:
-                                raise TimeoutError("Upstream LLM stalled (>600s silence). Closing stream.")
+                            if silence_seconds >= 120.0:
+                                print("[SSE-STREAM] Upstream LLM stalled (>120s silence). Gracefully terminating stream.", flush=True)
+                                closure = build_closure()
+                                if closure:
+                                    yield closure
+                                break
                             # Send active SSE keep-alive ping comment during generation pauses
                             yield b": ping\n\n"
 
                     if buffer.strip():
                         yield (buffer + "\n\n").encode("utf-8")
 
+                except Exception as outer_exc:
+                    print(f"[SSE-STREAM] Fatal generator error: {outer_exc}. Yielding graceful closure.", flush=True)
+                    closure = build_closure()
+                    if closure:
+                        yield closure
                 finally:
                     if not producer_task.done():
                         producer_task.cancel()
@@ -258,7 +304,7 @@ MODEL_DISPLAY_NAMES = {
     "backup-deepseek": "DeepSeek V4.1 Flash",
     "poolside/laguna-xs-2.1": "Poolside Laguna XS 2.1",
     "backup-laguna": "Poolside Laguna XS 2.1",
-    "auto": "Auto Smart-Failover (Mistral 4 / Nemotron Ultra / Step 5 / MiniMax)",
+    "auto": "Auto Smart-Failover (Nemotron Ultra / Laguna XS / Mistral 4 / Step 5)",
 }
 
 def clean_command_noise(text: str) -> str:
@@ -327,12 +373,18 @@ def sanitize_claude_identity(text: str, active_name: str) -> str:
          f"You are an AI coding assistant powered by {active_name} on NVIDIA NIM."),
         ("running as Claude Sonnet 4.5", f"powered by {active_name} on NVIDIA NIM"),
         ("running as Claude Sonnet 5", f"powered by {active_name} on NVIDIA NIM"),
+        ("running as Claude 3.7 Sonnet", f"powered by {active_name} on NVIDIA NIM"),
+        ("running as Claude 3.5 Sonnet", f"powered by {active_name} on NVIDIA NIM"),
         ("I'm Claude Sonnet 4.5", f"I'm powered by {active_name}"),
         ("I am Claude Sonnet 4.5", f"I am powered by {active_name}"),
         ("Claude Sonnet 4.5", f"{active_name} (NVIDIA NIM)"),
         ("Claude Sonnet 5", f"{active_name} (NVIDIA NIM)"),
+        ("Claude 3.7 Sonnet", f"{active_name} (NVIDIA NIM)"),
+        ("Claude 3.5 Sonnet", f"{active_name} (NVIDIA NIM)"),
         ("claude-sonnet-4-5", f"{active_name}"),
         ("claude-sonnet-5", f"{active_name}"),
+        ("claude-3-7-sonnet", f"{active_name}"),
+        ("claude-3-5-sonnet", f"{active_name}"),
         ("Anthropic's model", f"{active_name} running on NVIDIA NIM"),
         ("built by Anthropic", "powered by NVIDIA NIM"),
         ("Anthropic's official CLI", "Claude Code CLI"),
@@ -397,8 +449,8 @@ ARCHITECTURAL_COHESION_DIRECTIVE = """
 [CRITICAL ARCHITECTURAL CONTRACT - FULL POWER MAXIMUM AUTONOMOUS DIRECTIVE]
 You are operating as an Elite Principal Software Architect and Lead Systems Engineer operating at MAXIMUM REASONING POWER.
 When designing, modifying, or executing software projects, you MUST adhere strictly to these operational pillars:
-1. MAXIMUM REASONING DEPTH & DEEP THINKING:
-   - Apply unrestricted reasoning depth. Think through the complete architecture, edge cases, lifecycle states, and dependency graph before generating code.
+1. RAPID EXECUTION:
+   - Deliver concise, high-speed reasoning (<10s) and transition immediately to production-ready code.
    - Trace errors to their fundamental root cause—never apply superficial patches or workaround bandaids.
 2. INTERCONNECTED COMPLETENESS (ZERO ORPHANED IMPORTS):
    - Whenever you write or edit a file that contains import or require statements pointing to local relative paths (e.g. `./src/...`, `../utils/...`, `./components/...`), you MUST ensure that EVERY referenced file is fully implemented and saved to disk.
@@ -418,7 +470,7 @@ When designing, modifying, or executing software projects, you MUST adhere stric
 7. PRE-COMPLETION VERIFICATION:
    - Always run syntax checks and verify import chains before concluding. Zero runtime errors, zero syntax errors, and 100% interconnected harmony.
 8. ENGINE IDENTITY & RUNTIME AWARENESS:
-   - Your underlying reasoning engine is powered by NVIDIA NIM enterprise inference running your active model (Mistral Large 4, Step 5 Preview, MiniMax M3.1 Flash, Nemotron Ultra 550B, or DeepSeek V4.1 Flash) integrated with Claude Code CLI.
+   - Your underlying reasoning engine is powered by NVIDIA NIM enterprise inference running your active model (NVIDIA Nemotron Ultra 550B MoE, Poolside Laguna XS 2.1, Mistral Large 4, Step 5 Preview, or MiniMax M3.1 Flash) integrated with Claude Code CLI.
    - When asked what AI model, mode, or engine you are, explicitly declare your active model powered by NVIDIA NIM. Never claim to be Anthropic Claude or Sonnet.
 """
 
@@ -539,7 +591,7 @@ class RequestSanitizer(CustomLogger):
                         return choice
             except Exception:
                 pass
-        return "mistralai/mistral-large-4-1t-a52b"
+        return "nvidia/nemotron-3-ultra-550b-a55b"
 
     def resolve_target_model(self, pref: str, total_chars: int = 0) -> str:
         mapping = {
@@ -726,22 +778,53 @@ class RequestSanitizer(CustomLogger):
                     if isinstance(p, dict):
                         total_chars += len(str(p.get("text", "")))
 
+        # Check for boost triggers in messages or system (case-insensitive)
+        boost_triggered = False
+        if messages and isinstance(messages, list):
+            for m in messages:
+                if not isinstance(m, dict):
+                    continue
+                c = m.get("content")
+                if isinstance(c, str):
+                    c_lower = c.lower()
+                    if "/boost" in c_lower or "turbo boost" in c_lower:
+                        boost_triggered = True
+                        break
+                elif isinstance(c, list):
+                    for part in c:
+                        if isinstance(part, dict):
+                            t = (str(part.get("text", "")) + " " + str(part.get("content", ""))).lower()
+                            if "/boost" in t or "turbo boost" in t:
+                                boost_triggered = True
+                                break
+                if boost_triggered:
+                    break
+
+        if not boost_triggered and top_system:
+            sys_str = str(top_system).lower()
+            if "/boost" in sys_str or "turbo boost" in sys_str:
+                boost_triggered = True
+
         req_model = str(data.get("model", "")).strip().lower()
         generic_claude_models = (
             "claude-sonnet-5", "claude-sonnet-4-5", "claude-sonnet-4", "claude-3-7-sonnet-20250219",
             "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-haiku-4-5",
             "claude-opus-4", "claude-opus-4-5", "claude-3-opus-20240229", "*", "auto", ""
         )
-        pref = self.get_selected_model()
-        if pref and pref != "auto":
-            target_model = self.resolve_target_model(pref, total_chars=total_chars)
-        elif req_model and req_model not in generic_claude_models:
-            target_model = self.resolve_target_model(req_model, total_chars=total_chars)
+        if boost_triggered:
+            print("[SMART-ROUTER] /boost or TURBO BOOST detected! Pinning directly to Nemotron Ultra 550B MoE (backup-ultra).", flush=True)
+            target_model = "backup-ultra"
         else:
-            target_model = self.resolve_target_model("auto", total_chars=total_chars)
+            pref = self.get_selected_model()
+            if pref and pref != "auto":
+                target_model = self.resolve_target_model(pref, total_chars=total_chars)
+            elif req_model and req_model not in generic_claude_models:
+                target_model = self.resolve_target_model(req_model, total_chars=total_chars)
+            else:
+                target_model = self.resolve_target_model("auto", total_chars=total_chars)
         data["model"] = target_model
 
-        active_name = MODEL_DISPLAY_NAMES.get(target_model, "Mistral Large 4 (NVIDIA NIM)")
+        active_name = MODEL_DISPLAY_NAMES.get(target_model, "NVIDIA Nemotron Ultra 550B MoE (NVIDIA NIM)")
 
         # 2. Build Injected Directives with Motion Graphics Intelligence
         identity_directive = f"""[CRITICAL ENGINE SPECIFICATION & RUNTIME IDENTITY]
@@ -798,8 +881,24 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
             elif not top_system:
                 messages.insert(0, {"role": "system", "content": full_directive})
 
-        # 5. Token Limit and Thinking Controls
-        data["max_tokens"] = max(data.get("max_tokens", 8192) or 8192, 8192)
+        # 5. Token Limit, Effort Suppression, and Thinking Controls
+        # Clamp max_tokens ceiling from 64,000 down to 8192
+        req_max_tokens = data.get("max_tokens")
+        if req_max_tokens is not None:
+            try:
+                data["max_tokens"] = min(int(req_max_tokens), 8192)
+            except (ValueError, TypeError):
+                data["max_tokens"] = 8192
+        else:
+            data["max_tokens"] = 8192
+
+        # Suppress excessive effort: if output_config.effort == "max", clamp to "medium"
+        output_config = data.get("output_config")
+        if isinstance(output_config, dict):
+            if output_config.get("effort") == "max":
+                output_config["effort"] = "medium"
+        if data.get("effort") == "max":
+            data["effort"] = "medium"
 
         # DeepSeek specific prompt optimization
         if "deepseek" in str(target_model).lower():
@@ -817,12 +916,13 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                 data["system"] = condense_system_prompt_for_deepseek(combined)
             data.pop("thinking", None)
         else:
-            # For Mistral Large 4 and others, sanitize thinking budget to avoid token starvation
+            # Clamp BOTH "enabled" and "adaptive" thinking types: set type: "enabled" and budget_tokens: 1024 (<10s reasoning)
             thinking = data.get("thinking")
-            if isinstance(thinking, dict) and thinking.get("type") == "enabled":
-                max_tok = data.get("max_tokens", 8192)
-                budget = thinking.get("budget_tokens", 2048)
-                thinking["budget_tokens"] = max(1024, min(budget, 4096, int(max_tok * 0.45)))
+            if isinstance(thinking, dict):
+                t_type = thinking.get("type")
+                if t_type in ("enabled", "adaptive"):
+                    thinking["type"] = "enabled"
+                    thinking["budget_tokens"] = 1024
 
         return data
 
