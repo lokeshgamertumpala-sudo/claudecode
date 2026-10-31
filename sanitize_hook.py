@@ -158,8 +158,8 @@ try:
 
                         except asyncio.TimeoutError:
                             silence_seconds += 5.0
-                            if silence_seconds >= 25.0:
-                                raise TimeoutError("Upstream LLM stalled (>25s silence). Triggering instant fast failover.")
+                            if silence_seconds >= 600.0:
+                                raise TimeoutError("Upstream LLM stalled (>600s silence). Closing stream.")
                             # Send active SSE keep-alive ping comment during generation pauses
                             yield b": ping\n\n"
 
