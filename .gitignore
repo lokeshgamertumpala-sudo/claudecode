@@ -20,3 +20,7 @@ node_modules/
 # Local runtime state
 active_model.txt
 
+# Rendered media & video outputs
+motion-studio/out/
+out/
+*.mp4

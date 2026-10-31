@@ -4,11 +4,11 @@ param(
     [string]$Model = "",
     [switch]$DangerouslySkipPermissions,
     [switch]$Unrestricted,
+    [switch]$Boost,
     [switch]$Help
 )
 
-$ErrorActionPreference = "Stop"
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } elseif ($MyInvocation.MyCommand.Path) { Split-Path -Parent $MyInvocation.MyCommand.Path } else { (Get-Location).Path }
 
 if ($Help -or $Model -in @("-h", "--help", "help")) {
     Write-Host "====================================================" -ForegroundColor Cyan
@@ -16,11 +16,12 @@ if ($Help -or $Model -in @("-h", "--help", "help")) {
     Write-Host "====================================================" -ForegroundColor Cyan
     Write-Host "Usage: .\start-claude.ps1 [Model] [-Unrestricted]" -ForegroundColor Cyan
     Write-Host "`nModels:" -ForegroundColor Yellow
-    Write-Host "  kimi     / 5  : Moonshot AI Kimi-K3 (Ultra-deep reasoning & advanced problem solving)"
-    Write-Host "  nemotron / 2  : NVIDIA Nemotron 3 Super 120B (Enterprise powerhouse ~0.3s)"
-    Write-Host "  laguna   / 3  : Poolside Laguna XS 2.1 (High-speed software engineering specialist)"
-    Write-Host "  deepseek / 4  : DeepSeek V4.1 Flash (High-speed reasoning & coding flagship)"
-    Write-Host "  auto     / 1  : Auto Smart-Failover (Zero API Errors across all 4 models)"
+    Write-Host "  mistral  / 2  : Mistral Large 4 (1.05T MoE, 52B Active, ~0.4s Latency) [DEFAULT]"
+    Write-Host "  step     / 3  : Step 5 Preview (600B MoE, 1M Context Window, Multimodal Reasoning)"
+    Write-Host "  minimax  / 4  : MiniMax M3.1 Flash (428B MoE, Ultra-Fast Agentic & Code Specialist)"
+    Write-Host "  ultra    / 5  : NVIDIA Nemotron Ultra 550B MoE (NVIDIA Flagship Reasoning Giant)"
+    Write-Host "  deepseek / 6  : DeepSeek V4.1 Flash (High-speed reasoning & coding powerhouse)"
+    Write-Host "  auto     / 1  : Auto Smart-Failover (Zero API Errors resilience mesh)"
     Write-Host "`nFlags:" -ForegroundColor Yellow
     Write-Host "  -Unrestricted : Run in full autonomous terminal mode (bypasses permission prompts)"
     exit 0
@@ -72,17 +73,24 @@ if (-not $env:NVIDIA_API_KEY) {
 }
 
 # 3. Locate LiteLLM and Claude
-$pythonScripts = "C:\Users\NEW\AppData\Local\Python\pythoncore-3.14-64\Scripts"
-$cmdLite = Get-Command litellm -ErrorAction SilentlyContinue
-$litellmCmd = if ($cmdLite) { $cmdLite.Source } else { $null }
-if (-not $litellmCmd) {
-    $litellmCandidate = Join-Path $pythonScripts "litellm.exe"
-    if (Test-Path $litellmCandidate) {
-        $litellmCmd = $litellmCandidate
-    } else {
-        Write-Error "LiteLLM executable not found. Please install it with 'pip install litellm[proxy]'."
-        exit 1
+$litellmCandidates = @(
+    "C:\Users\NEW\AppData\Local\Python\bin\litellm.exe",
+    "C:\Users\NEW\AppData\Local\Python\pythoncore-3.14-64\Scripts\litellm.exe"
+)
+$litellmCmd = $null
+foreach ($cand in $litellmCandidates) {
+    if (Test-Path $cand) {
+        $litellmCmd = $cand
+        break
     }
+}
+if (-not $litellmCmd) {
+    $cmdLite = Get-Command litellm -ErrorAction SilentlyContinue
+    if ($cmdLite) { $litellmCmd = $cmdLite.Source }
+}
+if (-not $litellmCmd) {
+    Write-Error "LiteLLM executable not found. Please install it with 'pip install litellm[proxy]'."
+    exit 1
 }
 
 $cmdClaude = Get-Command claude.cmd -ErrorAction SilentlyContinue
@@ -98,15 +106,14 @@ if (-not $claudeCmd) {
 
 # 4. Check if proxy is already running on port 4000
 $port = 4000
-$proxyStartedByUs = $false
 $proxyReady = $false
 
 $listener = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
 if ($listener) {
     try {
-        $response = Invoke-RestMethod -Uri "http://127.0.0.1:$port/health/readiness" -TimeoutSec 3 -ErrorAction Stop
+        $response = Invoke-RestMethod -Uri "http://127.0.0.1:$port/health/readiness" -TimeoutSec 2 -ErrorAction Stop
         if ($response.status -eq "healthy") {
-            Write-Host "[+] LiteLLM proxy is already running and healthy on port $port." -ForegroundColor Green
+            Write-Host "[+] LiteLLM proxy is already running and healthy on port $port (instant reuse <5ms)." -ForegroundColor Green
             $proxyReady = $true
         }
     } catch {
@@ -115,74 +122,58 @@ if ($listener) {
 }
 
 if (-not $proxyReady) {
-    # Clean any stale process holding the port
-    $conns = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
-    if ($conns) {
-        $conns | ForEach-Object {
-            $pId = $_.OwningProcess
-            if ($pId -gt 0 -and $pId -ne $PID) { cmd.exe /c "taskkill /F /T /PID $pId" 2>$null }
-        }
-    }
-    $stale = Get-CimInstance Win32_Process -Filter "CommandLine LIKE '%litellm%'" -ErrorAction SilentlyContinue
-    if ($stale) {
-        $stale | ForEach-Object {
-            if ($_.ProcessId -ne $PID) { cmd.exe /c "taskkill /F /T /PID $($_.ProcessId)" 2>$null }
-        }
-    }
-    Start-Sleep -Seconds 1
-
-    Write-Host "[*] Starting LiteLLM proxy with high-speed NIM routing..." -ForegroundColor Cyan
-    $env:PYTHONUTF8 = "1"
-    $env:PYTHONIOENCODING = "utf-8"
-    $configFile = Join-Path $ScriptDir "config.yaml"
+    Write-Host "[*] Proxy not running. Spawning detached persistent background daemon..." -ForegroundColor Cyan
+    $startProxyScript = Join-Path $ScriptDir "start-proxy.ps1"
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $startProxyScript
     
-    $psi = New-Object System.Diagnostics.ProcessStartInfo
-    $psi.FileName = $litellmCmd
-    $psi.Arguments = "--config `"$configFile`" --port $port --host 127.0.0.1"
-    $psi.UseShellExecute = $false
-    $psi.CreateNoWindow = $true
-    $psi.EnvironmentVariables["PYTHONUTF8"] = "1"
-    $psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8"
-    $psi.EnvironmentVariables["NVIDIA_API_KEY"] = $env:NVIDIA_API_KEY
-    $psi.EnvironmentVariables["NVIDIA_NIM_API_KEY"] = $env:NVIDIA_API_KEY
-    
-    $proxyProcess = [System.Diagnostics.Process]::Start($psi)
-    $proxyStartedByUs = $true
-    
-    Write-Host "Waiting for proxy to be ready..." -NoNewline
-    for ($i = 0; $i -lt 30; $i++) {
-        Start-Sleep -Milliseconds 500
+    # Verify readiness
+    for ($i = 0; $i -lt 10; $i++) {
         try {
-            $resp = Invoke-RestMethod -Uri "http://127.0.0.1:$port/health/readiness" -TimeoutSec 1 -ErrorAction Stop
+            $resp = Invoke-RestMethod -Uri "http://127.0.0.1:$port/health/readiness" -TimeoutSec 2 -ErrorAction Stop
             if ($resp.status -eq "healthy") {
                 $proxyReady = $true
                 break
             }
         } catch {
-            Write-Host "." -NoNewline
+            Start-Sleep -Milliseconds 500
         }
     }
-    Write-Host ""
     
     if (-not $proxyReady) {
-        Write-Error "LiteLLM proxy failed to start within timeout. Check logs or config.yaml."
-        if ($proxyStartedByUs -and $proxyProcess -and -not $proxyProcess.HasExited) {
-            cmd.exe /c "taskkill /F /T /PID $($proxyProcess.Id)" 2>$null
-        }
+        Write-Error "LiteLLM proxy failed to start. Check logs or config.yaml."
         exit 1
     }
-    Write-Host "[+] Proxy is up and ready! Model: NVIDIA Nemotron 120B (nvidia/nemotron-3-super-120b-a12b)" -ForegroundColor Green
+    Write-Host "[+] Proxy is up and ready! Model: Mistral Large 4 (mistralai/mistral-large-4-1t-a52b)" -ForegroundColor Green
 }
 
-# 5. Resolve or switch active model preference across all 4 flagship models
+# 5. Resolve or switch active model preference across all 5 flagship models
 $activeModelPath = Join-Path $ScriptDir "active_model.txt"
 
+$validModelTriggers = @(
+    "1", "2", "3", "4", "5", "6", "7",
+    "auto", "smart",
+    "mistral", "mistral-large", "mistral-large-4", "mistral-4",
+    "step", "step-5", "step5", "step-5-preview",
+    "minimax", "m3.1", "minimax-m3.1", "m3.1-flash", "minimax-m3.1-flash",
+    "ultra", "nemotron", "nemotron-ultra", "nemotron-ultra-550b", "ultra-550b",
+    "deepseek", "deepseek-flash", "deepseek-v4.1", "deepseek-v4.1-flash", "flash",
+    "laguna", "poolside",
+    "kimi", "kimi-k3",
+    "boost", "turbo", "fast"
+)
+
+$promptFromModelParam = $null
 if ($Model) {
-    # User passed a model directly in terminal command line
-    python "$ScriptDir\select_model.py" $Model
+    if ($validModelTriggers -contains $Model.ToLower().Trim()) {
+        # User passed a recognized model directly in terminal command line
+        python "$ScriptDir\select_model.py" $Model
+    } else {
+        # Positional parameter is actually a prompt or flag for Claude Code
+        $promptFromModelParam = $Model
+    }
 }
 
-$activeModel = "auto"
+$activeModel = "nvidia/nemotron-3-ultra-550b-a55b"
 if (Test-Path $activeModelPath) {
     $raw = (Get-Content $activeModelPath -Raw).Trim()
     if ($raw) { $activeModel = $raw }
@@ -191,31 +182,34 @@ if (Test-Path $activeModelPath) {
 $modelDisplayNames = @{
     "auto" = "Auto Smart-Failover (Zero API Errors)"
     "1" = "Auto Smart-Failover (Zero API Errors)"
-    "moonshotai/kimi-k3" = "Moonshot AI Kimi-K3"
-    "kimi" = "Moonshot AI Kimi-K3"
-    "kimi-k3" = "Moonshot AI Kimi-K3"
-    "k3" = "Moonshot AI Kimi-K3"
-    "moonshot" = "Moonshot AI Kimi-K3"
-    "5" = "Moonshot AI Kimi-K3"
-    "nvidia/nemotron-3-super-120b-a12b" = "NVIDIA Nemotron 3 Super 120B"
-    "nemotron" = "NVIDIA Nemotron 3 Super 120B"
-    "2" = "NVIDIA Nemotron 3 Super 120B"
+    "mistralai/mistral-large-4-1t-a52b" = "Mistral Large 4 (1.05T MoE)"
+    "mistral-large-4" = "Mistral Large 4 (1.05T MoE)"
+    "mistral" = "Mistral Large 4 (1.05T MoE)"
+    "2" = "Mistral Large 4 (1.05T MoE)"
+    "stepfun-ai/step-5-preview" = "Step 5 Preview (600B MoE)"
+    "step-5-preview" = "Step 5 Preview (600B MoE)"
+    "step" = "Step 5 Preview (600B MoE)"
+    "3" = "Step 5 Preview (600B MoE)"
+    "minimaxai/minimax-m3.1-flash" = "MiniMax M3.1 Flash (428B MoE)"
+    "minimax-m3.1-flash" = "MiniMax M3.1 Flash (428B MoE)"
+    "minimax" = "MiniMax M3.1 Flash (428B MoE)"
+    "4" = "MiniMax M3.1 Flash (428B MoE)"
+    "nvidia/nemotron-3-ultra-550b-a55b" = "NVIDIA Nemotron Ultra 550B MoE"
+    "nemotron-ultra" = "NVIDIA Nemotron Ultra 550B MoE"
+    "ultra" = "NVIDIA Nemotron Ultra 550B MoE"
+    "5" = "NVIDIA Nemotron Ultra 550B MoE"
+    "deepseek-ai/deepseek-v4.1-flash" = "DeepSeek V4.1 Flash"
+    "deepseek-v4.1-flash" = "DeepSeek V4.1 Flash"
+    "deepseek" = "DeepSeek V4.1 Flash"
+    "6" = "DeepSeek V4.1 Flash"
     "poolside/laguna-xs-2.1" = "Poolside Laguna XS 2.1"
     "laguna" = "Poolside Laguna XS 2.1"
-    "3" = "Poolside Laguna XS 2.1"
-    "deepseek-ai/deepseek-v4-flash-0731" = "DeepSeek V4.1 Flash"
-    "deepseek-ai/deepseek-v4-pro-0813" = "DeepSeek V4.1 Flash"
-    "deepseek-v4.1-flash" = "DeepSeek V4.1 Flash"
-    "deepseek-v4.1" = "DeepSeek V4.1 Flash"
-    "deepseek-4.1" = "DeepSeek V4.1 Flash"
-    "v4.1-flash" = "DeepSeek V4.1 Flash"
-    "v4.1" = "DeepSeek V4.1 Flash"
-    "4.1" = "DeepSeek V4.1 Flash"
-    "deepseek-flash" = "DeepSeek V4.1 Flash"
-    "deepseek-v4-flash" = "DeepSeek V4.1 Flash"
-    "deepseek-v4-pro" = "DeepSeek V4.1 Flash"
-    "deepseek" = "DeepSeek V4.1 Flash"
-    "4" = "DeepSeek V4.1 Flash"
+    "7" = "Poolside Laguna XS 2.1"
+    "moonshotai/kimi-k3" = "Mistral Large 4 (1.05T MoE)"
+    "kimi" = "Mistral Large 4 (1.05T MoE)"
+    "kimi-k3" = "Mistral Large 4 (1.05T MoE)"
+    "nvidia/nemotron-3-super-120b-a12b" = "NVIDIA Nemotron Ultra 550B MoE"
+    "nemotron-3-super-120b-a12b" = "NVIDIA Nemotron Ultra 550B MoE"
 }
 
 $activeLabel = if ($modelDisplayNames.ContainsKey($activeModel.ToLower())) { $modelDisplayNames[$activeModel.ToLower()] } else { $activeModel }
@@ -240,16 +234,21 @@ $env:CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT = "1"
 Remove-Item env:CLAUDE_CODE_EFFORT_LEVEL -ErrorAction SilentlyContinue
 [Environment]::SetEnvironmentVariable("CLAUDE_CODE_EFFORT_LEVEL", $null, "Process")
 $env:CLAUDE_CODE_WORKFLOWS = "1"
-$env:MAX_THINKING_TOKENS = "2048"
+$env:MAX_THINKING_TOKENS = if ($Boost) { "1024" } else { "2048" }
 $env:ANTHROPIC_MAX_TOKENS = "8192"
 $env:CLAUDE_CODE_DISABLE_THINKING_LIMIT = "1"
 $env:CLAUDE_CODE_WEBSEARCH_USE_CCR_PROXY = "1"
 $env:CLAUDE_CODE_WEBFETCH_USE_CCR_PROXY = "1"
 
+if ($Boost) {
+    $Unrestricted = $true
+}
+
+$modeHeader = if ($Boost) { "TURBO BOOST ACCELERATED" } else { "FULL POWER MAXIMUM" }
 Write-Host "====================================================" -ForegroundColor Cyan
-Write-Host "Launching Claude Code [FULL POWER MAXIMUM] ($activeLabel)..." -ForegroundColor Green
+Write-Host "Launching Claude Code [$modeHeader] ($activeLabel)..." -ForegroundColor Green
 Write-Host "Engine: $activeLabel on NVIDIA NIM" -ForegroundColor Gray
-Write-Host "Reasoning: MAXIMUM EFFORT (max thinking budget & token depth)" -ForegroundColor Magenta
+Write-Host "Reasoning: $(if ($Boost) { 'TURBO BOOST (1024 snappy thinking budget)' } else { 'MAXIMUM EFFORT (2048 thinking budget)' })" -ForegroundColor Magenta
 Write-Host "Workflows: ENABLED (Dynamic multi-agent orchestration)" -ForegroundColor Magenta
 Write-Host "Streaming: 100% Active (Native Thinking & Real-Time Seconds Timer)" -ForegroundColor Gray
 Write-Host "====================================================`n" -ForegroundColor Cyan
@@ -257,6 +256,9 @@ Write-Host "====================================================`n" -ForegroundC
 $claudeArgs = @("--model", $targetModel)
 if ($DangerouslySkipPermissions -or $Unrestricted) {
     $claudeArgs += "--dangerously-skip-permissions"
+}
+if ($promptFromModelParam) {
+    $claudeArgs += $promptFromModelParam
 }
 if ($args.Count -gt 0) {
     $claudeArgs += $args

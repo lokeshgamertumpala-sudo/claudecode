@@ -328,7 +328,7 @@ def run_audit(target_dir: Path):
             errors = []
             warnings = []
 
-            if ext in {".js", ".jsx", ".mjs", ".cjs"}:
+            if ext in {".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"}:
                 category = "JavaScript/TypeScript"
                 errors, warnings = check_node_js_file(p)
             elif ext in {".py"}:

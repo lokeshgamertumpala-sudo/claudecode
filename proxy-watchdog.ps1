@@ -1,8 +1,14 @@
 # Continuous Watchdog Supervisor for LiteLLM Proxy
 # Keeps a single instance of LiteLLM proxy alive 24/7 without duplicate process collisions.
 
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-if (-not $ScriptDir) { $ScriptDir = "C:\Users\NEW\OneDrive\Desktop\claudecode" }
+$ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } elseif ($MyInvocation.MyCommand.Path) { Split-Path -Parent $MyInvocation.MyCommand.Path } else { (Get-Location).Path }
+
+# Guard against duplicate watchdogs
+$currentPid = $PID
+$otherWatchdogs = Get-CimInstance Win32_Process -Filter "CommandLine LIKE '%proxy-watchdog.ps1%'" -ErrorAction SilentlyContinue | Where-Object { $_.ProcessId -ne $currentPid }
+if ($otherWatchdogs) {
+    exit 0
+}
 
 # 1. Load .env file and set Process & User environment variables
 $envFile = Join-Path $ScriptDir ".env"
@@ -28,9 +34,18 @@ if (Test-Path $envFile) {
     }
 }
 
-$pythonScripts = "C:\Users\NEW\AppData\Local\Python\pythoncore-3.14-64\Scripts"
-$litellmCmd = Join-Path $pythonScripts "litellm.exe"
-if (-not (Test-Path $litellmCmd)) {
+$litellmCandidates = @(
+    "C:\Users\NEW\AppData\Local\Python\bin\litellm.exe",
+    "C:\Users\NEW\AppData\Local\Python\pythoncore-3.14-64\Scripts\litellm.exe"
+)
+$litellmCmd = $null
+foreach ($cand in $litellmCandidates) {
+    if (Test-Path $cand) {
+        $litellmCmd = $cand
+        break
+    }
+}
+if (-not $litellmCmd) {
     $cmdLite = Get-Command litellm -ErrorAction SilentlyContinue
     if ($cmdLite) { $litellmCmd = $cmdLite.Source }
 }
@@ -60,10 +75,10 @@ function Clean-StaleProxyProcesses {
             }
         }
     }
-    Start-Sleep -Seconds 2
+    Start-Sleep -Seconds 1
 }
 
-# Start with 2 so if proxy is down on boot, check 1 triggers revival immediately
+# Start with 2 failures so first loop revives immediately if proxy is not yet running
 $consecutiveFailures = 2
 
 while ($true) {
@@ -72,7 +87,7 @@ while ($true) {
     $listener = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
     if ($listener) {
         try {
-            $resp = Invoke-RestMethod -Uri "http://127.0.0.1:$port/health/readiness" -TimeoutSec 5 -ErrorAction Stop
+            $resp = Invoke-RestMethod -Uri "http://127.0.0.1:$port/health/readiness" -TimeoutSec 3 -ErrorAction Stop
             if ($resp.status -eq "healthy") {
                 $alive = $true
             }
@@ -85,15 +100,15 @@ while ($true) {
         $consecutiveFailures = 0
     } else {
         $consecutiveFailures++
-        "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Health check failed ($consecutiveFailures/3)." | Out-File $watchdogLog -Append -Encoding utf8
+        "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Health check failed ($consecutiveFailures/2)." | Out-File $watchdogLog -Append -Encoding utf8
 
-        if ($consecutiveFailures -ge 3) {
-            "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Proxy down after 3 checks! Cleaning stale processes and reviving on port $port..." | Out-File $watchdogLog -Append -Encoding utf8
+        if ($consecutiveFailures -ge 2) {
+            "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Proxy down. Cleaning stale processes and reviving on port $port..." | Out-File $watchdogLog -Append -Encoding utf8
             Clean-StaleProxyProcesses -targetPort $port
 
             try {
                 $proc = Start-Process -FilePath $litellmCmd `
-                    -ArgumentList "--config `"$configFile`" --port $port --host 127.0.0.1" `
+                    -ArgumentList "--config `"$configFile`" --port $port --host 127.0.0.1 --request_timeout 45 --keepalive_timeout 45" `
                     -WorkingDirectory $ScriptDir `
                     -RedirectStandardOutput $outLog `
                     -RedirectStandardError $errLog `
@@ -124,5 +139,5 @@ while ($true) {
         }
     }
 
-    Start-Sleep -Seconds 10
+    Start-Sleep -Seconds 5
 }

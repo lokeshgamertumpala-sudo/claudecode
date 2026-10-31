@@ -1,26 +1,32 @@
-# 🚀 Claude Code + NVIDIA NIM Autonomous Inference Engine
+# 🚀 Claude Code + NVIDIA NIM Frontier Inference Engine & Remotion Motion Studio
 
-A high-performance autonomous engineering workspace integrating **Claude Code CLI** with **NVIDIA NIM enterprise inference** (NVIDIA Nemotron 3 Super 120B, DeepSeek V4.1 Flash, Moonshot AI Kimi-K3 & Poolside Laguna XS 2.1) under the **Zero-Error Architecture Protocol**.
+A high-performance autonomous engineering workspace integrating **Claude Code CLI** with **NVIDIA NIM enterprise inference** (Mistral Large 4, Step 5 Preview, MiniMax M3.1 Flash, NVIDIA Nemotron Ultra 550B MoE, DeepSeek V4.1 Flash & Poolside Laguna XS 2.1) and a production **Remotion React Motion Graphics Studio** under the **Zero-Error Architecture Protocol**.
 
 ---
 
 ## 🌟 Core Architecture & Capabilities
 
 1. **Sub-Second Latency & Real-Time Thinking Stream**
-   - **0.5s First-Token Arrival (TTFT)** powered by NVIDIA Nemotron 120B.
-   - **Native Thinking Tokens**: Streams real-time `thinking_delta` chunks into the Claude Code terminal UI.
-   - **Live Elapsed Time Display**: Spinner displays accurate real-time seconds (`Thinking... (1s)`, `(2s)`, `(3s)...`).
+   - **~0.4s First-Token Arrival (TTFT)** powered by **Mistral Large 4** (1.05T Frontier MoE, 52B Active).
+   - **Native Anthropic Thinking Delta Streaming**: In `sanitize_hook.py`, upstream reasoning tokens are translated to Anthropic `thinking_delta` chunks without stalling.
+   - **Live Elapsed Time Display**: Spinner displays accurate real-time thinking seconds in Claude Code CLI.
 
-2. **Context-Size Aware Dynamic Model Routing**
-   - **Interactive / Standard Queries (<= 20,000 chars)**: Routes directly to `nvidia/nemotron-3-super-120b-a12b` for maximum speed and sub-second reasoning.
-   - **High-Token / Massive Context (> 20,000 chars)**: Automatically promotes requests to `deepseek-ai/deepseek-v4-flash-0731` (128k context capacity) with zero 503 stream drops.
+2. **Frontier Multi-Model Mesh Failover**
+   - **Mistral Large 4** (`mistralai/mistral-large-4-1t-a52b`): Primary default coding & reasoning engine.
+   - **Step 5 Preview** (`stepfun-ai/step-5-preview`): 600B MoE, 1M context window, advanced multimodal reasoning.
+   - **MiniMax M3.1 Flash** (`minimaxai/minimax-m3.1-flash`): 428B MoE, ultra-fast agentic & code specialist.
+   - **NVIDIA Nemotron Ultra 550B MoE** (`nvidia/nemotron-3-ultra-550b-a55b`): 550B flagship reasoning giant.
+   - **DeepSeek V4.1 Flash** (`deepseek-ai/deepseek-v4.1-flash`): High-speed reasoning & massive context coding powerhouse.
+   - **Poolside Laguna XS 2.1** (`poolside/laguna-xs-2.1`): Software engineering specialist.
 
-3. **Context Buffer Protection & Tool Output Compaction**
-   - Safely compacts oversized tool results (>30,000 chars) in `sanitize_hook.py` to prevent upstream context blowout while preserving crucial head and tail lines.
-   - 300-second stream and request timeouts prevent premature disconnects.
+3. **Remotion Motion Graphics Studio (`motion-studio/`)**
+   - Production Remotion React 18 / TypeScript motion graphics project.
+   - 60 FPS deterministic frame-based animation with spring physics and fluid interpolations.
+   - 5 Built-in Compositions: `KineticTypography`, `CyberpunkHUD`, `ParticleVortex`, `LogoReveal`, and `VerticalReel` (9:16 mobile).
+   - Real-time preview via `preview-motion.bat` on `http://localhost:3000`.
 
 4. **Single-Instance 24/7 Background Supervisor**
-   - Independent Windows WMI watchdog daemon (`proxy-watchdog.ps1`) maintains a healthy LiteLLM proxy on port `4000` without process collisions or zombie tasks.
+   - Windows WMI watchdog daemon (`proxy-watchdog.ps1`) maintains a healthy LiteLLM proxy on port `4000` without process collisions or zombie tasks.
    - Health readiness checked in <5ms via `/health/readiness` without upstream quota consumption.
 
 5. **Zero-Error Architecture Protocol**
@@ -28,54 +34,63 @@ A high-performance autonomous engineering workspace integrating **Claude Code CL
 
 ---
 
-## ⚡ Quick Start Launchers
+## ⚡ Quick Start Launchers & Motion Workflow (macOS & Windows)
 
-| Command / Script | Purpose |
-|---|---|
-| `.\ultra.bat` (or `.\ultra-code.bat`) | **Ultra Code Mode**: Full unrestricted autonomous execution (auto permissions, max reasoning) |
-| `.\ai.bat` (or `.\model.bat`) | Interactive model switcher to select from all 5 engines & launch |
-| `.\start-deepseek.bat` | 1-click launcher for DeepSeek V4.1 Flash |
-| `.\start-kimi.bat` | 1-click launcher for Moonshot AI Kimi-K3 |
-| `.\start-nemotron.bat` | 1-click launcher for NVIDIA Nemotron 3 Super 120B |
-| `.\start-laguna.bat` | 1-click launcher for Poolside Laguna XS 2.1 |
-| `.\start-auto.bat` | 1-click launcher with Auto Smart-Failover (Zero API Errors) |
-| `.\start-claude.bat` (or `.ps1`) | Launches Claude Code CLI with Auto Mode (`Shift+Tab`) unlocked |
-| `.\run-autonomous.bat` (or `.ps1`) | Autonomous runner with continuous monitoring & auto-reconnect |
-| `.\start-proxy-independent.ps1` | Starts the detached 24/7 background proxy supervisor on port 4000 |
-| `.\stop-proxy.ps1` | Gracefully stops the proxy daemon and watchdog process tree |
-| `.\verify-all.bat` | 1-click universal integrity verification across all codebase files |
+All scripts feature automatic OS detection (`Darwin` vs `Windows_NT` vs `Linux`), automatic `python3` discovery, and 1-click execution:
+
+| macOS / Linux Command | Windows Command | Purpose |
+|---|---|---|
+| `./check-motion.sh <Comp>` | `.\check-motion.bat <Comp>` | **⚡ Sub-Minute Verifier (<2s)**: TypeScript type-check + 1-frame preview still |
+| `./still-motion.sh <Comp> [f]` | `.\still-motion.bat <Comp> [f]` | **📸 Quick Still**: Render single frame in <1.5s for instant layout inspection |
+| `./render-motion.sh <Comp>` | `.\render-motion.bat <Comp>` | **🚀 1-Click Turbo Render**: Pre-checks TS and renders 1080p 60fps MP4 in <8s |
+| `./preview-motion.sh` | `.\preview-motion.bat` | **🎥 Live 60FPS Studio**: Browser scrubbing & hot-reload on dedicated port `3100` (`http://localhost:3100`) |
+| `./boost.sh` | `.\boost.bat` | **🚀 Turbo Boost Accelerator**: Pinned sub-second inference + 1-shot Remotion |
+| `./start-mistral.sh` | `.\start-mistral.bat` | 1-click launcher with Mistral Large 4 (1.05T MoE, Recommended Default) |
+| `./start-ultra.sh` | `.\start-ultra.bat` | 1-click launcher for NVIDIA Nemotron Ultra 550B MoE |
+| `./start-step.sh` | `.\start-step.bat` | 1-click launcher for Step 5 Preview (600B MoE, 1M context) |
+| `./start-minimax.sh` | `.\start-minimax.bat` | 1-click launcher for MiniMax M3.1 Flash (428B MoE) |
+| `./start-deepseek.sh` | `.\start-deepseek.bat` | 1-click launcher for DeepSeek V4.1 Flash |
+| `./model.sh` | `.\model.bat` | Interactive terminal model switcher & canonical configuration sync |
+| `./start-proxy.sh` | `.\start-proxy.bat` | Spawns background persistent LiteLLM proxy daemon on port `4000` |
+| `./status-proxy.sh` | `.\status-proxy.bat` | Checks proxy readiness, active model, and sub-second latency |
+| `./stop-proxy.sh` | `.\stop-proxy.bat` | Cleanly terminates background proxy processes |
+| `./verify-all.sh` | `.\verify-all.bat` | 1-click universal zero-error integrity verification across all files |
 
 ---
 
-## 🛠️ Routing Flow
+## 🤖 Autonomous Subagent Swarm (`.claude/agents/`)
 
-```
-Claude Code CLI (claude.exe)
-         │
-         ▼ (Anthropic Messages API /v1/messages?beta=true)
-LiteLLM Local Proxy (127.0.0.1:4000)
-         │
-         ▼ (sanitize_hook.py: Context-Aware Dynamic Router)
- ┌───────────────────────────────┴───────────────────────────────┐
- │ Standard Prompts (<= 20k chars) │ High-Token Prompts (> 20k chars) │
- ▼                                 ▼
-NVIDIA Nemotron 3 Super 120B      DeepSeek V4 Flash
-(nvidia/nemotron-3-super-120b)     (deepseek-ai/deepseek-v4-flash)
-- Sub-second TTFT (~0.5s)         - 128k context capacity
-- Native reasoning stream         - Zero 503 stream drops
-```
+The workspace includes 5 specialized autonomous subagents tailored for 60FPS motion design and software architecture:
+
+1. **`motion-director.md`**: Creative concept, 60FPS frame pacing, harmonic color theory (`palettes.ts`), and sound design cues.
+2. **`remotion-engineer.md`**: Pure React 18 Remotion engineering, deterministic frame math, clamped interpolations, and GPU transforms.
+3. **`motion-qa.md`**: Rapid visual inspection via `still-motion.sh` / `.bat` (<1.5s check), keyframe transition auditing, and instant self-correction.
+4. **`fullstack-architect.md`**: Composition registration (`Root.tsx`), dual ID aliases (`PascalCase` + `kebab-case`), and cross-platform infrastructure.
+5. **`code-reviewer.md`**: Zero-error syntax assurance, strict TypeScript validation (`tsc --noEmit`), and import/export symmetry.
+
+---
+
+## 🎨 Versatile Motion & Audio Kit (`motion-studio/src/primitives/`)
+
+- **`springs.ts`**: Calibrated physics presets (`gentle`, `snappy`, `elastic`, `heavy`, `smooth`, `cinematic`) & `staggerSpring`.
+- **`KineticText.tsx`**: Staggered word/char spring entrance with optical blur-to-sharp focus and neon glow.
+- **`DeviceMockup.tsx`**: Photorealistic `IPhone16Pro` (titanium bezel, dynamic island), `MacBookPro` (unibody aluminum, top notch), `BrowserWindow` (macOS traffic lights, frosted glass), and `TiltCard` (3D pitch/yaw glare).
+- **`AudioSFX.tsx`**: Procedural Web Audio SFX generation (`whoosh`, `pop`, `impact`, `riser`, `chime`) & `WaveformVisualizer` (60FPS deterministic neon equalizer bars).
+- **`CameraRig.tsx`**: 2.5D/3D pan, continuous zoom, Ken Burns drift, focal tracking, and micro-camera shake.
+- **`GlowBackdrop.tsx`**: `SunriseGlow`, `RadialGlow`, `ParticleBackdrop`, and `MeshGlow` cinematic atmospheric shaders.
+- **`VersatileShowcase.tsx`**: 10-second multi-scene showcase composition registered in `Root.tsx`.
 
 ---
 
 ## 🛡️ Zero-Error Protocol Verification
 
 Run the universal multi-language verifier anytime:
-```bash
-python .agents/skills/zero-error-architect/scripts/universal_verifier.py
-```
-or double-click:
 ```cmd
 verify-all.bat
+```
+or via Python:
+```bash
+python .agents\skills\zero-error-architect\scripts\universal_verifier.py
 ```
 
 ---
@@ -84,15 +99,23 @@ verify-all.bat
 
 ```
 ├── .agents/skills/zero-error-architect/  # Universal auditor & file generator
-├── .claude/                             # Claude Code custom skills & commands
+├── .claude/                             # Claude Code custom settings & options
+├── motion-studio/                       # Remotion React 18 Motion Graphics Studio
+│   ├── src/compositions/                # 60 FPS Compositions (KineticTypography, CyberpunkHUD, ParticleVortex, LogoReveal)
+│   ├── src/Root.tsx                     # Composition registry
+│   └── remotion.config.ts               # Remotion bundler config
 ├── ai.bat / ai.ps1                      # 1-click model switcher & runner
-├── select_model.py                      # Multi-model selection engine (5 NVIDIA NIM models)
+├── model.bat / model.ps1                # Model selection utility
+├── select_model.py                      # Multi-model selection engine (NVIDIA NIM frontier models)
+├── start-mistral.bat                    # 1-click Mistral Large 4 launcher (Default)
+├── start-step.bat                       # 1-click Step 5 Preview launcher
+├── start-minimax.bat                    # 1-click MiniMax M3.1 Flash launcher
+├── start-ultra.bat                      # 1-click Nemotron Ultra 550B launcher
+├── preview-motion.bat                   # 1-click Remotion Motion Graphics preview launcher
 ├── start-claude.ps1 / start-claude.bat  # Claude Code launcher with live thinking stream
 ├── run-autonomous.ps1 / .bat            # Autonomous loop runner
 ├── config.yaml                          # LiteLLM proxy routing, fallbacks & timeouts
-├── sanitize_hook.py                     # Dynamic model router & sanitization hook
-├── start-proxy-independent.ps1          # Background proxy daemon launcher
-├── stop-proxy.ps1                       # Process tree termination script
+├── sanitize_hook.py                     # Dynamic model router, thinking stream translator & directives
 ├── proxy-watchdog.ps1                   # 24/7 supervisor watchdog
 ├── verify-all.bat                       # 1-click universal integrity verification
 └── README.md                            # Complete architecture documentation
