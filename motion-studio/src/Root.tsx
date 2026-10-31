@@ -13,6 +13,7 @@ import { GoodEvening } from "./compositions/GoodEvening";
 import { BeyondEarth } from "./compositions/BeyondEarth";
 import { OpenClaudeX } from "./compositions/OpenClaudeX";
 import { HourLongVideo } from "./compositions/HourLongVideo";
+import { ItIsAi } from "./compositions/ItIsAi";
 import { VersatileShowcase } from "./primitives/VersatileShowcase";
 import "./styles.css";
 
@@ -419,6 +420,24 @@ export const RemotionRoot: React.FC = () => {
         id="hour-long-preview"
         component={HourLongVideo}
         durationInFrames={3600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+
+      {/* 16. ItIsAi — 5 seconds (300 frames @ 60fps) */}
+      <Composition
+        id="ItIsAi"
+        component={ItIsAi}
+        durationInFrames={300}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="it-is-ai"
+        component={ItIsAi}
+        durationInFrames={300}
         fps={60}
         width={1920}
         height={1080}
