@@ -43,6 +43,7 @@ All scripts feature automatic OS detection (`Darwin` vs `Windows_NT` vs `Linux`)
 | `./check-motion.sh <Comp>` | `.\check-motion.bat <Comp>` | **⚡ Sub-Minute Verifier (<2s)**: TypeScript type-check + 1-frame preview still |
 | `./still-motion.sh <Comp> [f]` | `.\still-motion.bat <Comp> [f]` | **📸 Quick Still**: Render single frame in <1.5s for instant layout inspection |
 | `./render-motion.sh <Comp>` | `.\render-motion.bat <Comp>` | **🚀 1-Click Turbo Render**: Pre-checks TS and renders 1080p 60fps MP4 in <8s |
+| `./render-long.sh <Comp>` | `.\render-long.bat <Comp>` | **🎬 1-Hour Long-Form Render**: Continuous high-capacity rendering (up to 1 hr @ 60fps) |
 | `./preview-motion.sh` | `.\preview-motion.bat` | **🎥 Live 60FPS Studio**: Browser scrubbing & hot-reload on dedicated port `3100` (`http://localhost:3100`) |
 | `./boost.sh` | `.\boost.bat` | **🚀 Turbo Boost Accelerator**: Pinned sub-second inference + 1-shot Remotion |
 | `./start-mistral.sh` | `.\start-mistral.bat` | 1-click launcher with Mistral Large 4 (1.05T MoE, Recommended Default) |
