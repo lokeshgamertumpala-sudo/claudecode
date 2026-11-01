@@ -7,7 +7,7 @@ set "PROMPT_TEXT=%~2"
 
 echo ====================================================
 echo   🎬 1-SHOT AUTONOMOUS MOTION GRAPHICS ACCELERATOR
-echo   Powered by Remotion 60FPS & NVIDIA NIM (Ultra 550B)
+echo   Powered by Remotion 60FPS and NVIDIA NIM (Ultra 550B)
 echo ====================================================
 
 :: If no composition specified, show usage
