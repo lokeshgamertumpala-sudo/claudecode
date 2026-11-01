@@ -99,7 +99,7 @@ if command -v netstat >/dev/null 2>&1 && command -v taskkill >/dev/null 2>&1; th
 fi
 
 # Launch detached daemon
-nohup $LITELLM_CMD --config config.yaml --port ${PORT} > proxy-stdout.log 2> proxy-stderr.log &
+nohup $LITELLM_CMD --config config.yaml --port ${PORT} --request_timeout 1800 --keepalive_timeout 1800 > proxy-stdout.log 2> proxy-stderr.log &
 PROXY_PID=$!
 disown $PROXY_PID 2>/dev/null || true
 

@@ -67,6 +67,7 @@ try:
                 block_open = False
                 message_stopped = False
                 current_block_index = 0
+                active_block_type = "text"
                 has_emitted_body_block = False
 
                 def build_closure() -> bytes:
@@ -156,6 +157,9 @@ try:
                                     if line.startswith("data:"):
                                         data_str = line[5:].strip()
                                         if data_str == "[DONE]":
+                                            if block_open:
+                                                yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                                block_open = False
                                             message_stopped = True
                                             new_lines.append(line)
                                             continue
@@ -170,15 +174,27 @@ try:
                                                 block_open = False
                                                 current_block_index = 0
                                                 has_emitted_body_block = False
+                                                active_block_type = "text"
                                             elif p_type == "content_block_start":
+                                                if block_open:
+                                                    # Close previously unclosed block before opening a new one
+                                                    yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                                    block_open = False
                                                 block_open = True
                                                 current_block_index = payload.get("index", current_block_index)
                                                 c_block = payload.get("content_block", {})
-                                                if isinstance(c_block, dict) and c_block.get("type") in ("text", "tool_use"):
-                                                    has_emitted_body_block = True
+                                                if isinstance(c_block, dict):
+                                                    active_block_type = c_block.get("type", "text")
+                                                    if active_block_type in ("text", "tool_use"):
+                                                        has_emitted_body_block = True
                                             elif p_type == "content_block_stop":
                                                 block_open = False
                                             elif p_type == "message_delta":
+                                                # Ensure any open block is cleanly closed before message_delta
+                                                if block_open:
+                                                    yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                                    block_open = False
+
                                                 # Guard against empty-turn completion (e.g. only thinking block before end_turn)
                                                 if not has_emitted_body_block:
                                                     target_idx = current_block_index + 1
@@ -189,10 +205,20 @@ try:
                                                     )
                                                     yield synth_block.encode("utf-8")
                                                     has_emitted_body_block = True
+                                                    current_block_index = target_idx
+
+                                                # Coerce stop_reason from max_tokens to end_turn to prevent infinite continuation loops (64k error)
+                                                delta = payload.get("delta", {})
+                                                if isinstance(delta, dict):
+                                                    if delta.get("stop_reason") == "max_tokens":
+                                                        delta["stop_reason"] = "end_turn"
                                             elif p_type == "message_stop":
+                                                if block_open:
+                                                    yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                                    block_open = False
                                                 message_stopped = True
 
-                                            # Fix null text delta in content_block_delta
+                                            # Clean and align deltas in content_block_delta to prevent type mismatches
                                             if p_type == "content_block_delta":
                                                 idx = payload.get("index")
                                                 if idx is not None:
@@ -204,23 +230,27 @@ try:
                                                         has_emitted_body_block = True
                                                     if d_type == "text_delta" and delta.get("text") is None:
                                                         delta["text"] = ""
-                                                    elif "reasoning_content" in delta and delta.get("reasoning_content"):
-                                                        # Convert reasoning_content delta to native Anthropic thinking delta
-                                                        r_text = delta.get("reasoning_content", "")
-                                                        delta["type"] = "thinking_delta"
-                                                        delta["thinking"] = r_text
-                                                        delta.pop("reasoning_content", None)
-                                                    elif d_type == "text_delta" and isinstance(delta.get("text"), str):
-                                                        txt = delta.get("text", "")
-                                                        if "<think>" in txt:
-                                                            txt = txt.replace("<think>", "")
+
+                                                    # Prevent content_block_type_mismatch by strictly aligning delta type with parent block
+                                                    if active_block_type == "thinking":
+                                                        if d_type != "thinking_delta":
                                                             delta["type"] = "thinking_delta"
-                                                            delta["thinking"] = txt
-                                                            delta.pop("text", None)
-                                                        elif "</think>" in txt:
-                                                            txt = txt.replace("</think>", "")
+                                                            if "text" in delta:
+                                                                delta["thinking"] = delta.pop("text", "")
+                                                            elif "reasoning_content" in delta:
+                                                                delta["thinking"] = delta.pop("reasoning_content", "")
+                                                    elif active_block_type == "text":
+                                                        # Never convert delta to thinking_delta if block is text
+                                                        if d_type != "text_delta":
                                                             delta["type"] = "text_delta"
-                                                            delta["text"] = txt
+                                                            if "thinking" in delta:
+                                                                delta["text"] = delta.pop("thinking", "")
+                                                            elif "reasoning_content" in delta:
+                                                                delta["text"] = delta.pop("reasoning_content", "")
+                                                        if isinstance(delta.get("text"), str):
+                                                            txt = delta["text"]
+                                                            if "<think>" in txt or "</think>" in txt:
+                                                                delta["text"] = txt.replace("<think>", "").replace("</think>", "")
 
                                             new_lines.append(f"data: {json.dumps(payload)}")
                                         except Exception:
@@ -232,8 +262,8 @@ try:
 
                         except asyncio.TimeoutError:
                             silence_seconds += 2.5
-                            if silence_seconds >= 600.0:
-                                print("[SSE-STREAM] Upstream LLM stalled (>600s silence). Gracefully terminating stream.", flush=True)
+                            if silence_seconds >= 1800.0:
+                                print("[SSE-STREAM] Upstream LLM stalled (>1800s silence). Gracefully terminating stream.", flush=True)
                                 closure = build_closure()
                                 if closure:
                                     yield closure
@@ -243,6 +273,12 @@ try:
 
                     if buffer.strip():
                         yield (buffer + "\n\n").encode("utf-8")
+
+                    # If stream ended without clean message closure, finalize cleanly
+                    if not message_stopped:
+                        closure = build_closure()
+                        if closure:
+                            yield closure
 
                 except Exception as outer_exc:
                     print(f"[SSE-STREAM] Fatal generator error: {outer_exc}. Yielding graceful closure.", flush=True)
