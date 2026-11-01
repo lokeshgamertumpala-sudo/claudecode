@@ -2,6 +2,7 @@
 param(
     [Parameter(Position=0)]
     [string]$Model = "",
+    [string]$Prompt = "",
     [switch]$DangerouslySkipPermissions,
     [switch]$Unrestricted,
     [switch]$Boost,
@@ -265,6 +266,9 @@ if ($DangerouslySkipPermissions -or $Unrestricted) {
 }
 if ($promptFromModelParam) {
     $claudeArgs += $promptFromModelParam
+}
+if ($Prompt) {
+    $claudeArgs += $Prompt
 }
 if ($args.Count -gt 0) {
     $claudeArgs += $args

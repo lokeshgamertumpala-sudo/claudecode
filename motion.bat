@@ -2,8 +2,21 @@
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
-set "COMP_NAME=%~1"
+set "RAW_ARG1=%~1"
 set "PROMPT_TEXT=%~2"
+set "COMP_NAME=%~n1"
+
+:: If first parameter contains spaces and second parameter is empty, treat first param as prompt
+if not "%RAW_ARG1%"=="" (
+    for /f "tokens=1,2" %%A in ("%RAW_ARG1%") do (
+        if not "%%B"=="" (
+            if "%PROMPT_TEXT%"=="" (
+                set "PROMPT_TEXT=%RAW_ARG1%"
+                set "COMP_NAME=AiExplainer"
+            )
+        )
+    )
+)
 
 echo ====================================================
 echo   🎬 1-SHOT AUTONOMOUS MOTION GRAPHICS ACCELERATOR
@@ -37,14 +50,19 @@ if %ERRORLEVEL% NEQ 0 (
     echo [!] Local LiteLLM proxy is not running on port 4000.
     echo [*] Starting local inference proxy in background...
     start /b powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0start-proxy.ps1" >nul 2>&1
-    timeout /t 3 /nobreak >nul
+    echo [*] Waiting for proxy readiness...
+    powershell -NoProfile -Command "for ($i=0; $i -lt 10; $i++) { try { $r = Invoke-RestMethod -Uri 'http://127.0.0.1:4000/health/readiness' -TimeoutSec 2 -ErrorAction Stop; if ($r.status -eq 'healthy') { exit 0 } } catch {}; Start-Sleep -Milliseconds 500 }; exit 1" >nul 2>&1
+    if !ERRORLEVEL! NEQ 0 (
+        echo [ERROR] LiteLLM proxy failed to start or become healthy on port 4000.
+        exit /b 1
+    )
 )
 echo [+] Inference proxy confirmed healthy.
 
 :: Step 2: Ensure fast model selected (Nemotron Ultra 550B MoE)
 if exist "select_model.py" (
     python select_model.py ultra >nul 2>&1
-    echo [+] Pinned to NVIDIA Nemotron Ultra 550B MoE (sub-second TTFT).
+    echo [+] Pinned to NVIDIA Nemotron Ultra 550B MoE [sub-second TTFT].
 )
 
 :: Step 3: If prompt provided, execute Claude Code in 1-shot autonomous mode
