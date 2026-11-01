@@ -54,6 +54,20 @@ if /i "%COMP_ID%"=="one-hour" set "COMP_ID=HourLongVideo"
 if /i "%COMP_ID%"=="onehour" set "COMP_ID=HourLongVideo"
 if /i "%COMP_ID%"=="hour-preview" set "COMP_ID=HourLongPreview"
 if /i "%COMP_ID%"=="hourlongpreview" set "COMP_ID=HourLongPreview"
+if /i "%COMP_ID%"=="aiexplainer" set "COMP_ID=AiExplainer"
+if /i "%COMP_ID%"=="ai-explainer" set "COMP_ID=AiExplainer"
+if /i "%COMP_ID%"=="ai" set "COMP_ID=AiExplainer"
+if /i "%COMP_ID%"=="neuralnetwork" set "COMP_ID=AiExplainer"
+if /i "%COMP_ID%"=="neural-network" set "COMP_ID=AiExplainer"
+if /i "%COMP_ID%"=="ai-neural-network" set "COMP_ID=AiExplainer"
+if /i "%COMP_ID%"=="explainer" set "COMP_ID=AiExplainer"
+if /i "%COMP_ID%"=="itisai" set "COMP_ID=ItIsAi"
+if /i "%COMP_ID%"=="it-is-ai" set "COMP_ID=ItIsAi"
+
+:: Dynamic composition matching from src/compositions folder
+for %%F in (src\compositions\*.tsx) do (
+    if /i "%COMP_ID%"=="%%~nF" set "COMP_ID=%%~nF"
+)
 
 :: Default output path
 if "%OUT_FILE%"=="" set "OUT_FILE=out/%COMP_ID%.mp4"

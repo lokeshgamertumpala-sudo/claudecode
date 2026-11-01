@@ -46,6 +46,7 @@ Claude Code automatically scans the skill descriptions in real-time. Whenever yo
 | **18** | **A11y Champion** | UX & Product Design | `/a11y-champion` | WCAG 2.2 AA/AAA compliance, screen reader attributes, focus trapping, and keyboard navigation. |
 | **19** | **UI Wireframe** | Layout & Prototyping | `/ui-wireframe` | ASCII layout schematics, information hierarchy mapping, and rapid interactive HTML prototypes. |
 | **20** | **Landing Page Hero** | Growth & Conversion | `/landing-page-hero` | High-converting SaaS hero layouts, bento grids, social proof badges, and pricing matrices. |
+| **21** | **Remotion Motion Graphics** | Video & Animation | `/motion` | 1-Shot autonomous 60FPS Remotion React motion graphics, cinematic explainers, procedural loops, and video components. |
 
 ---
 

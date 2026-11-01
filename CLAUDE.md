@@ -46,6 +46,7 @@ This repository contains **21 specialized skills** in `.claude/skills/` and `.ag
 - **Deep Debugging & Root Cause**: Use `.claude/skills/bug-hunter/SKILL.md` for systematic error tracing.
 - **Automated Testing**: Use `.claude/skills/test-craftsman/SKILL.md` for AAA unit, integration, and E2E tests.
 - **UI & Aesthetics**: Use `.claude/skills/tailwind-ninja/SKILL.md` and `.claude/skills/design-system/SKILL.md` for modern glassmorphism, typography scales, and token architectures.
+- **Motion Graphics & Remotion 1-Shot**: Use `.claude/skills/remotion-motion-graphics/SKILL.md` (or `.agents/skills/remotion-motion-graphics/SKILL.md`) for 1-shot autonomous 60FPS Remotion React motion graphics with pre-cached library exports and zero file-reading turns.
 - **Smooth Motion**: Use `.claude/skills/micro-interactions/SKILL.md` for spring physics, tactile buttons, and loading skeletons.
 - **Responsive Layout**: Use `.claude/skills/responsive-wizard/SKILL.md` for fluid mobile-first layouts and container queries.
 - **Clean Architecture & Refactoring**: Use `.claude/skills/code-refactor/SKILL.md` for SOLID principles and DRY code.
@@ -113,6 +114,34 @@ When coding motion graphics, video components, or animations, you operate as an 
   2. Register in `motion-studio/src/Root.tsx` with symmetrical named import.
   3. Run `check-motion.bat <Name>` to verify in ~2 seconds.
   4. Run `render-motion.bat <Name> out/<name>.mp4` to render full 1080p 60fps MP4 in <8 seconds.
+
+---
+
+## ⚡ Section 8: 1-Shot Autonomous Motion Graphics Mandate (Zero Exploration & Zero Pauses)
+When asked to create, generate, or animate motion graphics, explainers, or Remotion components:
+
+1. **Strict Prohibition on Library Exploration (Zero File Reading)**:
+   - You are **STRICTLY PROHIBITED** from calling `Glob`, `Grep`, or `Read` on `motion-studio/src/library/` or reading existing compositions.
+   - All components, props, math utilities, easing curves, and color palettes are **100% pre-cached** in `.claude/skills/remotion-motion-graphics/SKILL.md`:
+     - Springs: `springPresets` (`snappy`, `bouncy`, `smooth`, `cinematic`, `gentle`, `slowMo`), `getSpringValue(frame, fps, preset, delay)`.
+     - Math: `interpolateSafe(frame, [in], [out])`, `clamp`, `getInOutOpacity(frame, total, fade)`, `slideIn(frame, start, dur, from, to)`.
+     - Palettes: `palettes` (`appleMinimal`, `cyberpunk`, `deepSpace`, `solarEarth`, `darkLuxury`).
+     - Typography & Badges: `KineticTitle`, `GlowBadge`.
+     - Particles & Rings: `ParticleField` (Mulberry32 seed-locked), `OrbitalRings`.
+     - Effects & Camera: `VignetteOverlay`, `GridBackdrop`, `LightSweep`, `GlowDefs`, `CameraRig`.
+2. **Strict Prohibition on Conversational Pauses (Immediate Tool Calling)**:
+   - **NEVER** emit conversational acknowledgments alone (e.g. DO NOT say *"Now I have a clear understanding of the existing structure. Let me create..."* or *"I will now write the file..."*).
+   - Emitting text without an accompanying tool call causes Claude Code to halt the autonomous loop prematurely.
+   - You MUST emit a `Write` tool call to `motion-studio/src/compositions/<Name>.tsx` as your very first action in Turn 1!
+3. **Deterministic 4-Turn Pipeline**:
+   - **Turn 1**: Call `Write` to create `motion-studio/src/compositions/<Name>.tsx` using a modular 5-scene `<Series>` architecture.
+   - **Turn 2**: Call `Edit` on `motion-studio/src/Root.tsx` to register both 1080p and 4K composition presets.
+   - **Turn 3**: Call `Bash` to run `check-motion.bat <Name> 60` (validates TypeScript syntax and captures preview frame in <2s).
+   - **Turn 4**: Call `Bash` to run `render-motion.bat <Name> out/<name>.mp4` (12-thread multithreaded MP4 render in <8s).
+4. **Immediate Continuation Execution**:
+   - When the user prompt is `"do it"`, `"continue"`, `"proceed"`, or `"go ahead"`, emit the next required tool call (`Write`, `Edit`, or `Bash`) immediately with zero conversational preamble.
+5. **CLI Motion Runner**:
+   - Run `motion.bat <CompositionName> "<Prompt>"` or `motion.bat <CompositionName>` for 1-click autonomous execution.
 
 ---
 

@@ -523,6 +523,36 @@ When creating, editing, or enhancing motion graphics, video components, or anima
    - Full TypeScript types on all Remotion compositions and Props.
 """
 
+ONESHOT_MOTION_DIRECTIVE = """
+[CRITICAL 1-SHOT DIRECT ACTION MANDATE - ZERO CONVERSATIONAL PAUSES & ZERO FILE EXPLORATION]
+You are creating/editing Motion Graphics or Remotion React video compositions:
+1. STRICT PROHIBITION ON FILE READING / EXPLORATION:
+   - DO NOT call `Read`, `Glob`, or `Grep` on `motion-studio/src/library/` or existing compositions.
+   - All library exports are 100% pre-cached in your Remotion skill (`.claude/skills/remotion-motion-graphics/SKILL.md`):
+     • Springs: `springPresets` (`snappy`, `bouncy`, `smooth`, `cinematic`, `gentle`, `slowMo`), `getSpringValue(frame, fps, preset, delay)`.
+     • Math: `interpolateSafe(frame, [in], [out])`, `clamp`, `getInOutOpacity(frame, total, fade)`, `slideIn(frame, start, dur, from, to)`.
+     • Palettes: `palettes` (`appleMinimal`, `cyberpunk`, `deepSpace`, `solarEarth`, `darkLuxury`).
+     • Typography & Badges: `KineticTitle`, `GlowBadge`.
+     • Particles & Rings: `ParticleField` (Mulberry32 deterministic), `OrbitalRings`.
+     • Effects & Atmosphere: `VignetteOverlay`, `GridBackdrop`, `LightSweep`, `GlowDefs`, `CameraRig`.
+2. STRICT PROHIBITION ON CONVERSATIONAL PAUSES:
+   - NEVER emit conversational acknowledgments alone (e.g. DO NOT say "Now I have a clear understanding of the existing structure. Let me create..." or "I will now implement...").
+   - Emitting text without calling a tool halts Claude Code's autonomous execution and abandons the user!
+   - You MUST emit a `Write` tool call to `motion-studio/src/compositions/<Name>.tsx` as your VERY FIRST ACTION in this turn!
+3. STRICT 4-TURN PIPELINE:
+   - Turn 1: Call `Write` to create `motion-studio/src/compositions/<Name>.tsx` (5-scene modular `<Series>` architecture, 60fps, named export).
+   - Turn 2: Call `Edit` on `motion-studio/src/Root.tsx` (register 1080p and 4K composition presets).
+   - Turn 3: Call `Bash` to run `check-motion.bat <Name> 60` (instant verification in <2s).
+   - Turn 4: Call `Bash` to run `render-motion.bat <Name> out/<name>.mp4` (12-thread multithreaded MP4 render in <8s).
+"""
+
+CONTINUATION_ACTION_DIRECTIVE = """
+[CRITICAL CONTINUATION DIRECTIVE - IMMEDIATE TOOL CALL REQUIRED]
+The user prompt is a continuation command (e.g. "do it", "continue", "proceed", "go ahead").
+1. DO NOT output conversational text, pleasantries, or explanations.
+2. IMMEDIATELY invoke the next required tool call (`Write`, `Edit`, or `Bash`) to proceed with the pending implementation!
+"""
+
 ARCHITECTURAL_COHESION_DIRECTIVE = """
 [CRITICAL ARCHITECTURAL CONTRACT - FULL POWER MAXIMUM AUTONOMOUS DIRECTIVE]
 You are operating as an Elite Principal Software Architect and Lead Systems Engineer operating at MAXIMUM REASONING POWER.
@@ -861,32 +891,79 @@ class RequestSanitizer(CustomLogger):
                     if isinstance(p, dict):
                         total_chars += len(str(p.get("text", "")))
 
-        # Check for boost triggers in messages or system (case-insensitive)
+        # Check for boost, motion, and continuation triggers in messages or system (case-insensitive)
         boost_triggered = False
+        motion_triggered = False
+        continuation_triggered = False
+        last_user_msg = None
+
+        motion_keywords = (
+            "remotion", "motion-studio", "motion graphic", "motion graphics",
+            "/motion", "cinematic", "explainer", "animation", "neural network video"
+        )
+        continuation_phrases = (
+            "do it", "continue", "proceed", "go ahead", "done", "next",
+            "keep going", "finish", "yes", "ok", "proceed with implementation"
+        )
+
         if messages and isinstance(messages, list):
             for m in messages:
                 if not isinstance(m, dict):
                     continue
+                role = m.get("role")
                 c = m.get("content")
+                text_content = ""
                 if isinstance(c, str):
-                    c_lower = c.lower()
-                    if "/boost" in c_lower or "turbo boost" in c_lower:
-                        boost_triggered = True
-                        break
+                    text_content = c.lower()
                 elif isinstance(c, list):
-                    for part in c:
-                        if isinstance(part, dict):
-                            t = (str(part.get("text", "")) + " " + str(part.get("content", ""))).lower()
-                            if "/boost" in t or "turbo boost" in t:
-                                boost_triggered = True
-                                break
-                if boost_triggered:
-                    break
+                    text_content = " ".join(
+                        str(p.get("text", "")) + " " + str(p.get("content", ""))
+                        for p in c if isinstance(p, dict)
+                    ).lower()
+
+                if "/boost" in text_content or "turbo boost" in text_content:
+                    boost_triggered = True
+
+                if any(k in text_content for k in motion_keywords) or (
+                    ("video" in text_content or "motion" in text_content) and
+                    any(act in text_content for act in ("create", "make", "generate", "render", "explainer", "build"))
+                ):
+                    motion_triggered = True
+
+                if role == "user":
+                    last_user_msg = m
 
         if not boost_triggered and top_system:
             sys_str = str(top_system).lower()
             if "/boost" in sys_str or "turbo boost" in sys_str:
                 boost_triggered = True
+            if any(k in sys_str for k in motion_keywords):
+                motion_triggered = True
+
+        # Check latest user message for continuation intent
+        if last_user_msg:
+            c = last_user_msg.get("content")
+            user_text = ""
+            if isinstance(c, str):
+                user_text = c.strip().lower().strip(".!?,")
+            elif isinstance(c, list):
+                user_text = " ".join(
+                    str(p.get("text", "")).strip().lower()
+                    for p in c if isinstance(p, dict) and p.get("type") == "text"
+                ).strip(".!?,")
+
+            if user_text in continuation_phrases or any(user_text.startswith(p) for p in ("do it", "continue", "proceed", "go ahead")):
+                continuation_triggered = True
+
+            # Inject immediate action mandate directly into the user message prompt
+            if continuation_triggered and isinstance(c, str) and "[ACTION MANDATE:" not in c:
+                last_user_msg["content"] = c + "\n\n[ACTION MANDATE: Continuation confirmed. DO NOT output conversational text alone! IMMEDIATELY emit the next required tool call (Write, Edit, or Bash).]"
+            elif motion_triggered and not continuation_triggered and isinstance(c, str) and "[1-SHOT MOTION MANDATE:" not in c:
+                last_user_msg["content"] = c + "\n\n[1-SHOT MOTION MANDATE: Do NOT read library files. Do NOT output conversational text before calling tools. IMMEDIATELY emit the Write tool call to motion-studio/src/compositions/<Name>.tsx!]"
+
+        # Motion graphics prompts automatically benefit from turbo ultra routing
+        if motion_triggered:
+            boost_triggered = True
 
         req_model = str(data.get("model", "")).strip().lower()
         generic_claude_models = (
@@ -895,7 +972,7 @@ class RequestSanitizer(CustomLogger):
             "claude-opus-4", "claude-opus-4-5", "claude-3-opus-20240229", "*", "auto", ""
         )
         if boost_triggered:
-            print("[SMART-ROUTER] /boost or TURBO BOOST detected! Pinning directly to Nemotron Ultra 550B MoE (backup-ultra).", flush=True)
+            print("[SMART-ROUTER] /boost, Motion, or TURBO BOOST detected! Pinning directly to Nemotron Ultra 550B MoE (backup-ultra).", flush=True)
             target_model = "backup-ultra"
         else:
             pref = self.get_selected_model()
@@ -917,7 +994,15 @@ When asked what model, mode, or engine you are, or who built/powers you, you MUS
 "{active_name} powered by NVIDIA NIM via local proxy routing."
 Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
 """
-        full_directive = identity_directive.strip() + "\n\n" + MOTION_GRAPHICS_REMOTION_DIRECTIVE.strip() + "\n\n" + ARCHITECTURAL_COHESION_DIRECTIVE.strip()
+        directive_parts = [identity_directive.strip()]
+        if motion_triggered:
+            directive_parts.append(ONESHOT_MOTION_DIRECTIVE.strip())
+        if continuation_triggered:
+            directive_parts.append(CONTINUATION_ACTION_DIRECTIVE.strip())
+        directive_parts.append(MOTION_GRAPHICS_REMOTION_DIRECTIVE.strip())
+        directive_parts.append(ARCHITECTURAL_COHESION_DIRECTIVE.strip())
+
+        full_directive = "\n\n".join(directive_parts)
 
         # 3. Sanitize System Prompt
         if top_system:
@@ -926,7 +1011,15 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                 if "[CRITICAL ENGINE SPECIFICATION" not in cleaned:
                     data["system"] = full_directive + "\n\n" + cleaned
                 else:
-                    data["system"] = cleaned
+                    extra_dirs = []
+                    if motion_triggered and "[CRITICAL 1-SHOT DIRECT ACTION MANDATE" not in cleaned:
+                        extra_dirs.append(ONESHOT_MOTION_DIRECTIVE.strip())
+                    if continuation_triggered and "[CRITICAL CONTINUATION DIRECTIVE" not in cleaned:
+                        extra_dirs.append(CONTINUATION_ACTION_DIRECTIVE.strip())
+                    if extra_dirs:
+                        data["system"] = "\n\n".join(extra_dirs) + "\n\n" + cleaned
+                    else:
+                        data["system"] = cleaned
             elif isinstance(top_system, list):
                 for p in top_system:
                     if isinstance(p, dict) and "text" in p and isinstance(p["text"], str):
@@ -957,6 +1050,14 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                 if isinstance(s_content, str):
                     if "[CRITICAL ENGINE SPECIFICATION" not in s_content:
                         system_msg["content"] = full_directive + "\n\n" + s_content
+                    else:
+                        extra_dirs = []
+                        if motion_triggered and "[CRITICAL 1-SHOT DIRECT ACTION MANDATE" not in s_content:
+                            extra_dirs.append(ONESHOT_MOTION_DIRECTIVE.strip())
+                        if continuation_triggered and "[CRITICAL CONTINUATION DIRECTIVE" not in s_content:
+                            extra_dirs.append(CONTINUATION_ACTION_DIRECTIVE.strip())
+                        if extra_dirs:
+                            system_msg["content"] = "\n\n".join(extra_dirs) + "\n\n" + s_content
                 elif isinstance(s_content, list):
                     has_dir = any(isinstance(p, dict) and "[CRITICAL ENGINE SPECIFICATION" in p.get("text", "") for p in s_content)
                     if not has_dir:
