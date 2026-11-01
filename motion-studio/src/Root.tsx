@@ -14,6 +14,7 @@ import { BeyondEarth } from "./compositions/BeyondEarth";
 import { OpenClaudeX } from "./compositions/OpenClaudeX";
 import { HourLongVideo } from "./compositions/HourLongVideo";
 import { ItIsAi } from "./compositions/ItIsAi";
+import { AiExplainer } from "./compositions/AiExplainer";
 import { VersatileShowcase } from "./primitives/VersatileShowcase";
 import "./styles.css";
 
@@ -441,6 +442,40 @@ export const RemotionRoot: React.FC = () => {
         fps={60}
         width={1920}
         height={1080}
+      />
+
+      {/* 17. AiExplainer — 60 seconds (3600 frames @ 60fps) Cinematic AI Neural Network */}
+      <Composition
+        id="AiExplainer"
+        component={AiExplainer}
+        durationInFrames={3600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="ai-explainer"
+        component={AiExplainer}
+        durationInFrames={3600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="ai-neural-network"
+        component={AiExplainer}
+        durationInFrames={3600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="AiExplainer-4K"
+        component={AiExplainer}
+        durationInFrames={3600}
+        fps={60}
+        width={3840}
+        height={2160}
       />
     </>
   );
