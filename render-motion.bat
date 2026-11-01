@@ -17,7 +17,8 @@ if "%COMP_ID%"=="" (
     echo   MinimalMotion, EarthRotation, GoodMorning, GoodEvening, HiGreeting,
     echo   KineticTypography, CyberpunkHUD, ParticleVortex, LogoReveal,
     echo   NeonPortal, VerticalReel, VersatileShowcase, BeyondEarth,
-    echo   OpenClaudeX, HourLongVideo, HourLongPreview, AiExplainer, ItIsAi
+    echo   OpenClaudeX, HourLongVideo, HourLongPreview, AiExplainer, ItIsAi,
+    echo   CosmicAurora, AuroraFlow
     exit /b 1
 )
 

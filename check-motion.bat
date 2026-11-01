@@ -12,6 +12,14 @@ if "%COMP_ID%"=="" (
     echo Usage: check-motion.bat [CompositionId] [OptionalFrameNumber]
     echo Example: check-motion.bat EarthRotation 60
     echo Example: check-motion.bat MinimalMotion 45
+    echo Example: check-motion.bat AuroraFlow 60
+    echo.
+    echo Available compositions:
+    echo   MinimalMotion, EarthRotation, GoodMorning, GoodEvening, HiGreeting,
+    echo   KineticTypography, CyberpunkHUD, ParticleVortex, LogoReveal,
+    echo   NeonPortal, VerticalReel, VersatileShowcase, BeyondEarth,
+    echo   OpenClaudeX, HourLongVideo, HourLongPreview, AiExplainer, ItIsAi,
+    echo   CosmicAurora, AuroraFlow
     exit /b 1
 )
 

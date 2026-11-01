@@ -88,7 +88,7 @@ else
 fi
 
 # 5. Resolve or switch active model preference
-VALID_TRIGGERS=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "auto" "smart" "mistral" "mistral-large" "mistral-large-4" "step" "step-5" "minimax" "ultra" "nemotron" "deepseek" "flash" "laguna" "poolside" "r1" "deepseek-r1" "v3" "deepseek-v3" "llama" "llama-3.3" "qwen" "qwen-72b" "boost" "turbo")
+VALID_TRIGGERS=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "auto" "smart" "mistral" "mistral-large" "mistral-large-4" "step" "step-5" "minimax" "ultra" "nemotron" "deepseek" "flash" "laguna" "poolside" "r1" "deepseek-r1" "v3" "deepseek-v3" "llama" "llama-3.3" "llama-3.3-70b" "qwen" "qwen-72b" "qwen-2.5-72b" "boost" "turbo")
 
 PROMPT_PARAM=""
 if [ -n "$MODEL" ]; then

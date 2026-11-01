@@ -38,6 +38,8 @@ case "$COMP_ID_LOWER" in
     hourlongpreview|hour-long-preview|hour-preview) COMP_ID="HourLongPreview" ;;
     aiexplainer|ai-explainer|ai|neuralnetwork|aineuralnetwork|explainer) COMP_ID="AiExplainer" ;;
     itisai|it-is-ai) COMP_ID="ItIsAi" ;;
+    auroraflow|aurora-flow|aurora) COMP_ID="AuroraFlow" ;;
+    cosmicaurora|cosmic-aurora|cosmic) COMP_ID="CosmicAurora" ;;
 esac
 
 echo -e "\033[96m====================================================\033[0m"

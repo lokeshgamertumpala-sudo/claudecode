@@ -392,6 +392,18 @@ MODEL_DISPLAY_NAMES = {
     "backup-deepseek": "DeepSeek V4.1 Flash",
     "poolside/laguna-xs-2.1": "Poolside Laguna XS 2.1",
     "backup-laguna": "Poolside Laguna XS 2.1",
+    "deepseek-ai/deepseek-r1": "DeepSeek R1 (671B MoE)",
+    "deepseek-r1": "DeepSeek R1 (671B MoE)",
+    "backup-r1": "DeepSeek R1 (671B MoE)",
+    "deepseek-ai/deepseek-v3": "DeepSeek V3 (671B MoE)",
+    "deepseek-v3": "DeepSeek V3 (671B MoE)",
+    "backup-v3": "DeepSeek V3 (671B MoE)",
+    "meta/llama-3.3-70b-instruct": "Meta Llama 3.3 70B Instruct",
+    "llama-3.3-70b": "Meta Llama 3.3 70B Instruct",
+    "backup-llama": "Meta Llama 3.3 70B Instruct",
+    "qwen/qwen2.5-72b-instruct": "Qwen 2.5 72B Instruct",
+    "qwen-2.5-72b": "Qwen 2.5 72B Instruct",
+    "backup-qwen": "Qwen 2.5 72B Instruct",
     "auto": "Auto Smart-Failover (Nemotron Ultra / Laguna XS / Mistral 4 / Step 5)",
 }
 
@@ -593,7 +605,7 @@ When designing, modifying, or executing software projects, you MUST adhere stric
 7. PRE-COMPLETION VERIFICATION:
    - Always run syntax checks and verify import chains before concluding. Zero runtime errors, zero syntax errors, and 100% interconnected harmony.
 8. ENGINE IDENTITY & RUNTIME AWARENESS:
-   - Your underlying reasoning engine is powered by NVIDIA NIM enterprise inference running your active model (NVIDIA Nemotron Ultra 550B MoE, Poolside Laguna XS 2.1, Mistral Large 4, Step 5 Preview, or MiniMax M3.1 Flash) integrated with Claude Code CLI.
+   - Your underlying reasoning engine is powered by NVIDIA NIM enterprise inference running your active model (NVIDIA Nemotron Ultra 550B MoE, Poolside Laguna XS 2.1, Mistral Large 4, Step 5 Preview, MiniMax M3.1 Flash, DeepSeek V4.1 Flash, DeepSeek R1, DeepSeek V3, Meta Llama 3.3 70B, or Qwen 2.5 72B) integrated with Claude Code CLI.
    - When asked what AI model, mode, or engine you are, explicitly declare your active model powered by NVIDIA NIM. Never claim to be Anthropic Claude or Sonnet.
 9. AUTONOMOUS ACTION MANDATE (ZERO CONVERSATIONAL PAUSES):
    - When asked to create, edit, or execute code or files, NEVER emit conversational promises alone (e.g., do NOT say "Now I understand. Let me create the composition..." or "I will now implement X...").
@@ -690,7 +702,7 @@ class RequestSanitizer(CustomLogger):
                 elif part_type == "tool_use":
                     tool_name = part.get("name", "")
                     if tool_name == "ai":
-                        new_content.append({"type": "text", "text": "Displaying model selector: 1. Auto, 2. Mistral Large 4, 3. Step 5, 4. MiniMax, 5. Nemotron Ultra 550B, 6. DeepSeek V4.1 Flash."})
+                        new_content.append({"type": "text", "text": "Displaying model selector: 1. Auto, 2. Mistral Large 4, 3. Step 5, 4. MiniMax, 5. Nemotron Ultra 550B, 6. DeepSeek V4.1 Flash, 7. Laguna XS, 8. DeepSeek R1, 9. DeepSeek V3, 10. Llama 3.3 70B, 11. Qwen 2.5 72B."})
                     else:
                         new_content.append(part)
                 elif part_type == "tool_result":

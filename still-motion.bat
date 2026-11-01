@@ -12,6 +12,14 @@ if "%COMP_ID%"=="" (
     echo [!] Missing composition ID.
     echo Usage: still-motion.bat [CompositionId] [FrameNumber] [OutputFile]
     echo Example: still-motion.bat EarthRotation 60 out/earth-frame60.png
+    echo Example: still-motion.bat AuroraFlow 60 out/aurora-frame60.png
+    echo.
+    echo Available compositions:
+    echo   MinimalMotion, EarthRotation, GoodMorning, GoodEvening, HiGreeting,
+    echo   KineticTypography, CyberpunkHUD, ParticleVortex, LogoReveal,
+    echo   NeonPortal, VerticalReel, VersatileShowcase, BeyondEarth,
+    echo   OpenClaudeX, HourLongVideo, HourLongPreview, AiExplainer, ItIsAi,
+    echo   CosmicAurora, AuroraFlow
     exit /b 1
 )
 
@@ -49,6 +57,10 @@ if /i "!COMP_ALIAS!"=="neuralnetwork" set "COMP_ID=AiExplainer"
 if /i "!COMP_ALIAS!"=="aineuralnetwork" set "COMP_ID=AiExplainer"
 if /i "!COMP_ALIAS!"=="explainer" set "COMP_ID=AiExplainer"
 if /i "!COMP_ALIAS!"=="itisai" set "COMP_ID=ItIsAi"
+if /i "!COMP_ALIAS!"=="auroraflow" set "COMP_ID=AuroraFlow"
+if /i "!COMP_ALIAS!"=="aurora" set "COMP_ID=AuroraFlow"
+if /i "!COMP_ALIAS!"=="cosmicaurora" set "COMP_ID=CosmicAurora"
+if /i "!COMP_ALIAS!"=="cosmic" set "COMP_ID=CosmicAurora"
 
 :: Dynamic composition matching from src/compositions folder
 set "CLEAN_COMP_ID=%COMP_ID:-=%"

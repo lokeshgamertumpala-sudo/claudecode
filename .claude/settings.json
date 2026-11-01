@@ -4,8 +4,8 @@
     "options": [
       {
         "model": "claude-sonnet-5",
-        "label": "MiniMax M3.1 Flash",
-        "description": "428B MoE, Ultra-Fast Agentic & Code Specialist",
+        "label": "NVIDIA Nemotron Ultra 550B MoE",
+        "description": "550B Flagship Reasoning Giant, Sub-Second Latency (RECOMMENDED DEFAULT)",
         "behavesAs": "sonnet"
       },
       {
@@ -42,6 +42,30 @@
         "model": "poolside/laguna-xs-2.1",
         "label": "Poolside Laguna XS 2.1",
         "description": "High-speed software engineering & code specialist",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "deepseek-ai/deepseek-r1",
+        "label": "DeepSeek R1",
+        "description": "671B Frontier Open Reasoning Engine",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "deepseek-ai/deepseek-v3",
+        "label": "DeepSeek V3",
+        "description": "671B Frontier MoE Code & Language Model",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "meta/llama-3.3-70b-instruct",
+        "label": "Meta Llama 3.3 70B Instruct",
+        "description": "70B Frontier Open Instruction Model",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "qwen/qwen2.5-72b-instruct",
+        "label": "Qwen 2.5 72B Instruct",
+        "description": "72B Advanced Reasoning & Code Flagship",
         "behavesAs": "sonnet"
       }
     ]
