@@ -36,6 +36,8 @@ case "$COMP_ID_LOWER" in
     openclaudex|open-claudex|claudex) COMP_ID="OpenClaudeX" ;;
     hourlongvideo|hour-long-video|one-hour|onehour) COMP_ID="HourLongVideo" ;;
     hourlongpreview|hour-long-preview|hour-preview) COMP_ID="HourLongPreview" ;;
+    aiexplainer|ai-explainer|ai|neuralnetwork|aineuralnetwork|explainer) COMP_ID="AiExplainer" ;;
+    itisai|it-is-ai) COMP_ID="ItIsAi" ;;
 esac
 
 echo -e "\033[96m====================================================\033[0m"

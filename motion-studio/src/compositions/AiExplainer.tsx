@@ -523,7 +523,15 @@ const Scene04_LatentSpace: React.FC = () => {
 // Scene 5: Emergent Intelligence & Grand Finale (48-60s / Frames 2880-3600)
 // Unified neural core, pristine typography, professional outro
 // =========================================================================
-const Scene05_Emergence: React.FC = () => {
+const Scene05_Emergence: React.FC<{
+  title?: string;
+  subtitle?: string;
+  accentColor?: string;
+}> = ({
+  title = "THE ARCHITECTURE OF THOUGHT",
+  subtitle = "Next-Generation Artificial Intelligence Designed for Boundless Reasoning",
+  accentColor = "#38bdf8",
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -566,7 +574,7 @@ const Scene05_Emergence: React.FC = () => {
             borderRadius: 999,
             background: "rgba(56, 189, 248, 0.15)",
             border: "1px solid rgba(56, 189, 248, 0.4)",
-            color: "#38bdf8",
+            color: accentColor,
             fontSize: 14,
             fontWeight: 800,
             letterSpacing: "0.35em",
@@ -585,10 +593,10 @@ const Scene05_Emergence: React.FC = () => {
             letterSpacing: "-0.04em",
             margin: 0,
             color: "#ffffff",
-            textShadow: "0 0 70px rgba(56, 189, 248, 0.6)",
+            textShadow: `0 0 70px ${accentColor}99`,
           }}
         >
-          THE ARCHITECTURE OF THOUGHT
+          {title}
         </h1>
 
         <p
@@ -602,7 +610,7 @@ const Scene05_Emergence: React.FC = () => {
             lineHeight: 1.6,
           }}
         >
-          Next-Generation Artificial Intelligence Designed for Boundless Reasoning
+          {subtitle}
         </p>
       </div>
 
@@ -611,10 +619,20 @@ const Scene05_Emergence: React.FC = () => {
   );
 };
 
+export interface AiExplainerProps {
+  title?: string;
+  subtitle?: string;
+  accentColor?: string;
+}
+
 // =========================================================================
 // Main Composition: 60 Seconds (3600 Frames @ 60 FPS)
 // =========================================================================
-export const AiExplainer: React.FC = () => {
+export const AiExplainer: React.FC<AiExplainerProps> = ({
+  title = "THE ARCHITECTURE OF THOUGHT",
+  subtitle = "Next-Generation Artificial Intelligence Designed for Boundless Reasoning",
+  accentColor = "#38bdf8",
+}) => {
   return (
     <Series>
       {/* Scene 1: 0-10s (600 frames) */}
@@ -639,7 +657,7 @@ export const AiExplainer: React.FC = () => {
 
       {/* Scene 5: 48-60s (720 frames) */}
       <Series.Sequence durationInFrames={720}>
-        <Scene05_Emergence />
+        <Scene05_Emergence title={title} subtitle={subtitle} accentColor={accentColor} />
       </Series.Sequence>
     </Series>
   );

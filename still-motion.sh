@@ -32,6 +32,12 @@ case "$COMP_ID_LOWER" in
     logoreveal|logo-reveal) COMP_ID="LogoReveal" ;;
     verticalreel|vertical-reel) COMP_ID="VerticalReel" ;;
     kinetictypography|kinetic-typography) COMP_ID="KineticTypography" ;;
+    beyondearth|beyond-earth|space) COMP_ID="BeyondEarth" ;;
+    openclaudex|open-claudex|claudex) COMP_ID="OpenClaudeX" ;;
+    hourlongvideo|hour-long-video|one-hour|onehour) COMP_ID="HourLongVideo" ;;
+    hourlongpreview|hour-long-preview|hour-preview) COMP_ID="HourLongPreview" ;;
+    aiexplainer|ai-explainer|ai|neuralnetwork|aineuralnetwork|explainer) COMP_ID="AiExplainer" ;;
+    itisai|it-is-ai) COMP_ID="ItIsAi" ;;
 esac
 
 if [ -z "$OUT_FILE" ]; then

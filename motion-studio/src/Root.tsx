@@ -15,7 +15,7 @@ import { OpenClaudeX } from "./compositions/OpenClaudeX";
 import { HourLongVideo } from "./compositions/HourLongVideo";
 import { ItIsAi } from "./compositions/ItIsAi";
 import { AiExplainer } from "./compositions/AiExplainer";
-import { VersatileShowcase } from "./primitives/VersatileShowcase";
+import { VersatileShowcase } from "./compositions/VersatileShowcase";
 import "./styles.css";
 
 export const RemotionRoot: React.FC = () => {

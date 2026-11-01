@@ -360,7 +360,15 @@ const Scene04_CodeAutomation: React.FC = () => {
 // -------------------------------------------------------------
 // Scene 5 (50-60s / frames 3000-3600): Grand Finale & Epic Outro
 // -------------------------------------------------------------
-const Scene05_GrandFinale: React.FC = () => {
+const Scene05_GrandFinale: React.FC<{
+  title?: string;
+  subtitle?: string;
+  accentColor?: string;
+}> = ({
+  title = "OPENCLAUDEX",
+  subtitle = "One Ecosystem. Multiple Intelligences. Infinite Possibilities.",
+  accentColor = "#38bdf8",
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -401,10 +409,10 @@ const Scene05_GrandFinale: React.FC = () => {
             fontWeight: 900,
             letterSpacing: "-0.04em",
             color: "#ffffff",
-            textShadow: "0 0 70px rgba(56, 189, 248, 0.7)",
+            textShadow: `0 0 70px ${accentColor}b3`,
           }}
         >
-          OPENCLAUDEX
+          {title}
         </div>
 
         <div
@@ -412,12 +420,12 @@ const Scene05_GrandFinale: React.FC = () => {
             fontSize: 24,
             fontWeight: 600,
             letterSpacing: "0.3em",
-            color: "#38bdf8",
+            color: accentColor,
             marginTop: 24,
             textTransform: "uppercase",
           }}
         >
-          One Ecosystem. Multiple Intelligences. Infinite Possibilities.
+          {subtitle}
         </div>
 
         <div
@@ -463,10 +471,20 @@ const Scene05_GrandFinale: React.FC = () => {
   );
 };
 
+export interface OpenClaudeXProps {
+  title?: string;
+  subtitle?: string;
+  accentColor?: string;
+}
+
 // -------------------------------------------------------------
 // Root OpenClaudeX 60-Second Video Composition
 // -------------------------------------------------------------
-export const OpenClaudeX: React.FC = () => {
+export const OpenClaudeX: React.FC<OpenClaudeXProps> = ({
+  title = "OPENCLAUDEX",
+  subtitle = "One Ecosystem. Multiple Intelligences. Infinite Possibilities.",
+  accentColor = "#38bdf8",
+}) => {
   return (
     <Series>
       {/* 0-10s (600 frames @ 60fps) */}
@@ -491,7 +509,7 @@ export const OpenClaudeX: React.FC = () => {
 
       {/* 50-60s (600 frames @ 60fps) */}
       <Series.Sequence durationInFrames={600}>
-        <Scene05_GrandFinale />
+        <Scene05_GrandFinale title={title} subtitle={subtitle} accentColor={accentColor} />
       </Series.Sequence>
     </Series>
   );

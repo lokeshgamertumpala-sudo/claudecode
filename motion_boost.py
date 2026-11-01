@@ -29,7 +29,13 @@ AVAILABLE_COMPOSITIONS = [
     ("LogoReveal", "Volumetric light sweep & cinematic logo reveal (3s, 60fps)"),
     ("NeonPortal", "Hypnotic neon polygon tunnel with camera zoom (4s, 60fps)"),
     ("VerticalReel", "9:16 vertical shorts format composition (3s, 60fps)"),
-    ("VersatileShowcase", "Multi-scene showcase of all motion & audio primitives (10s, 60fps)")
+    ("VersatileShowcase", "Multi-scene showcase of all motion & audio primitives (10s, 60fps)"),
+    ("BeyondEarth", "Cinematic 10s deep space odyssey & planetary simulation (60fps)"),
+    ("OpenClaudeX", "60s cinematic multi-agent video production (60fps)"),
+    ("HourLongVideo", "1-hour procedural continuous broadcast engine (216k frames @ 60fps)"),
+    ("HourLongPreview", "60-second fast test preview of 1-hour engine (60fps)"),
+    ("ItIsAi", "5s punchy cyberpunk neon AI reveal (60fps)"),
+    ("AiExplainer", "60s cinematic AI neural network explainer (3600 frames @ 60fps)"),
 ]
 
 ALIAS_MAP = {
@@ -61,7 +67,50 @@ ALIAS_MAP = {
     "neonportal": "NeonPortal",
     "vertical-reel": "VerticalReel",
     "verticalreel": "VerticalReel",
+    "beyondearth": "BeyondEarth",
+    "beyond-earth": "BeyondEarth",
+    "space": "BeyondEarth",
+    "openclaudex": "OpenClaudeX",
+    "open-claudex": "OpenClaudeX",
+    "claudex": "OpenClaudeX",
+    "hourlongvideo": "HourLongVideo",
+    "hour-long-video": "HourLongVideo",
+    "one-hour": "HourLongVideo",
+    "onehour": "HourLongVideo",
+    "hourlongpreview": "HourLongPreview",
+    "hour-long-preview": "HourLongPreview",
+    "hour-preview": "HourLongPreview",
+    "itisai": "ItIsAi",
+    "it-is-ai": "ItIsAi",
+    "aiexplainer": "AiExplainer",
+    "ai-explainer": "AiExplainer",
+    "ai": "AiExplainer",
+    "neuralnetwork": "AiExplainer",
+    "aineuralnetwork": "AiExplainer",
+    "explainer": "AiExplainer",
 }
+
+def resolve_composition(comp_id: str) -> str:
+    # Strip directory path and file extensions (.tsx, .ts) if provided
+    base = os.path.basename(comp_id.strip())
+    if base.lower().endswith(".tsx"):
+        base = base[:-4]
+    elif base.lower().endswith(".ts"):
+        base = base[:-3]
+    cleaned = base.lower().strip()
+    if cleaned in ALIAS_MAP:
+        return ALIAS_MAP[cleaned]
+    normalized = cleaned.replace("-", "").replace("_", "")
+    for k, v in ALIAS_MAP.items():
+        if k.replace("-", "").replace("_", "") == normalized:
+            return v
+    if os.path.isdir(COMP_DIR):
+        for f in os.listdir(COMP_DIR):
+            if f.endswith(".tsx"):
+                stem = f[:-4]
+                if stem.lower().replace("-", "").replace("_", "") == normalized:
+                    return stem
+    return base
 
 def list_compositions():
     print("=" * 70)
@@ -87,7 +136,7 @@ def run_type_check() -> bool:
         return False
 
 def verify_composition(comp_id: str, frame: int = 30) -> int:
-    comp_id = ALIAS_MAP.get(comp_id.lower().strip(), comp_id)
+    comp_id = resolve_composition(comp_id)
     if not run_type_check():
         return 1
     
@@ -117,7 +166,7 @@ def verify_composition(comp_id: str, frame: int = 30) -> int:
         return proc.returncode
 
 def render_still(comp_id: str, frame: int = 30, out_file: str = None) -> int:
-    comp_id = ALIAS_MAP.get(comp_id.lower().strip(), comp_id)
+    comp_id = resolve_composition(comp_id)
     if not out_file:
         out_file = f"out/{comp_id}-f{frame}.png"
     
@@ -145,7 +194,7 @@ def render_still(comp_id: str, frame: int = 30, out_file: str = None) -> int:
         return proc.returncode
 
 def render_composition(comp_id: str, out_file: str = None, concurrency: int = 12) -> int:
-    comp_id = ALIAS_MAP.get(comp_id.lower().strip(), comp_id)
+    comp_id = resolve_composition(comp_id)
     if not out_file:
         out_file = f"out/{comp_id}.mp4"
     

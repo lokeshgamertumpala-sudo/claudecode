@@ -14,9 +14,10 @@ if "%COMP_ID%"=="" (
     echo Example: render-motion.bat GoodMorning out/good-morning.mp4
     echo.
     echo Available compositions:
-    echo   MinimalMotion, EarthRotation, GoodMorning, HiGreeting,
+    echo   MinimalMotion, EarthRotation, GoodMorning, GoodEvening, HiGreeting,
     echo   KineticTypography, CyberpunkHUD, ParticleVortex, LogoReveal,
-    echo   NeonPortal, VerticalReel
+    echo   NeonPortal, VerticalReel, VersatileShowcase, BeyondEarth,
+    echo   OpenClaudeX, HourLongVideo, HourLongPreview, AiExplainer, ItIsAi
     exit /b 1
 )
 
@@ -37,6 +38,8 @@ if /i "!COMP_ALIAS!"=="particlevortex" set "COMP_ID=ParticleVortex"
 if /i "!COMP_ALIAS!"=="logoreveal" set "COMP_ID=LogoReveal"
 if /i "!COMP_ALIAS!"=="neonportal" set "COMP_ID=NeonPortal"
 if /i "!COMP_ALIAS!"=="verticalreel" set "COMP_ID=VerticalReel"
+if /i "!COMP_ALIAS!"=="versatile" set "COMP_ID=VersatileShowcase"
+if /i "!COMP_ALIAS!"=="showcase" set "COMP_ID=VersatileShowcase"
 if /i "!COMP_ALIAS!"=="versatileshowcase" set "COMP_ID=VersatileShowcase"
 if /i "!COMP_ALIAS!"=="beyondearth" set "COMP_ID=BeyondEarth"
 if /i "!COMP_ALIAS!"=="space" set "COMP_ID=BeyondEarth"

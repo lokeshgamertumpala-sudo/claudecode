@@ -7,6 +7,7 @@ import {
   VignetteOverlay,
   interpolateSafe,
   getSpringValue,
+  getInOutOpacity,
   palettes,
 } from "../library";
 
@@ -215,10 +216,3 @@ export const ItIsAi: React.FC<ItIsAiProps> = ({
     </AbsoluteFill>
   );
 };
-
-// Helper function (inline to avoid import issues)
-function getInOutOpacity(frame: number, totalFrames: number, fadeFrames: number): number {
-  if (frame < fadeFrames) return frame / fadeFrames;
-  if (frame > totalFrames - fadeFrames) return (totalFrames - frame) / fadeFrames;
-  return 1;
-}

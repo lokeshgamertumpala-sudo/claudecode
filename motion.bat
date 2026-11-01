@@ -35,7 +35,7 @@ if "%COMP_NAME%"=="" (
     echo   motion.bat BeyondEarth
     echo.
     echo Available Registered Compositions:
-    echo   AiExplainer, BeyondEarth, OpenClaudeX, HourLongVideo,
+    echo   AiExplainer, BeyondEarth, OpenClaudeX, HourLongVideo, ItIsAi,
     echo   MinimalMotion, EarthRotation, GoodMorning, GoodEvening,
     echo   HiGreeting, KineticTypography, CyberpunkHUD, ParticleVortex,
     echo   LogoReveal, NeonPortal, VersatileShowcase
