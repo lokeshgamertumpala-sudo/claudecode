@@ -1,4 +1,4 @@
-﻿model_list:
+model_list:
   # 1. Mistral Large 4 (Frontier 1.05T MoE, 52B Active - Primary Default Flagship)
   - model_name: "mistralai/mistral-large-4-1t-a52b"
     litellm_params:
@@ -243,6 +243,136 @@
       timeout: 1800
       max_tokens: 8192
 
+  # 7. DeepSeek R1 (671B Frontier Open Reasoning Engine)
+  - model_name: "deepseek-ai/deepseek-r1"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-r1"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "deepseek-r1"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-r1"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "r1"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-r1"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "backup-r1"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-r1"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  # 8. DeepSeek V3 (671B Frontier MoE Code & Language Model)
+  - model_name: "deepseek-ai/deepseek-v3"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-v3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "deepseek-v3"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-v3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "v3"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-v3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "backup-v3"
+    litellm_params:
+      model: "nvidia_nim/deepseek-ai/deepseek-v3"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  # 9. Meta Llama 3.3 70B Instruct (70B Frontier Open Instruction Model)
+  - model_name: "meta/llama-3.3-70b-instruct"
+    litellm_params:
+      model: "nvidia_nim/meta/llama-3.3-70b-instruct"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "llama-3.3-70b"
+    litellm_params:
+      model: "nvidia_nim/meta/llama-3.3-70b-instruct"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "llama-3.3"
+    litellm_params:
+      model: "nvidia_nim/meta/llama-3.3-70b-instruct"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "llama"
+    litellm_params:
+      model: "nvidia_nim/meta/llama-3.3-70b-instruct"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "backup-llama"
+    litellm_params:
+      model: "nvidia_nim/meta/llama-3.3-70b-instruct"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  # 10. Qwen 2.5 72B Instruct (72B Advanced Reasoning & Code Flagship)
+  - model_name: "qwen/qwen2.5-72b-instruct"
+    litellm_params:
+      model: "nvidia_nim/qwen/qwen2.5-72b-instruct"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "qwen-2.5-72b"
+    litellm_params:
+      model: "nvidia_nim/qwen/qwen2.5-72b-instruct"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "qwen-72b"
+    litellm_params:
+      model: "nvidia_nim/qwen/qwen2.5-72b-instruct"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "qwen"
+    litellm_params:
+      model: "nvidia_nim/qwen/qwen2.5-72b-instruct"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "backup-qwen"
+    litellm_params:
+      model: "nvidia_nim/qwen/qwen2.5-72b-instruct"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
   # Auto Smart Routing (Default: NVIDIA Nemotron Ultra 550B MoE - Sub-Second Fast)
   - model_name: "auto"
     litellm_params:
@@ -356,6 +486,24 @@ router_settings:
     - backup-deepseek: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-step", "backup-minimax"]
     - backup-laguna: ["backup-ultra", "backup-mistral", "backup-deepseek", "backup-step"]
     - laguna: ["backup-ultra", "backup-mistral", "backup-deepseek", "backup-step"]
+    - deepseek-ai/deepseek-r1: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - deepseek-r1: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - r1: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - backup-r1: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - deepseek-ai/deepseek-v3: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - deepseek-v3: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - v3: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - backup-v3: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - meta/llama-3.3-70b-instruct: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - llama-3.3-70b: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - llama-3.3: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - llama: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - backup-llama: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - qwen/qwen2.5-72b-instruct: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - qwen-2.5-72b: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - qwen-72b: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - qwen: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
+    - backup-qwen: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-deepseek"]
     - "*": ["backup-ultra", "backup-laguna", "backup-mistral", "backup-step", "backup-minimax", "backup-deepseek"]
 
 litellm_settings:

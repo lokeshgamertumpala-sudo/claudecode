@@ -26,11 +26,16 @@ if [ "$MODEL" = "-h" ] || [ "$MODEL" = "--help" ] || [ "$MODEL" = "help" ]; then
     echo "Usage: ./start-claude.sh [Model] [Claude flags/prompts]"
     echo ""
     echo "Models:"
-    echo "  mistral  / 2  : Mistral Large 4 (1.05T MoE, 52B Active, ~0.4s Latency) [DEFAULT]"
+    echo "  ultra    / 5  : NVIDIA Nemotron Ultra 550B MoE (Reasoning Giant) [DEFAULT]"
+    echo "  mistral  / 2  : Mistral Large 4 (1.05T MoE, 52B Active, ~0.4s Latency)"
     echo "  step     / 3  : Step 5 Preview (600B MoE, 1M Context Window, Multimodal)"
     echo "  minimax  / 4  : MiniMax M3.1 Flash (428B MoE, Ultra-Fast Code Specialist)"
-    echo "  ultra    / 5  : NVIDIA Nemotron Ultra 550B MoE (Reasoning Giant)"
     echo "  deepseek / 6  : DeepSeek V4.1 Flash (High-speed reasoning)"
+    echo "  laguna   / 7  : Poolside Laguna XS 2.1 (Software engineering & coding specialist)"
+    echo "  r1       / 8  : DeepSeek R1 (671B Frontier Open Reasoning Engine)"
+    echo "  v3       / 9  : DeepSeek V3 (671B Frontier MoE Code & Language Model)"
+    echo "  llama    / 10 : Meta Llama 3.3 70B Instruct (70B Open Instruction Model)"
+    echo "  qwen     / 11 : Qwen 2.5 72B Instruct (72B Reasoning & Code Flagship)"
     echo "  auto     / 1  : Auto Smart-Failover (Zero API Errors resilience mesh)"
     exit 0
 fi
@@ -83,7 +88,7 @@ else
 fi
 
 # 5. Resolve or switch active model preference
-VALID_TRIGGERS=("1" "2" "3" "4" "5" "6" "7" "auto" "smart" "mistral" "mistral-large" "mistral-large-4" "step" "step-5" "minimax" "ultra" "nemotron" "deepseek" "flash" "laguna" "poolside" "boost" "turbo")
+VALID_TRIGGERS=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "auto" "smart" "mistral" "mistral-large" "mistral-large-4" "step" "step-5" "minimax" "ultra" "nemotron" "deepseek" "flash" "laguna" "poolside" "r1" "deepseek-r1" "v3" "deepseek-v3" "llama" "llama-3.3" "qwen" "qwen-72b" "boost" "turbo")
 
 PROMPT_PARAM=""
 if [ -n "$MODEL" ]; then

@@ -591,3 +591,30 @@ motion.bat MyCompositionName "Explain autonomous agent routing"
 5. **NEVER use SVG SMIL animations** (`<animate>`, `<animateTransform>`). Headless Chromium does not advance SMIL time properly in headless still/frame capture.
 6. **Always clamp interpolations**: Use `interpolateSafe` or `{ extrapolateLeft: "clamp", extrapolateRight: "clamp" }`.
 7. **Always match exports**: Named export `export const Foo` in composition file, named import `import { Foo } from ...` in `Root.tsx`.
+
+---
+
+## 🌟 Community Best Practices (`remotion-dev/claude-code-plugin` & `haidrrrry/claude-remotion-skill`)
+
+### 1. Zero Layout Shift & GPU Acceleration
+- **Transform Over Geometry**: Never animate `top`, `left`, `width`, or `height`. Always use GPU-accelerated `transform: translate3d(x, y, 0) scale(s) rotate(deg)` combined with `opacity`.
+- **Hardware Layering**: Annotate animated hero elements with `willChange: "transform, opacity"` to force separate compositor layers.
+- **Root Sizing**: Enforce container boundaries with `AbsoluteFill` (`position: absolute; inset: 0`) and `overflow: "hidden"` to prevent canvas bleeding.
+
+### 2. Micro-Interaction & Kinetic Typography Choreography
+- **Optical Focus**: Combine spring translation with dynamic `filter: blur(...)` to simulate high-speed cinema camera depth of field.
+- **Tokenized Staggering**: Break sentences into words or characters, applying `(startFrame + index * staggerDelay)` to create smooth cascading ripple entrances.
+- **Settling Envelope**: Use `springPresets.snappy` for badges/pills (settles in 15f), `springPresets.bouncy` for kinetic titles (settles in 30f), and `springPresets.cinematic` for camera movements (settles in 60f).
+
+### 3. Visual Staging Hierarchy (The 5-Layer Stack)
+Every cinematic Remotion composition should strictly follow the 5-layer visual hierarchy:
+1. **Layer 0 (Atmosphere)**: Radial gradient backdrops, SVG glow defs, and subtle tech grids (`GridBackdrop`).
+2. **Layer 1 (Procedural Particles)**: Frame-deterministic particle vortexes or starfields with Mulberry32 PRNG (`ParticleField`).
+3. **Layer 2 (Hero Geometry)**: 3D perspective orbital rings, mockups, or vector illustrations (`OrbitalRings`).
+4. **Layer 3 (Typography & Messaging)**: Staggered kinetic titles and pill badges (`KineticTitle`, `GlowBadge`).
+5. **Layer 4 (Post-Processing & Camera)**: 2.5D camera zoom rig, specular shine sweeps, and dark vignette (`CameraRig`, `LightSweep`, `VignetteOverlay`).
+
+### 4. Continuous Integration & Universal AST Verification
+- Before submitting any composition, run `npm run check` in `motion-studio` (`tsc --noEmit`).
+- Verify visual frame generation using `check-motion.bat <CompositionName> 60`.
+- Audit whole-repository syntactic and semantic integrity with `verify-all.bat` (`universal_verifier.py`).

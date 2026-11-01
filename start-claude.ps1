@@ -22,6 +22,11 @@ if ($Help -or $Model -in @("-h", "--help", "help")) {
     Write-Host "  step     / 3  : Step 5 Preview (600B MoE, 1M Context Window, Multimodal Reasoning)"
     Write-Host "  minimax  / 4  : MiniMax M3.1 Flash (428B MoE, Ultra-Fast Agentic & Code Specialist)"
     Write-Host "  deepseek / 6  : DeepSeek V4.1 Flash (High-speed reasoning & coding powerhouse)"
+    Write-Host "  laguna   / 7  : Poolside Laguna XS 2.1 (Software engineering & coding specialist)"
+    Write-Host "  r1       / 8  : DeepSeek R1 (671B Frontier Open Reasoning Engine)"
+    Write-Host "  v3       / 9  : DeepSeek V3 (671B Frontier MoE Code & Language Model)"
+    Write-Host "  llama    / 10 : Meta Llama 3.3 70B Instruct (70B Frontier Open Instruction Model)"
+    Write-Host "  qwen     / 11 : Qwen 2.5 72B Instruct (72B Advanced Reasoning & Code Flagship)"
     Write-Host "  auto     / 1  : Auto Smart-Failover (Zero API Errors resilience mesh)"
     Write-Host "`nFlags:" -ForegroundColor Yellow
     Write-Host "  -Unrestricted : Run in full autonomous terminal mode (bypasses permission prompts)"
@@ -151,7 +156,7 @@ if (-not $proxyReady) {
 $activeModelPath = Join-Path $ScriptDir "active_model.txt"
 
 $validModelTriggers = @(
-    "1", "2", "3", "4", "5", "6", "7",
+    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11",
     "auto", "smart",
     "mistral", "mistral-large", "mistral-large-4", "mistral-4",
     "step", "step-5", "step5", "step-5-preview",
@@ -159,6 +164,10 @@ $validModelTriggers = @(
     "ultra", "nemotron", "nemotron-ultra", "nemotron-ultra-550b", "ultra-550b",
     "deepseek", "deepseek-flash", "deepseek-v4.1", "deepseek-v4.1-flash", "flash",
     "laguna", "poolside",
+    "r1", "deepseek-r1",
+    "v3", "deepseek-v3",
+    "llama", "llama-3.3", "llama-3.3-70b",
+    "qwen", "qwen-72b", "qwen-2.5-72b",
     "kimi", "kimi-k3",
     "boost", "turbo", "fast"
 )
@@ -206,6 +215,24 @@ $modelDisplayNames = @{
     "poolside/laguna-xs-2.1" = "Poolside Laguna XS 2.1"
     "laguna" = "Poolside Laguna XS 2.1"
     "7" = "Poolside Laguna XS 2.1"
+    "deepseek-ai/deepseek-r1" = "DeepSeek R1 (671B MoE)"
+    "deepseek-r1" = "DeepSeek R1 (671B MoE)"
+    "r1" = "DeepSeek R1 (671B MoE)"
+    "8" = "DeepSeek R1 (671B MoE)"
+    "deepseek-ai/deepseek-v3" = "DeepSeek V3 (671B MoE)"
+    "deepseek-v3" = "DeepSeek V3 (671B MoE)"
+    "v3" = "DeepSeek V3 (671B MoE)"
+    "9" = "DeepSeek V3 (671B MoE)"
+    "meta/llama-3.3-70b-instruct" = "Meta Llama 3.3 70B Instruct"
+    "llama-3.3-70b" = "Meta Llama 3.3 70B Instruct"
+    "llama-3.3" = "Meta Llama 3.3 70B Instruct"
+    "llama" = "Meta Llama 3.3 70B Instruct"
+    "10" = "Meta Llama 3.3 70B Instruct"
+    "qwen/qwen2.5-72b-instruct" = "Qwen 2.5 72B Instruct"
+    "qwen-2.5-72b" = "Qwen 2.5 72B Instruct"
+    "qwen-72b" = "Qwen 2.5 72B Instruct"
+    "qwen" = "Qwen 2.5 72B Instruct"
+    "11" = "Qwen 2.5 72B Instruct"
     "moonshotai/kimi-k3" = "Mistral Large 4 (1.05T MoE)"
     "kimi" = "Mistral Large 4 (1.05T MoE)"
     "kimi-k3" = "Mistral Large 4 (1.05T MoE)"

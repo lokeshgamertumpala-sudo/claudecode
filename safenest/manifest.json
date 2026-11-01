@@ -1,0 +1,15 @@
+{
+  "short_name": "SafeNest",
+  "name": "SafeNest Demo",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#070B16",
+  "background_color": "#070B16"
+}

@@ -1,0 +1,12 @@
+{
+  "status": "allClear",
+  "lastUpdated": "2026-09-12T20:00:00Z",
+  "message": "All systems normal. No active warnings.",
+  "type": "allClear",
+  "details": {
+    "temperature": 28,
+    "humidity": 65,
+    "waterLevel": "normal",
+    "riskLevel": "low"
+  }
+}

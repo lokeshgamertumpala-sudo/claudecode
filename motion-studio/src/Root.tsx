@@ -16,6 +16,8 @@ import { HourLongVideo } from "./compositions/HourLongVideo";
 import { ItIsAi } from "./compositions/ItIsAi";
 import { AiExplainer } from "./compositions/AiExplainer";
 import { VersatileShowcase } from "./compositions/VersatileShowcase";
+import { AuroraFlow } from "./compositions/AuroraFlow";
+import { CosmicAurora } from "./compositions/CosmicAurora";
 import "./styles.css";
 
 export const RemotionRoot: React.FC = () => {
@@ -473,6 +475,57 @@ export const RemotionRoot: React.FC = () => {
         id="AiExplainer-4K"
         component={AiExplainer}
         durationInFrames={3600}
+        fps={60}
+        width={3840}
+        height={2160}
+      />
+      {/* 18. CosmicAurora — 10 seconds (600 frames @ 60fps) Cinematic Space Odyssey */}
+      <Composition
+        id="CosmicAurora"
+        component={CosmicAurora}
+        durationInFrames={600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="cosmic-aurora"
+        component={CosmicAurora}
+        durationInFrames={600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="CosmicAurora-4K"
+        component={CosmicAurora}
+        durationInFrames={600}
+        fps={60}
+        width={3840}
+        height={2160}
+      />
+
+      {/* 19. AuroraFlow — 10 seconds (600 frames @ 60fps) Luminous Aurora & Particle Flow */}
+      <Composition
+        id="AuroraFlow"
+        component={AuroraFlow}
+        durationInFrames={600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="aurora-flow"
+        component={AuroraFlow}
+        durationInFrames={600}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="AuroraFlow-4K"
+        component={AuroraFlow}
+        durationInFrames={600}
         fps={60}
         width={3840}
         height={2160}

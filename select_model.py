@@ -11,7 +11,11 @@ MODELS = {
     "4": ("MiniMax M3.1 Flash", "minimaxai/minimax-m3.1-flash", "428B MoE, Ultra-Fast Agentic & Code Specialist"),
     "5": ("NVIDIA Nemotron Ultra 550B MoE", "nvidia/nemotron-3-ultra-550b-a55b", "550B Flagship Reasoning Giant, Sub-Second Latency (RECOMMENDED DEFAULT)"),
     "6": ("DeepSeek V4.1 Flash", "deepseek-ai/deepseek-v4.1-flash", "High-speed reasoning & massive context coding powerhouse"),
-    "7": ("Poolside Laguna XS 2.1", "poolside/laguna-xs-2.1", "High-speed software engineering & code specialist")
+    "7": ("Poolside Laguna XS 2.1", "poolside/laguna-xs-2.1", "High-speed software engineering & code specialist"),
+    "8": ("DeepSeek R1", "deepseek-ai/deepseek-r1", "671B Frontier Open Reasoning Engine"),
+    "9": ("DeepSeek V3", "deepseek-ai/deepseek-v3", "671B Frontier MoE Code & Language Model"),
+    "10": ("Meta Llama 3.3 70B Instruct", "meta/llama-3.3-70b-instruct", "70B Frontier Open Instruction Model"),
+    "11": ("Qwen 2.5 72B Instruct", "qwen/qwen2.5-72b-instruct", "72B Advanced Reasoning & Code Flagship")
 }
 
 ALIASES = {
@@ -55,6 +59,24 @@ ALIASES = {
     "poolside": "poolside/laguna-xs-2.1",
     "poolside/laguna-xs-2.1": "poolside/laguna-xs-2.1",
     "7": "poolside/laguna-xs-2.1",
+    "r1": "deepseek-ai/deepseek-r1",
+    "deepseek-r1": "deepseek-ai/deepseek-r1",
+    "deepseek-ai/deepseek-r1": "deepseek-ai/deepseek-r1",
+    "8": "deepseek-ai/deepseek-r1",
+    "v3": "deepseek-ai/deepseek-v3",
+    "deepseek-v3": "deepseek-ai/deepseek-v3",
+    "deepseek-ai/deepseek-v3": "deepseek-ai/deepseek-v3",
+    "9": "deepseek-ai/deepseek-v3",
+    "llama": "meta/llama-3.3-70b-instruct",
+    "llama-3.3": "meta/llama-3.3-70b-instruct",
+    "llama-3.3-70b": "meta/llama-3.3-70b-instruct",
+    "meta/llama-3.3-70b-instruct": "meta/llama-3.3-70b-instruct",
+    "10": "meta/llama-3.3-70b-instruct",
+    "qwen": "qwen/qwen2.5-72b-instruct",
+    "qwen-72b": "qwen/qwen2.5-72b-instruct",
+    "qwen-2.5-72b": "qwen/qwen2.5-72b-instruct",
+    "qwen/qwen2.5-72b-instruct": "qwen/qwen2.5-72b-instruct",
+    "11": "qwen/qwen2.5-72b-instruct",
     "kimi": "mistralai/mistral-large-4-1t-a52b",
     "kimi-k3": "mistralai/mistral-large-4-1t-a52b",
     "nemotron-3-super-120b-a12b": "nvidia/nemotron-3-ultra-550b-a55b",
@@ -168,7 +190,7 @@ def show_menu():
         print(f" [{k}] {name:<35} {tag}")
         print(f"     -> {desc}")
     print("-" * 75)
-    print(" Quick switch commands: model mistral | model step | model minimax | model ultra")
+    print(" Quick switch commands: model ultra | model mistral | model r1 | model llama | model qwen")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
@@ -180,7 +202,7 @@ if __name__ == "__main__":
     else:
         show_menu()
         try:
-            choice = input("\nSelect model [1-7] (or Enter to keep current): ").strip()
+            choice = input("\nSelect model [1-11] (or Enter to keep current): ").strip()
             if choice:
                 set_model(choice)
         except (KeyboardInterrupt, EOFError):

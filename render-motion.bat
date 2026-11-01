@@ -55,6 +55,10 @@ if /i "!COMP_ALIAS!"=="neuralnetwork" set "COMP_ID=AiExplainer"
 if /i "!COMP_ALIAS!"=="aineuralnetwork" set "COMP_ID=AiExplainer"
 if /i "!COMP_ALIAS!"=="explainer" set "COMP_ID=AiExplainer"
 if /i "!COMP_ALIAS!"=="itisai" set "COMP_ID=ItIsAi"
+if /i "!COMP_ALIAS!"=="auroraflow" set "COMP_ID=AuroraFlow"
+if /i "!COMP_ALIAS!"=="aurora" set "COMP_ID=AuroraFlow"
+if /i "!COMP_ALIAS!"=="cosmicaurora" set "COMP_ID=CosmicAurora"
+if /i "!COMP_ALIAS!"=="cosmic" set "COMP_ID=CosmicAurora"
 
 :: Dynamic composition matching from src/compositions folder
 set "CLEAN_COMP_ID=%COMP_ID:-=%"

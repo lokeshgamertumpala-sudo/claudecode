@@ -1,5 +1,5 @@
 # Script to stop both the background watchdog and the LiteLLM proxy
-Write-Host "[*] Stopping Claude Code background watchdog and LiteLLM proxy..." -ForegroundColor Cyan
+Write-Host "[*] Stopping Claude Code background watchdog and proxy..." -ForegroundColor Cyan
 
 # 1. Terminate any running watchdog instances
 $watchdogs = Get-CimInstance Win32_Process -Filter "CommandLine LIKE '%proxy-watchdog.ps1%'" -ErrorAction SilentlyContinue

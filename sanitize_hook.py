@@ -295,6 +295,7 @@ try:
 
             # Return transformed StreamingResponse preserving headers
             headers = dict(response.headers)
+            headers.pop("content-length", None)
             headers["cache-control"] = "no-cache"
             headers["x-accel-buffering"] = "no"
             headers["connection"] = "keep-alive"
@@ -308,7 +309,9 @@ try:
                 if isinstance(body_json, dict):
                     if body_json.get("stop_reason") in ("max_tokens", "length"):
                         body_json["stop_reason"] = "end_turn"
-                    return JSONResponse(body_json, status_code=200, headers=dict(response.headers))
+                    resp_headers = dict(response.headers)
+                    resp_headers.pop("content-length", None)
+                    return JSONResponse(body_json, status_code=200, headers=resp_headers)
             except Exception:
                 pass
 
@@ -614,6 +617,10 @@ class RequestSanitizer(CustomLogger):
             ("backup-step", "stepfun-ai/step-5-preview", "Step 5 Preview"),
             ("backup-minimax", "minimaxai/minimax-m3.1-flash", "MiniMax M3.1 Flash"),
             ("backup-deepseek", "deepseek-ai/deepseek-v4.1-flash", "DeepSeek V4.1 Flash"),
+            ("backup-r1", "deepseek-ai/deepseek-r1", "DeepSeek R1"),
+            ("backup-v3", "deepseek-ai/deepseek-v3", "DeepSeek V3"),
+            ("backup-llama", "meta/llama-3.3-70b-instruct", "Meta Llama 3.3 70B"),
+            ("backup-qwen", "qwen/qwen2.5-72b-instruct", "Qwen 2.5 72B"),
         ]
 
         self.health = {}
@@ -769,6 +776,24 @@ class RequestSanitizer(CustomLogger):
             "boost": ("backup-ultra", "nvidia/nemotron-3-ultra-550b-a55b"),
             "turbo": ("backup-ultra", "nvidia/nemotron-3-ultra-550b-a55b"),
             "fast": ("backup-ultra", "nvidia/nemotron-3-ultra-550b-a55b"),
+            "r1": ("backup-r1", "deepseek-ai/deepseek-r1"),
+            "deepseek-r1": ("backup-r1", "deepseek-ai/deepseek-r1"),
+            "deepseek-ai/deepseek-r1": ("backup-r1", "deepseek-ai/deepseek-r1"),
+            "8": ("backup-r1", "deepseek-ai/deepseek-r1"),
+            "v3": ("backup-v3", "deepseek-ai/deepseek-v3"),
+            "deepseek-v3": ("backup-v3", "deepseek-ai/deepseek-v3"),
+            "deepseek-ai/deepseek-v3": ("backup-v3", "deepseek-ai/deepseek-v3"),
+            "9": ("backup-v3", "deepseek-ai/deepseek-v3"),
+            "llama": ("backup-llama", "meta/llama-3.3-70b-instruct"),
+            "llama-3.3": ("backup-llama", "meta/llama-3.3-70b-instruct"),
+            "llama-3.3-70b": ("backup-llama", "meta/llama-3.3-70b-instruct"),
+            "meta/llama-3.3-70b-instruct": ("backup-llama", "meta/llama-3.3-70b-instruct"),
+            "10": ("backup-llama", "meta/llama-3.3-70b-instruct"),
+            "qwen": ("backup-qwen", "qwen/qwen2.5-72b-instruct"),
+            "qwen-72b": ("backup-qwen", "qwen/qwen2.5-72b-instruct"),
+            "qwen-2.5-72b": ("backup-qwen", "qwen/qwen2.5-72b-instruct"),
+            "qwen/qwen2.5-72b-instruct": ("backup-qwen", "qwen/qwen2.5-72b-instruct"),
+            "11": ("backup-qwen", "qwen/qwen2.5-72b-instruct"),
         }
 
         # If user explicitly selected a model and it's healthy, use it
