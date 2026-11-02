@@ -151,169 +151,183 @@ try:
 
                             while "\n\n" in buffer:
                                 event_block, buffer = buffer.split("\n\n", 1)
-                                lines = event_block.splitlines()
-                                new_lines = []
+                                lines = event_block.strip("\r\n").splitlines()
+                                if not lines:
+                                    continue
 
-                                for line in lines:
-                                    if line.startswith("data:"):
-                                        data_str = line[5:].strip()
-                                        if data_str == "[DONE]":
+                                # Forward comment-only keepalive blocks (e.g. ': ping') immediately
+                                if all(l.startswith(":") for l in lines):
+                                    yield (event_block.strip() + "\n\n").encode("utf-8")
+                                    continue
+
+                                event_type = ""
+                                data_lines = []
+                                for l in lines:
+                                    if l.startswith("event:"):
+                                        event_type = l[6:].strip()
+                                    elif l.startswith("data:"):
+                                        data_lines.append(l[5:].strip())
+                                    elif l.startswith(":"):
+                                        yield (l.strip() + "\n\n").encode("utf-8")
+
+                                if not data_lines:
+                                    continue
+
+                                data_str = "\n".join(data_lines)
+                                if data_str == "[DONE]":
+                                    if block_open:
+                                        yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                        block_open = False
+                                    message_stopped = True
+                                    yield b"data: [DONE]\n\n"
+                                    continue
+
+                                try:
+                                    payload = json.loads(data_str)
+                                    p_type = payload.get("type", "")
+
+                                    if p_type == "message_start":
+                                        message_started = True
+                                        message_stopped = False
+                                        block_open = False
+                                        current_block_index = 0
+                                        has_emitted_body_block = False
+                                        active_block_type = "text"
+                                        buffered_start_payload = None
+                                        yield f"event: message_start\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
+
+                                    elif p_type == "content_block_start":
+                                        c_block = payload.get("content_block", {})
+                                        b_type = c_block.get("type", "text") if isinstance(c_block, dict) else "text"
+                                        if b_type == "thinking":
                                             if block_open:
                                                 yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
-                                                block_open = False
-                                            message_stopped = True
-                                            new_lines.append(line)
-                                            continue
-                                        try:
-                                            payload = json.loads(data_str)
-                                            p_type = payload.get("type", "")
+                                            block_open = True
+                                            current_block_index = payload.get("index", 0)
+                                            active_block_type = "thinking"
+                                            buffered_start_payload = None
+                                            yield f"event: content_block_start\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
+                                        elif b_type == "text" and not has_emitted_body_block and current_block_index == 0:
+                                            # Buffer initial text block start until first delta
+                                            buffered_start_payload = payload
+                                        else:
+                                            if block_open:
+                                                yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                            block_open = True
+                                            current_block_index = payload.get("index", current_block_index)
+                                            active_block_type = b_type
+                                            if active_block_type in ("text", "tool_use"):
+                                                has_emitted_body_block = True
+                                            yield f"event: content_block_start\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
 
-                                            # Track message lifecycle
-                                            if p_type == "message_start":
-                                                message_started = True
-                                                message_stopped = False
-                                                block_open = False
+                                    elif p_type == "content_block_delta":
+                                        delta = payload.get("delta", {})
+                                        d_type = delta.get("type", "")
+                                        raw_text = delta.get("text", "") or delta.get("thinking", "") or delta.get("reasoning_content", "")
+
+                                        if buffered_start_payload is not None:
+                                            if "<think>" in raw_text or d_type == "thinking_delta" or "reasoning_content" in delta:
+                                                active_block_type = "thinking"
                                                 current_block_index = 0
-                                                has_emitted_body_block = False
-                                                active_block_type = "text"
+                                                block_open = True
                                                 buffered_start_payload = None
-                                                new_lines.append(f"data: {json.dumps(payload)}")
-                                            elif p_type == "content_block_start":
-                                                c_block = payload.get("content_block", {})
-                                                b_type = c_block.get("type", "text") if isinstance(c_block, dict) else "text"
-                                                if b_type == "thinking":
-                                                    if block_open:
-                                                        yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
-                                                    block_open = True
-                                                    current_block_index = payload.get("index", 0)
-                                                    active_block_type = "thinking"
-                                                    buffered_start_payload = None
-                                                    new_lines.append(f"data: {json.dumps(payload)}")
-                                                elif b_type == "text" and not has_emitted_body_block and current_block_index == 0:
-                                                    # Buffer initial text block start until first delta to verify if model begins with <think>
-                                                    buffered_start_payload = payload
+                                                yield b'event: content_block_start\ndata: {"type": "content_block_start", "index": 0, "content_block": {"type": "thinking", "thinking": ""}}\n\n'
+                                                th_chunk = raw_text.split("<think>", 1)[-1] if "<think>" in raw_text else raw_text
+                                                if "</think>" in th_chunk:
+                                                    th_part, tx_part = th_chunk.split("</think>", 1)
+                                                    if th_part:
+                                                        yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(th_part)}}}}}\n\n'.encode("utf-8")
+                                                    yield b'event: content_block_stop\ndata: {"type": "content_block_stop", "index": 0}\n\n'
+                                                    yield b'event: content_block_start\ndata: {"type": "content_block_start", "index": 1, "content_block": {"type": "text", "text": ""}}\n\n'
+                                                    current_block_index = 1
+                                                    active_block_type = "text"
+                                                    has_emitted_body_block = True
+                                                    if tx_part:
+                                                        yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 1, "delta": {{"type": "text_delta", "text": {json.dumps(tx_part)}}}}}\n\n'.encode("utf-8")
                                                 else:
-                                                    if block_open:
-                                                        yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
-                                                    block_open = True
-                                                    current_block_index = payload.get("index", current_block_index)
-                                                    active_block_type = b_type
-                                                    if active_block_type in ("text", "tool_use"):
-                                                        has_emitted_body_block = True
-                                                    new_lines.append(f"data: {json.dumps(payload)}")
-                                            elif p_type == "content_block_delta":
-                                                delta = payload.get("delta", {})
-                                                d_type = delta.get("type", "")
-                                                raw_text = delta.get("text", "") or delta.get("thinking", "") or delta.get("reasoning_content", "")
+                                                    if th_chunk:
+                                                        yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(th_chunk)}}}}}\n\n'.encode("utf-8")
+                                                continue
+                                            else:
+                                                # Release initial text block start
+                                                active_block_type = "text"
+                                                current_block_index = 0
+                                                block_open = True
+                                                has_emitted_body_block = True
+                                                yield f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}\n\n'.encode("utf-8")
+                                                buffered_start_payload = None
 
-                                                if buffered_start_payload is not None:
-                                                    if not raw_text.strip() and not ("<think>" in raw_text or d_type == "thinking_delta" or "reasoning_content" in delta):
-                                                        continue
+                                        if active_block_type == "thinking":
+                                            if "</think>" in raw_text:
+                                                th_part, tx_part = raw_text.split("</think>", 1)
+                                                if th_part:
+                                                    yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(th_part)}}}}}\n\n'.encode("utf-8")
+                                                yield b'event: content_block_stop\ndata: {"type": "content_block_stop", "index": 0}\n\n'
+                                                yield b'event: content_block_start\ndata: {"type": "content_block_start", "index": 1, "content_block": {"type": "text", "text": ""}}\n\n'
+                                                current_block_index = 1
+                                                active_block_type = "text"
+                                                has_emitted_body_block = True
+                                                if tx_part:
+                                                    yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 1, "delta": {{"type": "text_delta", "text": {json.dumps(tx_part)}}}}}\n\n'.encode("utf-8")
+                                            else:
+                                                clean_th = raw_text.replace("<think>", "")
+                                                if clean_th:
+                                                    yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(clean_th)}}}}}\n\n'.encode("utf-8")
+                                        elif active_block_type == "text":
+                                            payload["index"] = current_block_index
+                                            if d_type not in ("input_json_delta",):
+                                                delta["type"] = "text_delta"
+                                                txt = delta.get("text", "") or delta.get("content", "")
+                                                if isinstance(txt, str):
+                                                    delta["text"] = txt.replace("<think>", "").replace("</think>", "")
+                                                delta.pop("thinking", None)
+                                                delta.pop("reasoning_content", None)
+                                            has_emitted_body_block = True
+                                            yield f"event: content_block_delta\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
+                                        else:
+                                            yield f"event: content_block_delta\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
 
-                                                    # First content-bearing delta: check if model begins with native thinking (<think> or reasoning_content)
-                                                    if "<think>" in raw_text or d_type == "thinking_delta" or "reasoning_content" in delta:
-                                                        active_block_type = "thinking"
-                                                        current_block_index = 0
-                                                        block_open = True
-                                                        buffered_start_payload = None
-                                                        yield b'event: content_block_start\ndata: {"type": "content_block_start", "index": 0, "content_block": {"type": "thinking", "thinking": ""}}\n\n'
+                                    elif p_type == "content_block_stop":
+                                        if buffered_start_payload is not None:
+                                            yield f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}\n\n'.encode("utf-8")
+                                            buffered_start_payload = None
+                                        if block_open:
+                                            yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                            block_open = False
 
-                                                        th_chunk = raw_text.split("<think>", 1)[-1] if "<think>" in raw_text else raw_text
-                                                        if "</think>" in th_chunk:
-                                                            th_part, tx_part = th_chunk.split("</think>", 1)
-                                                            if th_part:
-                                                                yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(th_part)}}}}}\n\n'.encode("utf-8")
-                                                            yield b'event: content_block_stop\ndata: {"type": "content_block_stop", "index": 0}\n\n'
-                                                            yield b'event: content_block_start\ndata: {"type": "content_block_start", "index": 1, "content_block": {"type": "text", "text": ""}}\n\n'
-                                                            current_block_index = 1
-                                                            active_block_type = "text"
-                                                            has_emitted_body_block = True
-                                                            if tx_part:
-                                                                yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 1, "delta": {{"type": "text_delta", "text": {json.dumps(tx_part)}}}}}\n\n'.encode("utf-8")
-                                                        else:
-                                                            if th_chunk:
-                                                                yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(th_chunk)}}}}}\n\n'.encode("utf-8")
-                                                        continue
-                                                    else:
-                                                        # Normal text start
-                                                        active_block_type = "text"
-                                                        current_block_index = 0
-                                                        block_open = True
-                                                        has_emitted_body_block = True
-                                                        yield f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}\n\n'.encode("utf-8")
-                                                        buffered_start_payload = None
-                                                        payload["index"] = 0
-                                                        new_lines.append(f"data: {json.dumps(payload)}")
-                                                        continue
+                                    elif p_type == "message_delta":
+                                        if block_open:
+                                            yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                            block_open = False
+                                        if not has_emitted_body_block:
+                                            target_idx = current_block_index + 1
+                                            synth_block = (
+                                                f'event: content_block_start\ndata: {{"type": "content_block_start", "index": {target_idx}, "content_block": {{"type": "text", "text": ""}}}}\n\n'
+                                                f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": {target_idx}, "delta": {{"type": "text_delta", "text": "Proceeding with implementation."}}}}\n\n'
+                                                f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {target_idx}}}\n\n'
+                                            )
+                                            yield synth_block.encode("utf-8")
+                                            has_emitted_body_block = True
+                                            current_block_index = target_idx
 
-                                                if active_block_type == "thinking":
-                                                    if "</think>" in raw_text:
-                                                        th_part, tx_part = raw_text.split("</think>", 1)
-                                                        if th_part:
-                                                            yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(th_part)}}}}}\n\n'.encode("utf-8")
-                                                        yield b'event: content_block_stop\ndata: {"type": "content_block_stop", "index": 0}\n\n'
-                                                        yield b'event: content_block_start\ndata: {"type": "content_block_start", "index": 1, "content_block": {"type": "text", "text": ""}}\n\n'
-                                                        current_block_index = 1
-                                                        active_block_type = "text"
-                                                        has_emitted_body_block = True
-                                                        if tx_part:
-                                                            yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 1, "delta": {{"type": "text_delta", "text": {json.dumps(tx_part)}}}}}\n\n'.encode("utf-8")
-                                                        continue
-                                                    else:
-                                                        clean_th = raw_text.replace("<think>", "")
-                                                        if clean_th:
-                                                            yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(clean_th)}}}}}\n\n'.encode("utf-8")
-                                                        continue
-                                                elif active_block_type == "text":
-                                                    payload["index"] = current_block_index
-                                                    if d_type not in ("input_json_delta",):
-                                                        delta["type"] = "text_delta"
-                                                        txt = delta.get("text", "") or delta.get("content", "")
-                                                        if isinstance(txt, str):
-                                                            delta["text"] = txt.replace("<think>", "").replace("</think>", "")
-                                                        delta.pop("thinking", None)
-                                                        delta.pop("reasoning_content", None)
-                                                    has_emitted_body_block = True
-                                                    new_lines.append(f"data: {json.dumps(payload)}")
-                                            elif p_type == "content_block_stop":
-                                                if buffered_start_payload is not None:
-                                                    yield f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}\n\n'.encode("utf-8")
-                                                    buffered_start_payload = None
-                                                if block_open:
-                                                    yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
-                                                    block_open = False
-                                            elif p_type == "message_delta":
-                                                if block_open:
-                                                    yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
-                                                    block_open = False
-                                                if not has_emitted_body_block:
-                                                    target_idx = current_block_index + 1
-                                                    synth_block = (
-                                                        f'event: content_block_start\ndata: {{"type": "content_block_start", "index": {target_idx}, "content_block": {{"type": "text", "text": ""}}}}\n\n'
-                                                        f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": {target_idx}, "delta": {{"type": "text_delta", "text": "Proceeding with implementation."}}}}\n\n'
-                                                        f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {target_idx}}}\n\n'
-                                                    )
-                                                    yield synth_block.encode("utf-8")
-                                                    has_emitted_body_block = True
-                                                    current_block_index = target_idx
+                                        delta = payload.get("delta", {})
+                                        if isinstance(delta, dict):
+                                            if delta.get("stop_reason") in ("max_tokens", "length"):
+                                                delta["stop_reason"] = "end_turn"
+                                        yield f"event: message_delta\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
 
-                                                delta = payload.get("delta", {})
-                                                if isinstance(delta, dict):
-                                                    if delta.get("stop_reason") in ("max_tokens", "length"):
-                                                        delta["stop_reason"] = "end_turn"
-                                                new_lines.append(f"data: {json.dumps(payload)}")
-                                            elif p_type == "message_stop":
-                                                if block_open:
-                                                    yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
-                                                    block_open = False
-                                                message_stopped = True
-                                                new_lines.append(f"data: {json.dumps(payload)}")
-                                        except Exception:
-                                            new_lines.append(line)
+                                    elif p_type == "message_stop":
+                                        if block_open:
+                                            yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                            block_open = False
+                                        message_stopped = True
+                                        yield f"event: message_stop\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
                                     else:
-                                        new_lines.append(line)
+                                        yield f"event: {event_type or 'message'}\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
 
-                                yield ("\n".join(new_lines) + "\n\n").encode("utf-8")
+                                except Exception:
+                                    # Fallback: emit original event lines
+                                    yield ("\n".join(lines) + "\n\n").encode("utf-8")
 
                         except asyncio.TimeoutError:
                             silence_seconds += 2.5
@@ -323,8 +337,8 @@ try:
                                 if closure:
                                     yield closure
                                 break
-                            # Send active SSE keep-alive ping comment during generation pauses every 2.5s
-                            yield b": ping\n\n"
+                            # Send active SSE keep-alive ping comment and Anthropic ping event every 2.5s
+                            yield b": ping\n\nevent: ping\ndata: {\"type\": \"ping\"}\n\n"
 
                     if buffer.strip():
                         yield (buffer + "\n\n").encode("utf-8")
@@ -1034,7 +1048,9 @@ class RequestSanitizer(CustomLogger):
                 if role == "user":
                     last_user_msg = m
 
-        # Check latest user message for motion request, boost, or continuation intent
+        # Check latest user message for motion request, boost, continuation, or conversational intent
+        is_conversational = False
+        user_is_motion = False
         if last_user_msg:
             c = last_user_msg.get("content")
             user_text = ""
@@ -1045,15 +1061,66 @@ class RequestSanitizer(CustomLogger):
                     str(p.get("text", "")).strip().lower()
                     for p in c if isinstance(p, dict) and p.get("type") == "text"
                 )
-            user_text_clean = user_text.strip(".!?,")
+            user_text_clean = user_text.strip(".!?, \t\r\n")
 
-            greetings = ("hi", "hello", "hey", "sup", "good morning", "good evening", "good afternoon", "howdy", "greetings", "test", "ping")
-            is_greeting = (
-                user_text_clean in greetings or
-                (len(user_text.split()) <= 2 and any(user_text_clean.startswith(g) for g in greetings))
+            # Broad conversational vocabulary
+            greetings = (
+                "hi", "hello", "hey", "sup", "good morning", "good evening",
+                "good afternoon", "howdy", "greetings", "test", "ping", "yo", "hola"
+            )
+            conversational_phrases = (
+                # Well-being
+                "how are you", "how are you doing", "how's it going", "hows it going",
+                "how are things", "how do you do", "what's up", "whats up", "wassup",
+                "how r u", "how you doing",
+                # Identity & background
+                "who are you", "what are you", "what is your name", "who made you",
+                "who created you", "tell me about yourself", "tell me who you are",
+                "introduce yourself", "what model are you", "what model is this",
+                "which model are you", "what engine are you", "what ai are you",
+                # Capabilities & help
+                "what can you do", "what can u do", "what are your capabilities",
+                "what do you do", "what are you capable of", "how can you help",
+                "how can you help me", "what help can you provide", "help me",
+                # Gratitude & acknowledgments
+                "thank you", "thanks", "thx", "thank you so much", "thanks a lot",
+                "nice", "cool", "great", "awesome", "good job", "well done",
+                "ok thanks", "okay thanks", "bye", "goodbye", "see you"
             )
 
-            if not is_greeting:
+            words = [w for w in user_text_clean.split() if w]
+            word_count = len(words)
+
+            coding_action_keywords = (
+                "write", "create", "make", "edit", "modify", "update", "delete", "remove",
+                "fix", "patch", "build", "run", "execute", "test", "install", "git",
+                "commit", "push", "pull", "repo", "file", "folder", "directory",
+                "script", "code", "bug", "error", "refactor", "implement", "deploy",
+                "compile", "lint", "debug", "bash", "command", "powershell", "python",
+                "node", "npm", "cargo", "docker"
+            )
+            has_coding_action = any(k in words for k in coding_action_keywords)
+
+            is_pure_greeting = (
+                user_text_clean in greetings or
+                (word_count <= 2 and any(user_text_clean.startswith(g) for g in greetings))
+            )
+
+            is_conversational_phrase = any(
+                user_text_clean == p or
+                user_text_clean.startswith(p + " ") or
+                user_text_clean.endswith(" " + p) or
+                f" {p} " in f" {user_text_clean} "
+                for p in conversational_phrases
+            )
+
+            is_conversational_question = (
+                user_text.endswith("?") and
+                not has_coding_action and
+                word_count <= 15
+            )
+
+            if not is_pure_greeting and not is_conversational_phrase and not is_conversational_question:
                 if "/boost" in user_text or "turbo boost" in user_text:
                     boost_triggered = True
 
@@ -1067,6 +1134,9 @@ class RequestSanitizer(CustomLogger):
 
                 if user_is_motion:
                     motion_triggered = True
+            else:
+                if not boost_triggered and not user_is_motion and not continuation_triggered:
+                    is_conversational = True
 
             # Inject mandate into user message (supports both str and list content)
             if continuation_triggered:
@@ -1127,18 +1197,20 @@ When asked what model, mode, or engine you are, or who built/powers you, you MUS
 "{active_name} powered by NVIDIA NIM via local proxy routing."
 Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
 """
-        # Check for casual greetings or non-coding questions
-        greetings = ("hi", "hello", "hey", "sup", "good morning", "good evening", "good afternoon", "howdy", "greetings", "test", "ping")
-        is_greeting = (
-            user_text_clean in greetings or
-            (len(user_text.split()) <= 2 and any(user_text_clean.startswith(g) for g in greetings) and not user_is_motion and not continuation_triggered)
-        )
-
-        directive_parts = [identity_directive.strip(), NATIVE_THINKING_DIRECTIVE.strip()]
-        if is_greeting:
-            # For greetings, allow pure conversational responses with zero tool pressure
-            directive_parts.append("[CONVERSATIONAL MODE: The user is greeting you. Respond politely and naturally in text. DO NOT invoke any tools or edit any files.]")
+        if is_conversational:
+            # Pure Conversational Mode: zero tool pressure, no native thinking mandate, no architectural demands
+            # Strip tools and thinking from payload so upstream LLM feels 0 tool pressure
+            data.pop("tools", None)
+            data.pop("tool_choice", None)
+            data.pop("thinking", None)
+            conversational_directive = f"""[CONVERSATIONAL MODE: Zero Tool Pressure]
+The user is speaking with you conversationally.
+Respond warmly, politely, and directly in plain text.
+State your identity if asked: {active_name} powered by NVIDIA NIM enterprise inference via local proxy routing.
+DO NOT use tools, DO NOT analyze code or files, and DO NOT emit <think> tags."""
+            directive_parts = [identity_directive.strip(), conversational_directive.strip()]
         else:
+            directive_parts = [identity_directive.strip(), NATIVE_THINKING_DIRECTIVE.strip()]
             if motion_triggered:
                 directive_parts.append(ONESHOT_MOTION_DIRECTIVE.strip())
                 directive_parts.append(MOTION_GRAPHICS_REMOTION_DIRECTIVE.strip())
@@ -1156,7 +1228,7 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                     data["system"] = full_directive + "\n\n" + cleaned
                 else:
                     extra_dirs = []
-                    if "[CRITICAL NATIVE THINKING MANDATE" not in cleaned:
+                    if not is_conversational and "[CRITICAL NATIVE THINKING MANDATE" not in cleaned:
                         extra_dirs.append(NATIVE_THINKING_DIRECTIVE.strip())
                     if motion_triggered and "[CRITICAL 1-SHOT DIRECT ACTION MANDATE" not in cleaned:
                         extra_dirs.append(ONESHOT_MOTION_DIRECTIVE.strip())
@@ -1175,7 +1247,7 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                     top_system.insert(0, {"type": "text", "text": full_directive + "\n\n"})
                 else:
                     extra_dirs = []
-                    if not any(isinstance(p, dict) and "[CRITICAL NATIVE THINKING MANDATE" in p.get("text", "") for p in top_system):
+                    if not is_conversational and not any(isinstance(p, dict) and "[CRITICAL NATIVE THINKING MANDATE" in p.get("text", "") for p in top_system):
                         extra_dirs.append(NATIVE_THINKING_DIRECTIVE.strip())
                     if motion_triggered and not any(isinstance(p, dict) and "[CRITICAL 1-SHOT DIRECT ACTION MANDATE" in p.get("text", "") for p in top_system):
                         extra_dirs.append(ONESHOT_MOTION_DIRECTIVE.strip())
@@ -1208,7 +1280,7 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                         system_msg["content"] = full_directive + "\n\n" + s_content
                     else:
                         extra_dirs = []
-                        if "[CRITICAL NATIVE THINKING MANDATE" not in s_content:
+                        if not is_conversational and "[CRITICAL NATIVE THINKING MANDATE" not in s_content:
                             extra_dirs.append(NATIVE_THINKING_DIRECTIVE.strip())
                         if motion_triggered and "[CRITICAL 1-SHOT DIRECT ACTION MANDATE" not in s_content:
                             extra_dirs.append(ONESHOT_MOTION_DIRECTIVE.strip())
@@ -1222,7 +1294,7 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                         s_content.insert(0, {"type": "text", "text": full_directive + "\n\n"})
                     else:
                         extra_dirs = []
-                        if not any(isinstance(p, dict) and "[CRITICAL NATIVE THINKING MANDATE" in p.get("text", "") for p in s_content):
+                        if not is_conversational and not any(isinstance(p, dict) and "[CRITICAL NATIVE THINKING MANDATE" in p.get("text", "") for p in s_content):
                             extra_dirs.append(NATIVE_THINKING_DIRECTIVE.strip())
                         if motion_triggered and not any(isinstance(p, dict) and "[CRITICAL 1-SHOT DIRECT ACTION MANDATE" in p.get("text", "") for p in s_content):
                             extra_dirs.append(ONESHOT_MOTION_DIRECTIVE.strip())
@@ -1268,8 +1340,8 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                 data["system"] = condense_system_prompt_for_deepseek(combined)
             data.pop("thinking", None)
         else:
-            # Full-Fledged Native Thinking Mandate: enforce native thinking across all non-classifier requests
-            if not is_classifier:
+            # Full-Fledged Native Thinking Mandate: enforce native thinking across coding requests only
+            if not is_classifier and not is_conversational:
                 thinking = data.get("thinking")
                 req_budget = thinking.get("budget_tokens") if isinstance(thinking, dict) else None
                 if req_budget is not None:

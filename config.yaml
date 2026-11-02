@@ -381,10 +381,10 @@ model_list:
       timeout: 1800
       max_tokens: 8192
 
-  # Claude Code model mappings - routed dynamically to Nemotron Ultra 550B
+  # Claude Code model mappings - routed dynamically to Mistral Large 4
   - model_name: "claude-sonnet-5"
     litellm_params:
-      model: "nvidia_nim/nvidia/nemotron-3-ultra-550b-a55b"
+      model: "nvidia_nim/mistralai/mistral-large-4-1t-a52b"
       api_key: "os.environ/NVIDIA_API_KEY"
       timeout: 1800
       max_tokens: 8192
@@ -405,7 +405,7 @@ model_list:
 
   - model_name: "claude-3-7-sonnet-20250219"
     litellm_params:
-      model: "nvidia_nim/nvidia/nemotron-3-ultra-550b-a55b"
+      model: "nvidia_nim/mistralai/mistral-large-4-1t-a52b"
       api_key: "os.environ/NVIDIA_API_KEY"
       timeout: 1800
       max_tokens: 8192

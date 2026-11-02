@@ -3,7 +3,7 @@
   "modelPicker": {
     "options": [
       {
-        "model": "claude-3-7-sonnet-20250219",
+        "model": "claude-sonnet-5",
         "label": "Mistral Large 4",
         "description": "1.05T Frontier MoE, 52B Active (PRIMARY DEFAULT)",
         "behavesAs": "sonnet"
