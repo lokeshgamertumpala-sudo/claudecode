@@ -1031,36 +1031,10 @@ class RequestSanitizer(CustomLogger):
                 if not isinstance(m, dict):
                     continue
                 role = m.get("role")
-                c = m.get("content")
-                text_content = ""
-                if isinstance(c, str):
-                    text_content = c.lower()
-                elif isinstance(c, list):
-                    text_content = " ".join(
-                        str(p.get("text", "")) + " " + str(p.get("content", ""))
-                        for p in c if isinstance(p, dict)
-                    ).lower()
-
-                if "/boost" in text_content or "turbo boost" in text_content:
-                    boost_triggered = True
-
-                if any(k in text_content for k in motion_keywords) or (
-                    ("video" in text_content or "motion" in text_content or "animation" in text_content or "intro" in text_content) and
-                    any(act in text_content for act in ("create", "make", "generate", "render", "explainer", "build", "test", "deliverable", "code"))
-                ):
-                    history_has_motion = True
-
                 if role == "user":
                     last_user_msg = m
 
-        if not boost_triggered and top_system:
-            sys_str = str(top_system).lower()
-            if "/boost" in sys_str or "turbo boost" in sys_str:
-                boost_triggered = True
-            if any(k in sys_str for k in motion_keywords):
-                history_has_motion = True
-
-        # Check latest user message for motion request or continuation intent
+        # Check latest user message for motion request, boost, or continuation intent
         if last_user_msg:
             c = last_user_msg.get("content")
             user_text = ""
@@ -1073,17 +1047,26 @@ class RequestSanitizer(CustomLogger):
                 )
             user_text_clean = user_text.strip(".!?,")
 
-            user_is_motion = any(k in user_text for k in motion_keywords) or (
-                ("video" in user_text or "motion" in user_text or "animation" in user_text or "intro" in user_text) and
-                any(act in user_text for act in ("create", "make", "generate", "render", "explainer", "build", "remotion", "show", "test", "deliverable"))
+            greetings = ("hi", "hello", "hey", "sup", "good morning", "good evening", "good afternoon", "howdy", "greetings", "test", "ping")
+            is_greeting = (
+                user_text_clean in greetings or
+                (len(user_text.split()) <= 2 and any(user_text_clean.startswith(g) for g in greetings))
             )
 
-            if user_text_clean in continuation_phrases or any(user_text_clean.startswith(p) for p in ("do it", "continue", "proceed", "go ahead", "do that", "execute")):
-                continuation_triggered = True
+            if not is_greeting:
+                if "/boost" in user_text or "turbo boost" in user_text:
+                    boost_triggered = True
 
-            # If user asks for motion, or continues a motion task
-            if user_is_motion or (continuation_triggered and history_has_motion):
-                motion_triggered = True
+                user_is_motion = any(k in user_text for k in motion_keywords) or (
+                    ("video" in user_text or "motion" in user_text or "animation" in user_text or "intro" in user_text) and
+                    any(act in user_text for act in ("create", "make", "generate", "render", "explainer", "build", "remotion", "show", "test", "deliverable"))
+                )
+
+                if user_text_clean in continuation_phrases or any(user_text_clean.startswith(p) for p in ("do it", "continue", "proceed", "go ahead", "do that", "execute")):
+                    continuation_triggered = True
+
+                if user_is_motion:
+                    motion_triggered = True
 
             # Inject mandate into user message (supports both str and list content)
             if continuation_triggered:
