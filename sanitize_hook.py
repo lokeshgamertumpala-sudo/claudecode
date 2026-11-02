@@ -607,11 +607,10 @@ When designing, modifying, or executing software projects, you MUST adhere stric
 8. ENGINE IDENTITY & RUNTIME AWARENESS:
    - Your underlying reasoning engine is powered by NVIDIA NIM enterprise inference running your active model (NVIDIA Nemotron Ultra 550B MoE, Poolside Laguna XS 2.1, Mistral Large 4, Step 5 Preview, MiniMax M3.1 Flash, DeepSeek V4.1 Flash, DeepSeek R1, DeepSeek V3, Meta Llama 3.3 70B, or Qwen 2.5 72B) integrated with Claude Code CLI.
    - When asked what AI model, mode, or engine you are, explicitly declare your active model powered by NVIDIA NIM. Never claim to be Anthropic Claude or Sonnet.
-9. AUTONOMOUS ACTION MANDATE (ZERO CONVERSATIONAL PAUSES):
-   - When asked to create, edit, or execute code or files, NEVER emit conversational promises alone (e.g., do NOT say "Now I understand. Let me create the composition..." or "I will now implement X...").
-   - You MUST invoke the `Write`, `Edit`, or `Bash` tool IMMEDIATELY in the exact same turn!
-   - Emitting conversational text without calling a tool halts Claude Code's autonomous loop and leaves the user waiting. Always emit the tool call directly.
-   - When the user prompt is "do it", "continue", "proceed", or "go ahead", you MUST invoke the tool call immediately without further commentary.
+9. ACTION ON CODING TASKS VS NATURAL CONVERSATION:
+   - When the user explicitly requests you to create, modify, test, or execute code or files, make the actual tool calls (`Write`, `Edit`, or `Bash`) directly rather than only talking about them.
+   - For greetings (e.g. "hi", "hello"), general questions, discussions, planning, or casual queries, respond naturally, conversationally, and politely WITHOUT executing unsolicited tool calls.
+   - NEVER make tool calls or edit files when the user is simply saying hello or asking a question.
 """
 
 class RequestSanitizer(CustomLogger):
@@ -1084,13 +1083,24 @@ When asked what model, mode, or engine you are, or who built/powers you, you MUS
 "{active_name} powered by NVIDIA NIM via local proxy routing."
 Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
 """
+        # Check for casual greetings or non-coding questions
+        greetings = ("hi", "hello", "hey", "sup", "good morning", "good evening", "good afternoon", "howdy", "greetings", "test", "ping")
+        is_greeting = (
+            user_text_clean in greetings or
+            (len(user_text.split()) <= 2 and any(user_text_clean.startswith(g) for g in greetings) and not user_is_motion and not continuation_triggered)
+        )
+
         directive_parts = [identity_directive.strip()]
-        if motion_triggered:
-            directive_parts.append(ONESHOT_MOTION_DIRECTIVE.strip())
-        if continuation_triggered:
-            directive_parts.append(CONTINUATION_ACTION_DIRECTIVE.strip())
-        directive_parts.append(MOTION_GRAPHICS_REMOTION_DIRECTIVE.strip())
-        directive_parts.append(ARCHITECTURAL_COHESION_DIRECTIVE.strip())
+        if is_greeting:
+            # For greetings, allow pure conversational responses with zero tool pressure
+            directive_parts.append("[CONVERSATIONAL MODE: The user is greeting you. Respond politely and naturally in text. DO NOT invoke any tools or edit any files.]")
+        else:
+            if motion_triggered:
+                directive_parts.append(ONESHOT_MOTION_DIRECTIVE.strip())
+                directive_parts.append(MOTION_GRAPHICS_REMOTION_DIRECTIVE.strip())
+            if continuation_triggered:
+                directive_parts.append(CONTINUATION_ACTION_DIRECTIVE.strip())
+            directive_parts.append(ARCHITECTURAL_COHESION_DIRECTIVE.strip())
 
         full_directive = "\n\n".join(directive_parts)
 
