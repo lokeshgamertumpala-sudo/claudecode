@@ -3,6 +3,7 @@ import time
 import os
 import json
 import asyncio
+import re
 import requests
 from litellm.integrations.custom_logger import CustomLogger
 from typing import Any
@@ -207,7 +208,7 @@ try:
                                             active_block_type = "thinking"
                                             buffered_start_payload = None
                                             yield f"event: content_block_start\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
-                                        elif b_type == "text" and not has_emitted_body_block and current_block_index == 0:
+                                        elif b_type == "text" and not has_emitted_body_block and payload.get("index", 0) == 0:
                                             # Buffer initial text block start until first delta
                                             buffered_start_payload = payload
                                         else:
@@ -251,7 +252,7 @@ try:
                                             else:
                                                 # Release initial text block start
                                                 active_block_type = "text"
-                                                current_block_index = 0
+                                                current_block_index = buffered_start_payload.get("index", 0)
                                                 block_open = True
                                                 has_emitted_body_block = True
                                                 yield f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}\n\n'.encode("utf-8")
@@ -289,6 +290,8 @@ try:
 
                                     elif p_type == "content_block_stop":
                                         if buffered_start_payload is not None:
+                                            current_block_index = buffered_start_payload.get("index", current_block_index)
+                                            block_open = True
                                             yield f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}\n\n'.encode("utf-8")
                                             buffered_start_payload = None
                                         if block_open:
@@ -1068,6 +1071,52 @@ class RequestSanitizer(CustomLogger):
                 "hi", "hello", "hey", "sup", "good morning", "good evening",
                 "good afternoon", "howdy", "greetings", "test", "ping", "yo", "hola"
             )
+            continuation_phrases = (
+                "do it", "continue", "proceed", "go ahead", "done", "next",
+                "keep going", "finish", "yes", "ok", "proceed with implementation",
+                "do that", "execute", "start", "run it"
+            )
+
+            # Robust tokenization stripping attached punctuation
+            words = re.findall(r'[a-zA-Z0-9_\-\.]+', user_text.lower())
+            word_count = len(words)
+
+            coding_action_keywords = (
+                "write", "create", "make", "edit", "modify", "update", "delete", "remove",
+                "fix", "patch", "build", "run", "execute", "test", "install", "git",
+                "commit", "push", "pull", "repo", "file", "folder", "directory",
+                "script", "code", "bug", "error", "refactor", "implement", "deploy",
+                "compile", "lint", "debug", "bash", "command", "powershell", "python",
+                "node", "npm", "cargo", "docker", "rust", "golang", "go", "java",
+                "cpp", "c", "typescript", "javascript", "ts", "js", "html", "css",
+                "json", "yaml", "toml", "sql", "api", "server", "database", "db",
+                "endpoint", "component", "function", "class", "method", "algorithm",
+                "optimize", "benchmark", "review", "pr", "setup", "configure", "config",
+                "investigate", "analyze", "trace", "issue", "inspect", "find", "check",
+                "solve", "add", "show", "search"
+            )
+            has_coding_action = any(k in words for k in coding_action_keywords)
+
+            # 1. Action Triggers take priority over conversational detection
+            if "/boost" in user_text or "turbo boost" in user_text:
+                boost_triggered = True
+
+            user_is_motion = any(k in user_text for k in motion_keywords) or (
+                ("video" in user_text or "motion" in user_text or "animation" in user_text or "intro" in user_text) and
+                any(act in user_text for act in ("create", "make", "generate", "render", "explainer", "build", "remotion", "show", "test", "deliverable"))
+            )
+            if user_is_motion:
+                motion_triggered = True
+
+            continuation_action_terms = ("do it", "continue", "proceed", "go ahead", "do that", "execute", "keep going")
+            if user_text_clean in continuation_phrases or any(p in user_text_clean for p in continuation_action_terms):
+                continuation_triggered = True
+
+            # 2. Pure Conversational Detections
+            # Standalone help (pure conversational without coding tasks)
+            pure_help_phrases = ("help", "help me", "help me please", "please help me", "help please")
+            is_pure_help = (user_text_clean in pure_help_phrases)
+
             conversational_phrases = (
                 # Well-being
                 "how are you", "how are you doing", "how's it going", "hows it going",
@@ -1081,61 +1130,39 @@ class RequestSanitizer(CustomLogger):
                 # Capabilities & help
                 "what can you do", "what can u do", "what are your capabilities",
                 "what do you do", "what are you capable of", "how can you help",
-                "how can you help me", "what help can you provide", "help me",
+                "how can you help me", "what help can you provide",
                 # Gratitude & acknowledgments
                 "thank you", "thanks", "thx", "thank you so much", "thanks a lot",
-                "nice", "cool", "great", "awesome", "good job", "well done",
-                "ok thanks", "okay thanks", "bye", "goodbye", "see you"
+                "good job", "well done", "ok thanks", "okay thanks", "bye", "goodbye", "see you"
             )
-
-            words = [w for w in user_text_clean.split() if w]
-            word_count = len(words)
-
-            coding_action_keywords = (
-                "write", "create", "make", "edit", "modify", "update", "delete", "remove",
-                "fix", "patch", "build", "run", "execute", "test", "install", "git",
-                "commit", "push", "pull", "repo", "file", "folder", "directory",
-                "script", "code", "bug", "error", "refactor", "implement", "deploy",
-                "compile", "lint", "debug", "bash", "command", "powershell", "python",
-                "node", "npm", "cargo", "docker"
-            )
-            has_coding_action = any(k in words for k in coding_action_keywords)
 
             is_pure_greeting = (
                 user_text_clean in greetings or
                 (word_count <= 2 and any(user_text_clean.startswith(g) for g in greetings))
             )
 
-            is_conversational_phrase = any(
-                user_text_clean == p or
-                user_text_clean.startswith(p + " ") or
-                user_text_clean.endswith(" " + p) or
-                f" {p} " in f" {user_text_clean} "
-                for p in conversational_phrases
+            is_conversational_phrase = (
+                not has_coding_action and
+                any(
+                    user_text_clean == p or
+                    user_text_clean.startswith(p + " ") or
+                    user_text_clean.endswith(" " + p) or
+                    f" {p} " in f" {user_text_clean} "
+                    for p in conversational_phrases
+                )
             )
 
+            is_acknowledgment = (user_text_clean in ("nice", "cool", "great", "awesome"))
+
             is_conversational_question = (
-                user_text.endswith("?") and
+                user_text.strip().endswith("?") and
                 not has_coding_action and
                 word_count <= 15
             )
 
-            if not is_pure_greeting and not is_conversational_phrase and not is_conversational_question:
-                if "/boost" in user_text or "turbo boost" in user_text:
-                    boost_triggered = True
-
-                user_is_motion = any(k in user_text for k in motion_keywords) or (
-                    ("video" in user_text or "motion" in user_text or "animation" in user_text or "intro" in user_text) and
-                    any(act in user_text for act in ("create", "make", "generate", "render", "explainer", "build", "remotion", "show", "test", "deliverable"))
-                )
-
-                if user_text_clean in continuation_phrases or any(user_text_clean.startswith(p) for p in ("do it", "continue", "proceed", "go ahead", "do that", "execute")):
-                    continuation_triggered = True
-
-                if user_is_motion:
-                    motion_triggered = True
-            else:
-                if not boost_triggered and not user_is_motion and not continuation_triggered:
+            # 3. Final Determination: ONLY enter conversational mode if no action/coding/continuation
+            if not boost_triggered and not user_is_motion and not continuation_triggered and not has_coding_action:
+                if is_pure_greeting or is_pure_help or is_conversational_phrase or is_acknowledgment or is_conversational_question:
                     is_conversational = True
 
             # Inject mandate into user message (supports both str and list content)
