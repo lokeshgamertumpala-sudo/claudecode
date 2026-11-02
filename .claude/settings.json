@@ -4,14 +4,14 @@
     "options": [
       {
         "model": "claude-sonnet-5",
-        "label": "NVIDIA Nemotron Ultra 550B MoE",
-        "description": "550B Flagship Reasoning Giant, Sub-Second Latency (RECOMMENDED DEFAULT)",
+        "label": "Mistral Large 4",
+        "description": "1.05T Frontier MoE, 52B Active (PRIMARY DEFAULT)",
         "behavesAs": "sonnet"
       },
       {
         "model": "mistralai/mistral-large-4-1t-a52b",
         "label": "Mistral Large 4",
-        "description": "1.05T Frontier MoE, 52B Active",
+        "description": "1.05T Frontier MoE, 52B Active (PRIMARY DEFAULT)",
         "behavesAs": "sonnet"
       },
       {
@@ -29,7 +29,7 @@
       {
         "model": "nvidia/nemotron-3-ultra-550b-a55b",
         "label": "NVIDIA Nemotron Ultra 550B MoE",
-        "description": "550B Flagship Reasoning Giant, Sub-Second Latency (RECOMMENDED DEFAULT)",
+        "description": "550B Flagship Reasoning Giant, Sub-Second Latency",
         "behavesAs": "sonnet"
       },
       {

@@ -235,22 +235,39 @@ try:
                                                     if active_block_type == "thinking":
                                                         if d_type != "thinking_delta":
                                                             delta["type"] = "thinking_delta"
+                                                        if "thinking" not in delta:
                                                             if "text" in delta:
                                                                 delta["thinking"] = delta.pop("text", "")
                                                             elif "reasoning_content" in delta:
                                                                 delta["thinking"] = delta.pop("reasoning_content", "")
+                                                            else:
+                                                                delta["thinking"] = ""
+                                                        if isinstance(delta.get("thinking"), str) and "</think>" in delta["thinking"]:
+                                                            delta["thinking"] = delta["thinking"].replace("</think>", "")
                                                     elif active_block_type == "text":
-                                                        # Never convert delta to thinking_delta if block is text
-                                                        if d_type != "text_delta":
-                                                            delta["type"] = "text_delta"
+                                                        # If model sends reasoning_content or <think> before body text, support live thinking stream
+                                                        if not has_emitted_body_block and (d_type == "thinking_delta" or "reasoning_content" in delta or (isinstance(delta.get("text"), str) and "<think>" in delta["text"])):
+                                                            active_block_type = "thinking"
+                                                            delta["type"] = "thinking_delta"
                                                             if "thinking" in delta:
-                                                                delta["text"] = delta.pop("thinking", "")
+                                                                pass
                                                             elif "reasoning_content" in delta:
-                                                                delta["text"] = delta.pop("reasoning_content", "")
-                                                        if isinstance(delta.get("text"), str):
-                                                            txt = delta["text"]
-                                                            if "<think>" in txt or "</think>" in txt:
-                                                                delta["text"] = txt.replace("<think>", "").replace("</think>", "")
+                                                                delta["thinking"] = delta.pop("reasoning_content", "")
+                                                            elif "text" in delta:
+                                                                delta["thinking"] = delta.pop("text", "").replace("<think>", "").replace("</think>", "")
+                                                            else:
+                                                                delta["thinking"] = ""
+                                                        else:
+                                                            if d_type != "text_delta":
+                                                                delta["type"] = "text_delta"
+                                                                if "thinking" in delta:
+                                                                    delta["text"] = delta.pop("thinking", "")
+                                                                elif "reasoning_content" in delta:
+                                                                    delta["text"] = delta.pop("reasoning_content", "")
+                                                            if isinstance(delta.get("text"), str):
+                                                                txt = delta["text"]
+                                                                if "<think>" in txt or "</think>" in txt:
+                                                                    delta["text"] = txt.replace("<think>", "").replace("</think>", "")
 
                                             new_lines.append(f"data: {json.dumps(payload)}")
                                         except Exception:
@@ -738,7 +755,7 @@ class RequestSanitizer(CustomLogger):
                         return choice
             except Exception:
                 pass
-        return "nvidia/nemotron-3-ultra-550b-a55b"
+        return "mistralai/mistral-large-4-1t-a52b"
 
     def resolve_target_model(self, pref: str, total_chars: int = 0) -> str:
         mapping = {
@@ -1181,12 +1198,12 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
             elif not top_system:
                 messages.insert(0, {"role": "system", "content": full_directive})
 
-        # 5. Token Limit, Effort Suppression, and Thinking Controls
-        # Clamp max_tokens ceiling from 64,000 down to 8192
+        # 5. Token Limit, Effort Suppression, and Unconstrained Native Thinking Controls
+        # Support full model maximums (up to 64k tokens) without artificial restriction
         req_max_tokens = data.get("max_tokens")
         if req_max_tokens is not None:
             try:
-                data["max_tokens"] = min(int(req_max_tokens), 8192)
+                data["max_tokens"] = min(int(req_max_tokens), 64000)
             except (ValueError, TypeError):
                 data["max_tokens"] = 8192
         else:
@@ -1216,13 +1233,29 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                 data["system"] = condense_system_prompt_for_deepseek(combined)
             data.pop("thinking", None)
         else:
-            # Clamp BOTH "enabled" and "adaptive" thinking types: set type: "enabled" and budget_tokens: 1024 (<10s reasoning)
+            # Unconstrained Native Thinking: honor requested budget_tokens or full model maximum (up to 32k/64k tokens)
             thinking = data.get("thinking")
             if isinstance(thinking, dict):
                 t_type = thinking.get("type")
                 if t_type in ("enabled", "adaptive"):
                     thinking["type"] = "enabled"
-                    thinking["budget_tokens"] = 1024
+                    req_budget = thinking.get("budget_tokens")
+                    if req_budget is not None:
+                        try:
+                            budget_val = min(max(int(req_budget), 1024), 64000)
+                        except (ValueError, TypeError):
+                            budget_val = 32768
+                    else:
+                        budget_val = 32768
+                    thinking["budget_tokens"] = budget_val
+                    # Ensure max_tokens is strictly greater than budget_tokens to prevent Anthropic schema rejection
+                    curr_max = data.get("max_tokens", 8192)
+                    try:
+                        curr_max_int = int(curr_max)
+                    except (ValueError, TypeError):
+                        curr_max_int = 8192
+                    if curr_max_int <= budget_val:
+                        data["max_tokens"] = min(budget_val + 8192, 64000)
 
         return data
 

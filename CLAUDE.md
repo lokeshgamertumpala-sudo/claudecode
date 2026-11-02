@@ -145,9 +145,32 @@ When asked to create, generate, or animate motion graphics, explainers, or Remot
 
 ---
 
+## ⚡ Complete Native Slash Command Suite (`.claude/commands/`)
+
+Claude Code CLI includes a full-fledged native slash command suite tailored for autonomous software development and motion graphics:
+
+| Slash Command | File | Purpose & Behavior |
+|---|---|---|
+| `/plan` | `.claude/commands/plan.md` | **Strict Zero-Edit Planning**: Inspects codebase, produces comprehensive architectural design doc, and requires explicit user approval before modifying code. |
+| `/grill-me` | `.claude/commands/grill-me.md` | **1-by-1 Interactive Interview**: Stress-tests requirements, walking down the decision tree one question at a time with recommended choices. |
+| `/motion` | `.claude/commands/motion.md` | **1-Shot Turbo Remotion 60FPS Pipeline**: Instant 4-turn creation (<2s check, <8s MP4 render, port 3100 preview). |
+| `/test` | `.claude/commands/test.md` | **Autonomous Test Runner**: Discovers and runs tests across TypeScript/Remotion (`tsc --noEmit`), Python, and Node with auto-healing. |
+| `/review` | `.claude/commands/review.md` | **Automated Code Review**: Reviews `git diff` for bugs, memory leaks, missing types, and security vulnerabilities. |
+| `/git-sync` | `.claude/commands/git-sync.md` | **1-Click Git Sync**: Pulls upstream via rebase, stages changes, generates semantic commits, and pushes to `origin/main`. |
+| `/doctor` | `.claude/commands/doctor.md` | **System Diagnostics & Auto-Healing**: Verifies API keys, proxy port 4000 (auto-reviving if stopped), active model, Node/npm, Remotion, and Git. |
+| `/model` | `.claude/commands/model.md` | **Model Switcher**: Switches active model across all 11 NVIDIA NIM models or toggles Auto Smart-Failover. |
+| `/clean` | `.claude/commands/clean.md` | **Workspace Cleaner**: Reclaims disk space by clearing `__pycache__`, temp logs, and Remotion frame caches. |
+| `/boost` | `.claude/commands/boost.md` | **Turbo Boost Accelerator**: Pinned high-speed inference + 1-shot 60FPS Remotion acceleration. |
+| `/company` | `.claude/commands/company.md` | **Corporate Intelligence**: Instant financial and corporate dossiers via SEC EDGAR, Yahoo Finance, and Wikipedia. |
+| `/verify-all` | `.claude/commands/verify-all.md` | **Universal Integrity Auditor**: Multi-language AST validator across JS, TS, Python, HTML, CSS, JSON, YAML. |
+
+---
+
 ## ⚡ Engine Identity & Runtime Awareness
-- **Underlying Intelligence**: You are powered by **NVIDIA Nemotron Ultra 550B MoE** (or active model: Mistral Large 4, Step 5 Preview, MiniMax M3.1 Flash, DeepSeek V4.1 Flash, Laguna XS 2.1) running on **NVIDIA NIM** enterprise inference via local proxy routing (`127.0.0.1:4000`).
-- **Identity Truth**: When asked what model, mode, or AI engine you are running on, state clearly and accurately that you are **NVIDIA Nemotron Ultra 550B MoE** (or active model) powered by **NVIDIA NIM**, driving the Claude Code CLI interface.
+- **Primary Default Engine**: **Mistral Large 4** (`mistralai/mistral-large-4-1t-a52b`, 1.05T Frontier MoE, 52B Active) running on **NVIDIA NIM** enterprise inference via local proxy routing (`http://127.0.0.1:4000`).
+- **Unconstrained Native Thinking**: Streaming thinking deltas (`thinking_delta`) with full model reasoning budgets (up to 32k/64k tokens) and real-time live elapsed seconds timer in terminal.
+- **Frontier Multi-Model Mesh**: Mistral Large 4 (Default), NVIDIA Nemotron Ultra 550B MoE, Step 5 Preview, MiniMax M3.1 Flash, DeepSeek V4.1 Flash, Poolside Laguna XS 2.1, DeepSeek R1, DeepSeek V3, Meta Llama 3.3 70B, Qwen 2.5 72B, and Auto Smart-Failover.
+- **Identity Truth**: When asked what model, mode, or AI engine you are running on, state clearly and accurately that you are **Mistral Large 4** (or active model) powered by **NVIDIA NIM**, driving the Claude Code CLI interface.
 
 
 

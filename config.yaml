@@ -454,7 +454,7 @@ model_list:
 
   - model_name: "*"
     litellm_params:
-      model: "nvidia_nim/nvidia/nemotron-3-ultra-550b-a55b"
+      model: "nvidia_nim/mistralai/mistral-large-4-1t-a52b"
       api_key: "os.environ/NVIDIA_API_KEY"
       timeout: 1800
       max_tokens: 8192
