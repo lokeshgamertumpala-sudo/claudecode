@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEYOND EARTH - Cinematic Space Motion Graphics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #app {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #canvas-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            max-width: 1920px;
+            margin: 0 auto;
+            aspect-ratio: 16 / 9;
+            background: #000;
+        }
+
+        #canvas-container canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+            padding: 0 16px;
+        }
+
+        .control-btn {
+            background: rgba(10, 15, 30, 0.9);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            color: #e8f4ff;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 80, 120, 0.9);
+            border-color: #00c8ff;
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.primary {
+            background: linear-gradient(135deg, rgba(0, 120, 200, 0.9), rgba(0, 80, 160, 0.9));
+            border-color: #00c8ff;
+        }
+
+        .control-btn.primary:hover {
+            box-shadow: 0 0 30px rgba(0, 200, 255, 0.5);
+        }
+
+        .control-btn.recording {
+            background: linear-gradient(135deg, rgba(200, 40, 40, 0.9), rgba(160, 20, 20, 0.9));
+            border-color: #ff4444;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(255, 68, 68, 0.8); }
+        }
+
+        .timeline-container {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1200px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 0 16px;
+        }
+
+        .timeline-track {
+            flex: 1;
+            height: 6px;
+            background: rgba(10, 20, 40, 0.8);
+            border-radius: 3px;
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .timeline-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c8ff, #00ffaa, #ffd700);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.05s linear;
+            box-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
+        }
+
+        .timeline-playhead {
+            position: absolute;
+            top: -6px;
+            width: 18px;
+            height: 18px;
+            background: #00c8ff;
+            border: 2px solid #000;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 15px rgba(0, 200, 255, 0.8);
+            pointer-events: none;
+        }
+
+        .time-display {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 13px;
+            color: #00c8ff;
+            min-width: 100px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
+        }
+
+        .phase-indicator {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            z-index: 100;
+            background: rgba(10, 15, 30, 0.95);
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+        }
+
+        .phase-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 4px;
+        }
+
+        .phase-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #00c8ff;
+            text-shadow: 0 0 15px rgba(0, 200, 255, 0.5);
+        }
+
+        .phase-progress {
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .phase-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00c8ff, #00ffaa);
+            width: 0%;
+            transition: width 0.05s linear;
+        }
+
+        .export-status {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 100;
+            background: rgba(10, 15, 30, 0.95);
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            backdrop-filter: blur(10px);
+            min-width: 180px;
+            display: none;
+        }
+
+        .export-status.visible {
+            display: block;
+        }
+
+        .export-status.recording {
+            border-color: #ff4444;
+        }
+
+        .export-status.complete {
+            border-color: #00ff88;
+        }
+
+        .export-progress {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .export-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00c8ff, #00ffaa);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .export-progress-bar.recording {
+            background: linear-gradient(90deg, #ff4444, #ff8844);
+        }
+
+        .stats {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 100;
+            background: rgba(10, 15, 30, 0.9);
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                bottom: 12px;
+                gap: 8px;
+            }
+            .control-btn {
+                padding: 8px 14px;
+                font-size: 11px;
+            }
+            .timeline-container {
+                bottom: 70px;
+                width: 95%;
+            }
+            .phase-indicator {
+                top: 12px;
+                left: 12px;
+                padding: 8px 12px;
+                min-width: 160px;
+            }
+            .phase-name { font-size: 14px; }
+            .export-status {
+                top: 12px;
+                right: 12px;
+                padding: 8px 12px;
+                min-width: 140px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="canvas-container"></div>
+
+        <div class="phase-indicator" id="phaseIndicator">
+            <div class="phase-label">Current Phase</div>
+            <div class="phase-name" id="phaseName">THE VOID</div>
+            <div class="phase-progress">
+                <div class="phase-progress-bar" id="phaseProgress"></div>
+            </div>
+        </div>
+
+        <div class="export-status" id="exportStatus">
+            <div class="phase-label">Export Status</div>
+            <div class="phase-name" id="exportStatusText">Ready</div>
+            <div class="export-progress">
+                <div class="export-progress-bar" id="exportProgress"></div>
+            </div>
+        </div>
+
+        <div class="timeline-container" id="timelineContainer">
+            <div class="time-display" id="currentTime">0.000 / 10.000s</div>
+            <div class="timeline-track">
+                <div class="timeline-progress" id="timelineProgress"></div>
+                <div class="timeline-playhead" id="timelinePlayhead"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="btnRestart" title="Restart (R)">⟲ Restart</button>
+            <button class="control-btn primary" id="btnPlayPause" title="Play/Pause (Space)">▶ Play</button>
+            <button class="control-btn" id="btnExport" title="Export Video (E)">⬇ Export</button>
+        </div>
+
+        <div class="stats" id="stats">FPS: 0 | Particles: 0 | Draw Calls: 0</div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+        }
+    </script>
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
