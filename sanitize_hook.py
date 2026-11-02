@@ -69,16 +69,17 @@ try:
                 current_block_index = 0
                 active_block_type = "text"
                 has_emitted_body_block = False
+                buffered_start_payload = None
 
                 def build_closure() -> bytes:
-                    nonlocal message_stopped, block_open, current_block_index, has_emitted_body_block
+                    nonlocal message_stopped, block_open, current_block_index, has_emitted_body_block, buffered_start_payload
                     if message_stopped:
                         return b""
                     parts = []
                     if not message_started:
                         parts.append(
                             'event: message_start\n'
-                            'data: {"type": "message_start", "message": {"id": "msg_fallback", "type": "message", "role": "assistant", "content": [], "model": "nvidia/nemotron-3-ultra-550b-a55b", "stop_reason": null, "stop_sequence": null, "usage": {"input_tokens": 0, "output_tokens": 0}}}'
+                            'data: {"type": "message_start", "message": {"id": "msg_fallback", "type": "message", "role": "assistant", "content": [], "model": "mistralai/mistral-large-4-1t-a52b", "stop_reason": null, "stop_sequence": null, "usage": {"input_tokens": 0, "output_tokens": 0}}}'
                         )
                     if block_open:
                         parts.append(
@@ -175,27 +176,116 @@ try:
                                                 current_block_index = 0
                                                 has_emitted_body_block = False
                                                 active_block_type = "text"
+                                                buffered_start_payload = None
+                                                new_lines.append(f"data: {json.dumps(payload)}")
                                             elif p_type == "content_block_start":
-                                                if block_open:
-                                                    # Close previously unclosed block before opening a new one
-                                                    yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
-                                                    block_open = False
-                                                block_open = True
-                                                current_block_index = payload.get("index", current_block_index)
                                                 c_block = payload.get("content_block", {})
-                                                if isinstance(c_block, dict):
-                                                    active_block_type = c_block.get("type", "text")
+                                                b_type = c_block.get("type", "text") if isinstance(c_block, dict) else "text"
+                                                if b_type == "thinking":
+                                                    if block_open:
+                                                        yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                                    block_open = True
+                                                    current_block_index = payload.get("index", 0)
+                                                    active_block_type = "thinking"
+                                                    buffered_start_payload = None
+                                                    new_lines.append(f"data: {json.dumps(payload)}")
+                                                elif b_type == "text" and not has_emitted_body_block and current_block_index == 0:
+                                                    # Buffer initial text block start until first delta to verify if model begins with <think>
+                                                    buffered_start_payload = payload
+                                                else:
+                                                    if block_open:
+                                                        yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                                    block_open = True
+                                                    current_block_index = payload.get("index", current_block_index)
+                                                    active_block_type = b_type
                                                     if active_block_type in ("text", "tool_use"):
                                                         has_emitted_body_block = True
+                                                    new_lines.append(f"data: {json.dumps(payload)}")
+                                            elif p_type == "content_block_delta":
+                                                delta = payload.get("delta", {})
+                                                d_type = delta.get("type", "")
+                                                raw_text = delta.get("text", "") or delta.get("thinking", "") or delta.get("reasoning_content", "")
+
+                                                if buffered_start_payload is not None:
+                                                    if not raw_text.strip() and not ("<think>" in raw_text or d_type == "thinking_delta" or "reasoning_content" in delta):
+                                                        continue
+
+                                                    # First content-bearing delta: check if model begins with native thinking (<think> or reasoning_content)
+                                                    if "<think>" in raw_text or d_type == "thinking_delta" or "reasoning_content" in delta:
+                                                        active_block_type = "thinking"
+                                                        current_block_index = 0
+                                                        block_open = True
+                                                        buffered_start_payload = None
+                                                        yield b'event: content_block_start\ndata: {"type": "content_block_start", "index": 0, "content_block": {"type": "thinking", "thinking": ""}}\n\n'
+
+                                                        th_chunk = raw_text.split("<think>", 1)[-1] if "<think>" in raw_text else raw_text
+                                                        if "</think>" in th_chunk:
+                                                            th_part, tx_part = th_chunk.split("</think>", 1)
+                                                            if th_part:
+                                                                yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(th_part)}}}}}\n\n'.encode("utf-8")
+                                                            yield b'event: content_block_stop\ndata: {"type": "content_block_stop", "index": 0}\n\n'
+                                                            yield b'event: content_block_start\ndata: {"type": "content_block_start", "index": 1, "content_block": {"type": "text", "text": ""}}\n\n'
+                                                            current_block_index = 1
+                                                            active_block_type = "text"
+                                                            has_emitted_body_block = True
+                                                            if tx_part:
+                                                                yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 1, "delta": {{"type": "text_delta", "text": {json.dumps(tx_part)}}}}}\n\n'.encode("utf-8")
+                                                        else:
+                                                            if th_chunk:
+                                                                yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(th_chunk)}}}}}\n\n'.encode("utf-8")
+                                                        continue
+                                                    else:
+                                                        # Normal text start
+                                                        active_block_type = "text"
+                                                        current_block_index = 0
+                                                        block_open = True
+                                                        has_emitted_body_block = True
+                                                        yield f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}\n\n'.encode("utf-8")
+                                                        buffered_start_payload = None
+                                                        payload["index"] = 0
+                                                        new_lines.append(f"data: {json.dumps(payload)}")
+                                                        continue
+
+                                                if active_block_type == "thinking":
+                                                    if "</think>" in raw_text:
+                                                        th_part, tx_part = raw_text.split("</think>", 1)
+                                                        if th_part:
+                                                            yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(th_part)}}}}}\n\n'.encode("utf-8")
+                                                        yield b'event: content_block_stop\ndata: {"type": "content_block_stop", "index": 0}\n\n'
+                                                        yield b'event: content_block_start\ndata: {"type": "content_block_start", "index": 1, "content_block": {"type": "text", "text": ""}}\n\n'
+                                                        current_block_index = 1
+                                                        active_block_type = "text"
+                                                        has_emitted_body_block = True
+                                                        if tx_part:
+                                                            yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 1, "delta": {{"type": "text_delta", "text": {json.dumps(tx_part)}}}}}\n\n'.encode("utf-8")
+                                                        continue
+                                                    else:
+                                                        clean_th = raw_text.replace("<think>", "")
+                                                        if clean_th:
+                                                            yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(clean_th)}}}}}\n\n'.encode("utf-8")
+                                                        continue
+                                                elif active_block_type == "text":
+                                                    payload["index"] = current_block_index
+                                                    if d_type not in ("input_json_delta",):
+                                                        delta["type"] = "text_delta"
+                                                        txt = delta.get("text", "") or delta.get("content", "")
+                                                        if isinstance(txt, str):
+                                                            delta["text"] = txt.replace("<think>", "").replace("</think>", "")
+                                                        delta.pop("thinking", None)
+                                                        delta.pop("reasoning_content", None)
+                                                    has_emitted_body_block = True
+                                                    new_lines.append(f"data: {json.dumps(payload)}")
                                             elif p_type == "content_block_stop":
-                                                block_open = False
-                                            elif p_type == "message_delta":
-                                                # Ensure any open block is cleanly closed before message_delta
+                                                if buffered_start_payload is not None:
+                                                    yield f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}\n\n'.encode("utf-8")
+                                                    buffered_start_payload = None
                                                 if block_open:
                                                     yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
                                                     block_open = False
-
-                                                # Guard against empty-turn completion (e.g. only thinking block before end_turn)
+                                            elif p_type == "message_delta":
+                                                if block_open:
+                                                    yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                                    block_open = False
                                                 if not has_emitted_body_block:
                                                     target_idx = current_block_index + 1
                                                     synth_block = (
@@ -207,69 +297,17 @@ try:
                                                     has_emitted_body_block = True
                                                     current_block_index = target_idx
 
-                                                # Coerce stop_reason from max_tokens or length to end_turn to prevent infinite continuation loops (64k error)
                                                 delta = payload.get("delta", {})
                                                 if isinstance(delta, dict):
                                                     if delta.get("stop_reason") in ("max_tokens", "length"):
                                                         delta["stop_reason"] = "end_turn"
+                                                new_lines.append(f"data: {json.dumps(payload)}")
                                             elif p_type == "message_stop":
                                                 if block_open:
                                                     yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
                                                     block_open = False
                                                 message_stopped = True
-
-                                            # Clean and align deltas in content_block_delta to prevent type mismatches
-                                            if p_type == "content_block_delta":
-                                                idx = payload.get("index")
-                                                if idx is not None:
-                                                    current_block_index = idx
-                                                delta = payload.get("delta", {})
-                                                if isinstance(delta, dict):
-                                                    d_type = delta.get("type", "")
-                                                    if d_type in ("text_delta", "input_json_delta"):
-                                                        has_emitted_body_block = True
-                                                    if d_type == "text_delta" and delta.get("text") is None:
-                                                        delta["text"] = ""
-
-                                                    # Prevent content_block_type_mismatch by strictly aligning delta type with parent block
-                                                    if active_block_type == "thinking":
-                                                        if d_type != "thinking_delta":
-                                                            delta["type"] = "thinking_delta"
-                                                        if "thinking" not in delta:
-                                                            if "text" in delta:
-                                                                delta["thinking"] = delta.pop("text", "")
-                                                            elif "reasoning_content" in delta:
-                                                                delta["thinking"] = delta.pop("reasoning_content", "")
-                                                            else:
-                                                                delta["thinking"] = ""
-                                                        if isinstance(delta.get("thinking"), str) and "</think>" in delta["thinking"]:
-                                                            delta["thinking"] = delta["thinking"].replace("</think>", "")
-                                                    elif active_block_type == "text":
-                                                        # If model sends reasoning_content or <think> before body text, support live thinking stream
-                                                        if not has_emitted_body_block and (d_type == "thinking_delta" or "reasoning_content" in delta or (isinstance(delta.get("text"), str) and "<think>" in delta["text"])):
-                                                            active_block_type = "thinking"
-                                                            delta["type"] = "thinking_delta"
-                                                            if "thinking" in delta:
-                                                                pass
-                                                            elif "reasoning_content" in delta:
-                                                                delta["thinking"] = delta.pop("reasoning_content", "")
-                                                            elif "text" in delta:
-                                                                delta["thinking"] = delta.pop("text", "").replace("<think>", "").replace("</think>", "")
-                                                            else:
-                                                                delta["thinking"] = ""
-                                                        else:
-                                                            if d_type != "text_delta":
-                                                                delta["type"] = "text_delta"
-                                                                if "thinking" in delta:
-                                                                    delta["text"] = delta.pop("thinking", "")
-                                                                elif "reasoning_content" in delta:
-                                                                    delta["text"] = delta.pop("reasoning_content", "")
-                                                            if isinstance(delta.get("text"), str):
-                                                                txt = delta["text"]
-                                                                if "<think>" in txt or "</think>" in txt:
-                                                                    delta["text"] = txt.replace("<think>", "").replace("</think>", "")
-
-                                            new_lines.append(f"data: {json.dumps(payload)}")
+                                                new_lines.append(f"data: {json.dumps(payload)}")
                                         except Exception:
                                             new_lines.append(line)
                                     else:
@@ -630,18 +668,24 @@ When designing, modifying, or executing software projects, you MUST adhere stric
    - NEVER make tool calls or edit files when the user is simply saying hello or asking a question.
 """
 
+NATIVE_THINKING_DIRECTIVE = """
+[CRITICAL NATIVE THINKING MANDATE - MANDATORY REASONING PHASE]
+You MUST ALWAYS begin your response with your thorough internal reasoning and architectural analysis enclosed within <think> and </think> tags.
+Think deeply through requirements, edge cases, root causes, and implementation steps inside <think>...</think>.
+Only AFTER closing the </think> tag, proceed directly with your user-facing response, code implementation, or tool calls.
+"""
+
 class RequestSanitizer(CustomLogger):
     def __init__(self):
         super().__init__()
         self.api_key = None
         self._load_api_key()
         
-        # Priority pool across all 5 live frontier NIM models:
-        # Nemotron Ultra 550B and Laguna XS 2.1 provide verified sub-second (<0.6s) latency.
+        # Priority pool across all live frontier NIM models (Mistral Large 4 primary default):
         self.model_pool = [
+            ("backup-mistral", "mistralai/mistral-large-4-1t-a52b", "Mistral Large 4"),
             ("backup-ultra", "nvidia/nemotron-3-ultra-550b-a55b", "Nemotron Ultra 550B"),
             ("backup-laguna", "poolside/laguna-xs-2.1", "Poolside Laguna XS 2.1"),
-            ("backup-mistral", "mistralai/mistral-large-4-1t-a52b", "Mistral Large 4"),
             ("backup-step", "stepfun-ai/step-5-preview", "Step 5 Preview"),
             ("backup-minimax", "minimaxai/minimax-m3.1-flash", "MiniMax M3.1 Flash"),
             ("backup-deepseek", "deepseek-ai/deepseek-v4.1-flash", "DeepSeek V4.1 Flash"),
@@ -836,8 +880,8 @@ class RequestSanitizer(CustomLogger):
             if self.is_model_healthy(nim_id):
                 return slug
 
-        # Ultimate fallback: model whose cooldown expires earliest
-        soonest_slug = "backup-ultra"
+        # Ultimate fallback: model whose cooldown expires earliest (Mistral Large 4 primary)
+        soonest_slug = "backup-mistral"
         soonest_time = float("inf")
         for slug, nim_id, name in self.model_pool:
             cd = self.health.get(nim_id, {}).get("cooldown_until", 0.0)
@@ -1107,7 +1151,7 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
             (len(user_text.split()) <= 2 and any(user_text_clean.startswith(g) for g in greetings) and not user_is_motion and not continuation_triggered)
         )
 
-        directive_parts = [identity_directive.strip()]
+        directive_parts = [identity_directive.strip(), NATIVE_THINKING_DIRECTIVE.strip()]
         if is_greeting:
             # For greetings, allow pure conversational responses with zero tool pressure
             directive_parts.append("[CONVERSATIONAL MODE: The user is greeting you. Respond politely and naturally in text. DO NOT invoke any tools or edit any files.]")
@@ -1129,6 +1173,8 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                     data["system"] = full_directive + "\n\n" + cleaned
                 else:
                     extra_dirs = []
+                    if "[CRITICAL NATIVE THINKING MANDATE" not in cleaned:
+                        extra_dirs.append(NATIVE_THINKING_DIRECTIVE.strip())
                     if motion_triggered and "[CRITICAL 1-SHOT DIRECT ACTION MANDATE" not in cleaned:
                         extra_dirs.append(ONESHOT_MOTION_DIRECTIVE.strip())
                     if continuation_triggered and "[CRITICAL CONTINUATION DIRECTIVE" not in cleaned:
@@ -1146,6 +1192,8 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                     top_system.insert(0, {"type": "text", "text": full_directive + "\n\n"})
                 else:
                     extra_dirs = []
+                    if not any(isinstance(p, dict) and "[CRITICAL NATIVE THINKING MANDATE" in p.get("text", "") for p in top_system):
+                        extra_dirs.append(NATIVE_THINKING_DIRECTIVE.strip())
                     if motion_triggered and not any(isinstance(p, dict) and "[CRITICAL 1-SHOT DIRECT ACTION MANDATE" in p.get("text", "") for p in top_system):
                         extra_dirs.append(ONESHOT_MOTION_DIRECTIVE.strip())
                     if continuation_triggered and not any(isinstance(p, dict) and "[CRITICAL CONTINUATION DIRECTIVE" in p.get("text", "") for p in top_system):
@@ -1177,6 +1225,8 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                         system_msg["content"] = full_directive + "\n\n" + s_content
                     else:
                         extra_dirs = []
+                        if "[CRITICAL NATIVE THINKING MANDATE" not in s_content:
+                            extra_dirs.append(NATIVE_THINKING_DIRECTIVE.strip())
                         if motion_triggered and "[CRITICAL 1-SHOT DIRECT ACTION MANDATE" not in s_content:
                             extra_dirs.append(ONESHOT_MOTION_DIRECTIVE.strip())
                         if continuation_triggered and "[CRITICAL CONTINUATION DIRECTIVE" not in s_content:
@@ -1189,6 +1239,8 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                         s_content.insert(0, {"type": "text", "text": full_directive + "\n\n"})
                     else:
                         extra_dirs = []
+                        if not any(isinstance(p, dict) and "[CRITICAL NATIVE THINKING MANDATE" in p.get("text", "") for p in s_content):
+                            extra_dirs.append(NATIVE_THINKING_DIRECTIVE.strip())
                         if motion_triggered and not any(isinstance(p, dict) and "[CRITICAL 1-SHOT DIRECT ACTION MANDATE" in p.get("text", "") for p in s_content):
                             extra_dirs.append(ONESHOT_MOTION_DIRECTIVE.strip())
                         if continuation_triggered and not any(isinstance(p, dict) and "[CRITICAL CONTINUATION DIRECTIVE" in p.get("text", "") for p in s_content):
@@ -1233,29 +1285,26 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                 data["system"] = condense_system_prompt_for_deepseek(combined)
             data.pop("thinking", None)
         else:
-            # Unconstrained Native Thinking: honor requested budget_tokens or full model maximum (up to 32k/64k tokens)
-            thinking = data.get("thinking")
-            if isinstance(thinking, dict):
-                t_type = thinking.get("type")
-                if t_type in ("enabled", "adaptive"):
-                    thinking["type"] = "enabled"
-                    req_budget = thinking.get("budget_tokens")
-                    if req_budget is not None:
-                        try:
-                            budget_val = min(max(int(req_budget), 1024), 64000)
-                        except (ValueError, TypeError):
-                            budget_val = 32768
-                    else:
-                        budget_val = 32768
-                    thinking["budget_tokens"] = budget_val
-                    # Ensure max_tokens is strictly greater than budget_tokens to prevent Anthropic schema rejection
-                    curr_max = data.get("max_tokens", 8192)
+            # Full-Fledged Native Thinking Mandate: enforce native thinking across all non-classifier requests
+            if not is_classifier:
+                thinking = data.get("thinking")
+                req_budget = thinking.get("budget_tokens") if isinstance(thinking, dict) else None
+                if req_budget is not None:
                     try:
-                        curr_max_int = int(curr_max)
+                        budget_val = min(max(int(req_budget), 1024), 60000)
                     except (ValueError, TypeError):
-                        curr_max_int = 8192
-                    if curr_max_int <= budget_val:
-                        data["max_tokens"] = min(budget_val + 8192, 64000)
+                        budget_val = 32768
+                else:
+                    budget_val = 32768
+                data["thinking"] = {"type": "enabled", "budget_tokens": budget_val}
+                curr_max = data.get("max_tokens", 8192)
+                try:
+                    curr_max_int = int(curr_max)
+                except (ValueError, TypeError):
+                    curr_max_int = 8192
+                data["max_tokens"] = min(max(curr_max_int, budget_val + 4096), 64000)
+            else:
+                data.pop("thinking", None)
 
         return data
 
