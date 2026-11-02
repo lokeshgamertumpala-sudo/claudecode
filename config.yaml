@@ -463,7 +463,8 @@ router_settings:
   num_retries: 3
   retry_after: 0.2
   fallbacks:
-    - claude-sonnet-5: ["backup-ultra", "backup-laguna", "backup-mistral", "backup-step", "backup-minimax", "backup-deepseek"]
+    - claude-3-7-sonnet-20250219: ["backup-mistral", "backup-ultra", "backup-laguna", "backup-step", "backup-minimax", "backup-deepseek"]
+    - claude-sonnet-5: ["backup-mistral", "backup-ultra", "backup-laguna", "backup-step", "backup-minimax", "backup-deepseek"]
     - mistralai/mistral-large-4-1t-a52b: ["backup-ultra", "backup-laguna", "backup-step", "backup-minimax", "backup-deepseek"]
     - mistral-large-4: ["backup-ultra", "backup-laguna", "backup-step", "backup-minimax", "backup-deepseek"]
     - mistral: ["backup-ultra", "backup-laguna", "backup-step", "backup-minimax", "backup-deepseek"]

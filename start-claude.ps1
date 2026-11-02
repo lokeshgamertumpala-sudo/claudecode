@@ -246,7 +246,7 @@ $activeLabel = if ($modelDisplayNames.ContainsKey($activeModel.ToLower())) { $mo
 python "$ScriptDir\select_model.py" $activeModel > $null 2>&1
 
 # 6. Set Claude Code environment variables (routed locally to NVIDIA NIM)
-$targetModel = "claude-sonnet-5"
+$targetModel = "claude-3-7-sonnet-20250219"
 $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:$port"
 $env:ANTHROPIC_API_KEY = "sk-litellm-proxy-key"
 Remove-Item env:ANTHROPIC_AUTH_TOKEN -ErrorAction SilentlyContinue
@@ -262,6 +262,7 @@ $env:CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT = "1"
 Remove-Item env:CLAUDE_CODE_EFFORT_LEVEL -ErrorAction SilentlyContinue
 [Environment]::SetEnvironmentVariable("CLAUDE_CODE_EFFORT_LEVEL", $null, "Process")
 $env:CLAUDE_CODE_WORKFLOWS = "1"
+$env:CLAUDE_CODE_ALWAYS_THINK = "1"
 $env:MAX_THINKING_TOKENS = "32768"
 $env:ANTHROPIC_MAX_TOKENS = "64000"
 $env:CLAUDE_CODE_MAX_OUTPUT_TOKENS = "64000"

@@ -112,7 +112,7 @@ def update_claude_settings(canonical, display_name):
 
     options = [
         {
-            "model": "claude-sonnet-5",
+            "model": "claude-3-7-sonnet-20250219",
             "label": display_name,
             "description": active_desc or f"{display_name} via local NIM proxy",
             "behavesAs": "sonnet"
