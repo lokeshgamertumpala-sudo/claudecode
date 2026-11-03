@@ -10,6 +10,7 @@ __pycache__/
 
 # Runtime logs
 *.log
+*.jsonl
 litellm.log
 proxy-*.log
 watchdog.log
@@ -25,3 +26,7 @@ motion-studio/out/
 out/
 *.mp4
 *.png
+
+# Teamwork scratchpad metadata
+.agents/teamwork/
+

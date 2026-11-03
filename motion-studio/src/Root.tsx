@@ -18,6 +18,8 @@ import { AiExplainer } from "./compositions/AiExplainer";
 import { VersatileShowcase } from "./compositions/VersatileShowcase";
 import { AuroraFlow } from "./compositions/AuroraFlow";
 import { CosmicAurora } from "./compositions/CosmicAurora";
+import { AINEuralNetwork } from "./compositions/AINEuralNetwork";
+import { ToolCallHUD } from "./compositions/ToolCallHUD";
 import "./styles.css";
 
 export const RemotionRoot: React.FC = () => {
@@ -529,6 +531,56 @@ export const RemotionRoot: React.FC = () => {
         fps={60}
         width={3840}
         height={2160}
+      />
+
+      {/* AINEuralNetwork — 30 seconds (1800 frames @ 60fps) AI Neural Network Explainer */}
+      <Composition
+        id="AINEuralNetwork"
+        component={AINEuralNetwork}
+        durationInFrames={1800}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="neural-network-explainer"
+        component={AINEuralNetwork}
+        durationInFrames={1800}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="AINEuralNetwork-4K"
+        component={AINEuralNetwork}
+        durationInFrames={1800}
+        fps={60}
+        width={3840}
+        height={2160}
+      />
+
+      {/* ToolCallHUD — 3 seconds (180 frames @ 60fps) Cyberpunk Telemetry HUD */}
+      <Composition
+        id="ToolCallHUD"
+        component={ToolCallHUD}
+        durationInFrames={180}
+        fps={60}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          toolName: "Write",
+          status: "executing",
+          toolInput: { file_path: "src/App.tsx" },
+          durationMs: 142,
+        }}
+      />
+      <Composition
+        id="tool-call-hud"
+        component={ToolCallHUD}
+        durationInFrames={180}
+        fps={60}
+        width={1920}
+        height={1080}
       />
     </>
   );

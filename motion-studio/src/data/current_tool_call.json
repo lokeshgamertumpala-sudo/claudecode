@@ -1,0 +1,15 @@
+{
+  "tool": "Bash",
+  "toolName": "Bash",
+  "args": {
+    "command": "git status"
+  },
+  "toolInput": {
+    "command": "git status"
+  },
+  "status": "executing",
+  "durationMs": 0,
+  "timestamp": "2026-11-03T13:27:10Z",
+  "composition": "ToolCallHUD",
+  "theme": "cyberpunk"
+}

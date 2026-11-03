@@ -263,7 +263,7 @@ Remove-Item env:CLAUDE_CODE_EFFORT_LEVEL -ErrorAction SilentlyContinue
 [Environment]::SetEnvironmentVariable("CLAUDE_CODE_EFFORT_LEVEL", $null, "Process")
 $env:CLAUDE_CODE_WORKFLOWS = "1"
 $env:CLAUDE_CODE_ALWAYS_THINK = "1"
-$env:MAX_THINKING_TOKENS = "32768"
+$env:MAX_THINKING_TOKENS = "4096"
 $env:ANTHROPIC_MAX_TOKENS = "64000"
 $env:CLAUDE_CODE_MAX_OUTPUT_TOKENS = "64000"
 $env:CLAUDE_ENABLE_STREAM_WATCHDOG = "0"
@@ -283,7 +283,7 @@ $modeHeader = if ($Boost) { "TURBO BOOST ACCELERATED" } else { "AUTONOMOUS EXECU
 Write-Host "====================================================" -ForegroundColor Cyan
 Write-Host "Launching Claude Code [$modeHeader] ($activeLabel)..." -ForegroundColor Green
 Write-Host "Engine: $activeLabel on NVIDIA NIM" -ForegroundColor Gray
-Write-Host "Reasoning: $(if ($Boost) { 'TURBO BOOST (Native Unconstrained Thinking)' } else { 'UNCONSTRAINED NATIVE THINKING (Full model reasoning budget up to 64k tokens)' })" -ForegroundColor Magenta
+Write-Host "Reasoning: $(if ($Boost) { 'TURBO BOOST (Native Fast Thinking)' } else { 'NATIVE REASONING (Adaptive token budget up to 4096 tokens)' })" -ForegroundColor Magenta
 Write-Host "Autonomy: UNRESTRICTED (--dangerously-skip-permissions active)" -ForegroundColor Magenta
 Write-Host "Workflows: ENABLED (Dynamic multi-agent orchestration)" -ForegroundColor Magenta
 Write-Host "Streaming: 100% Active (Native Thinking & Real-Time Seconds Timer)" -ForegroundColor Gray

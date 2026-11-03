@@ -86,7 +86,30 @@ ALIASES = {
     "fast": "nvidia/nemotron-3-ultra-550b-a55b"
 }
 
+KNOWN_WORKSPACES = [
+    r"c:\Users\NEW\OneDrive\Desktop\CLAUDE CODE E",
+    r"c:\Users\NEW\OneDrive\Desktop\claudecode"
+]
+
 pref_file = os.path.join(os.path.dirname(__file__), "active_model.txt")
+
+def update_windows_user_env(display_name):
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Environment", 0, winreg.KEY_SET_VALUE) as key:
+            winreg.SetValueEx(key, "ANTHROPIC_MODEL", 0, winreg.REG_SZ, "claude-sonnet-5")
+            winreg.SetValueEx(key, "ANTHROPIC_DEFAULT_SONNET_MODEL", 0, winreg.REG_SZ, "claude-sonnet-5")
+            winreg.SetValueEx(key, "ANTHROPIC_DEFAULT_HAIKU_MODEL", 0, winreg.REG_SZ, "claude-sonnet-5")
+            winreg.SetValueEx(key, "ANTHROPIC_DEFAULT_OPUS_MODEL", 0, winreg.REG_SZ, "claude-sonnet-5")
+            winreg.SetValueEx(key, "ANTHROPIC_CUSTOM_MODEL_OPTION", 0, winreg.REG_SZ, "claude-sonnet-5")
+            winreg.SetValueEx(key, "ANTHROPIC_CUSTOM_MODEL_OPTION_NAME", 0, winreg.REG_SZ, display_name)
+            winreg.SetValueEx(key, "ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION", 0, winreg.REG_SZ, f"{display_name} via local NIM proxy")
+            winreg.SetValueEx(key, "CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT", 0, winreg.REG_SZ, "1")
+            winreg.SetValueEx(key, "CLAUDE_CODE_WORKFLOWS", 0, winreg.REG_SZ, "1")
+            winreg.SetValueEx(key, "ANTHROPIC_BASE_URL", 0, winreg.REG_SZ, "http://127.0.0.1:4000")
+            winreg.SetValueEx(key, "ANTHROPIC_API_KEY", 0, winreg.REG_SZ, "sk-litellm-proxy-key")
+    except Exception as e:
+        print(f"[!] Warning: could not update Windows User Environment registry: {e}")
 
 def get_current():
     if os.path.exists(pref_file):
@@ -104,6 +127,11 @@ def update_claude_settings(canonical, display_name):
         os.path.join(os.path.dirname(__file__), ".claude"),
         os.path.expanduser("~/.claude")
     ]
+    for ws in KNOWN_WORKSPACES:
+        ws_claude = os.path.join(ws, ".claude")
+        if os.path.exists(ws) and ws_claude not in settings_dirs:
+            settings_dirs.append(ws_claude)
+
     active_desc = ""
     for k, (name, slug, desc) in MODELS.items():
         if canonical == slug:
@@ -140,6 +168,7 @@ def update_claude_settings(canonical, display_name):
                     existing = {}
             if "effort" in existing:
                 del existing["effort"]
+            existing["model"] = "claude-sonnet-5"
             existing["enableWorkflows"] = True
             existing["modelPicker"] = {"options": options}
             existing["skipDangerousModePermissionPrompt"] = True
@@ -147,6 +176,31 @@ def update_claude_settings(canonical, display_name):
                 "defaultMode": "bypassPermissions",
                 "allow": ["WebSearch", "WebFetch"]
             }
+            if "hooks" not in existing:
+                existing["hooks"] = {
+                    "PreToolUse": [
+                        {
+                            "matcher": ".*",
+                            "hooks": [
+                                {
+                                    "type": "command",
+                                    "command": "python .agents/motion/tool_motion_hook.py pre"
+                                }
+                            ]
+                        }
+                    ],
+                    "PostToolUse": [
+                        {
+                            "matcher": ".*",
+                            "hooks": [
+                                {
+                                    "type": "command",
+                                    "command": "python .agents/motion/tool_motion_hook.py post"
+                                }
+                            ]
+                        }
+                    ]
+                }
             with open(spath, "w", encoding="utf-8") as f:
                 json.dump(existing, f, indent=2)
         except Exception:
@@ -168,11 +222,25 @@ def set_model(choice_key_or_name):
             display_name = name
             break
 
-    with open(pref_file, "w", encoding="utf-8") as f:
-        f.write(canonical)
+    # Symmetrically update active_model.txt across all known workspaces
+    for ws in KNOWN_WORKSPACES:
+        if os.path.exists(ws):
+            target_pref = os.path.join(ws, "active_model.txt")
+            try:
+                with open(target_pref, "w", encoding="utf-8") as f:
+                    f.write(canonical)
+            except Exception:
+                pass
+    try:
+        with open(pref_file, "w", encoding="utf-8") as f:
+            f.write(canonical)
+    except Exception:
+        pass
     
-    # Sync Claude Code settings so the real model name displays in the terminal
+    # Sync Claude Code settings across all workspaces & user profile
     update_claude_settings(canonical, display_name)
+    # Sync Windows User Registry environment variables
+    update_windows_user_env(display_name)
     
     print(f"\n[+] Active model switched to: {display_name}")
     print(f"    -> Canonical Model ID: {canonical}")

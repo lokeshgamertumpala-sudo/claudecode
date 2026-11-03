@@ -92,14 +92,31 @@ $results["LiteLLM Proxy (Port 4000)"] = @{ Status = $proxyStatus; Detail = $prox
 # 3. Active Model Configuration Check
 $modelFile = Join-Path $ScriptDir "active_model.txt"
 $modelStatus = "PASS"
-$modelDetail = "Mistral Large 4 (Primary Default)"
+$modelDetail = "mistralai/mistral-large-4-1t-a52b"
+$expectedModel = "mistralai/mistral-large-4-1t-a52b"
+
 if (Test-Path $modelFile) {
     $rawModel = (Get-Content $modelFile -Raw).Trim()
-    if ($rawModel) {
+    if ($rawModel -ne $expectedModel) {
+        Write-Host "  [!] Active model mismatch ($rawModel != $expectedModel). Auto-healing..." -ForegroundColor Yellow
+        python "$ScriptDir\select_model.py" mistral > $null 2>&1
+        $rawModel = (Get-Content $modelFile -Raw).Trim()
+        if ($rawModel -eq $expectedModel) {
+            $modelStatus = "PASS"
+            $modelDetail = "$rawModel (Auto-Healed)"
+        } else {
+            $modelStatus = "FAIL"
+            $modelDetail = "Mismatch: $rawModel (Expected: $expectedModel)"
+        }
+    } else {
+        $modelStatus = "PASS"
         $modelDetail = "$rawModel"
     }
 } else {
-    $modelDetail = "mistralai/mistral-large-4-1t-a52b (Default)"
+    Write-Host "  [!] active_model.txt missing. Auto-healing to $expectedModel..." -ForegroundColor Yellow
+    python "$ScriptDir\select_model.py" mistral > $null 2>&1
+    $modelStatus = "PASS"
+    $modelDetail = "$expectedModel (Created)"
 }
 $results["Active NIM Model"] = @{ Status = $modelStatus; Detail = $modelDetail }
 

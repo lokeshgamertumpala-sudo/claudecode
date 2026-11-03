@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akaza — Upper Rank Three</title>
+    <meta name="description" content="Akaza — Upper Rank Three of the Twelve Kizuki. Master of Destructive Death, seeker of the strong.">
+    <style>
+        :root {
+            --void: #0a0a0f;
+            --void-light: #11111a;
+            --blood: #c41e3a;
+            --blood-bright: #e82e4a;
+            --blood-dim: #8b1530;
+            --crimson: #ff2d4d;
+            --pink: #ff6b8a;
+            --pink-glow: #ff4d7a;
+            --ash: #2a2a3a;
+            --ash-light: #3a3a4f;
+            --bone: #e8e8f0;
+            --bone-dim: #a0a0b8;
+            --gold: #d4a843;
+            --gold-glow: #f0c050;
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 600ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        @keyframes particle-drift {
+            0% { transform: translateY(100vh) translateX(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) translateX(var(--drift-x)) rotate(720deg); opacity: 0; }
+        }
+
+        @keyframes text-reveal {
+            0% { opacity: 0; transform: translateY(30px); filter: blur(10px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+        @keyframes card-reveal {
+            0% { opacity: 0; transform: translateY(40px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes border-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(232, 46, 74, 0.2), inset 0 0 20px rgba(232, 46, 74, 0.05); }
+            50% { box-shadow: 0 0 40px rgba(232, 46, 74, 0.4), inset 0 0 40px rgba(232, 46, 74, 0.1); }
+        }
+
+        @keyframes kanji-float {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+            50% { transform: translateY(-10px) scale(1.05); opacity: 0.6; }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--void);
+            color: var(--bone);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        #particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: radial-gradient(circle, var(--pink) 0%, var(--blood) 70%, transparent 100%);
+            border-radius: 50%;
+            animation: particle-drift var(--duration) linear infinite;
+            opacity: 0;
+        }
+
+        .particle::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: radial-gradient(circle, var(--pink-glow) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(4px);
+            opacity: 0.5;
+        }
+
+        #bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 20%, rgba(196, 30, 58, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(232, 46, 74, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse 100% 100% at 50% 50%, rgba(10, 10, 15, 1) 0%, rgba(10, 10, 15, 0.8) 100%),
+                var(--void);
+            animation: pulse-glow 8s ease-in-out infinite;
+        }
+
+        #bg-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+        }
+
+        .kanji-watermark {
+            position: fixed;
+            font-size: clamp(12rem, 30vw, 28rem);
+            font-weight: 900;
+            color: rgba(196, 30, 58, 0.04);
+            z-index: 0;
+            pointer-events: none;
+            user-select: none;
+            line-height: 1;
+            font-family: 'Noto Serif JP', serif;
+            animation: kanji-float 6s ease-in-out infinite;
+        }
+
+        .kanji-watermark.top-left {
+            top: -5%;
+            left: -5%;
+            transform-origin: top left;
+        }
+
+        .kanji-watermark.bottom-right {
+            bottom: -5%;
+            right: -5%;
+            transform-origin: bottom right;
+            animation-delay: 3s;
+        }
+
+        main {
+            position: relative;
+            z-index: 10;
+        }
+
+        section {
+            padding: clamp(4rem, 10vh, 8rem) clamp(1.5rem, 5vw, 4rem);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: clamp(3rem, 6vh, 5rem);
+        }
+
+        .section-label {
+            display: inline-block;
+            font-size: clamp(0.75rem, 1.5vw, 1rem);
+            font-weight: 600;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--pink);
+            margin-bottom: 1rem;
+            opacity: 0;
+            animation: text-reveal 0.8s ease-out forwards;
+        }
+
+        .section-title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            background: linear-gradient(135deg, var(--bone) 0%, var(--pink) 50%, var(--gold) 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s linear infinite, text-reveal 0.8s ease-out 0.2s forwards;
+            opacity: 0;
+        }
+
+        .section-title .accent {
+            color: var(--pink);
+            -webkit-text-fill-color: var(--pink);
+        }
+
+        .divider {
+            width: 100px;
+            height: 3px;
+            margin: 1.5rem auto 0;
+            background: linear-gradient(90deg, transparent, var(--pink), var(--blood), var(--pink), transparent);
+            border-radius: 2px;
+            animation: border-glow 3s ease-in-out infinite;
+        }
+
+        /* Hero Section */
+        #hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            padding-top: clamp(6rem, 15vh, 10rem);
+        }
+
+        .hero-content {
+            max-width: 900px;
+            padding: 0 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 2rem;
+            background: rgba(196, 30, 58, 0.15);
+            border: 1px solid rgba(232, 46, 74, 0.3);
+            border-radius: 100px;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(20px);
+            animation: text-reveal 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        .hero-badge::before,
+        .hero-badge::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--pink);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--pink-glow), 0 0 20px var(--blood);
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .hero-badge::after {
+            animation-delay: 1s;
+        }
+
+        .hero-badge span {
+            font-size: 0.875rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--pink);
+        }
+
+        .hero-name {
+            font-size: clamp(3.5rem, 10vw, 8rem);
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+            animation: text-reveal 1s ease-out 0.3s forwards;
+            opacity: 0;
+        }
+
+        .hero-name .line {
+            display: block;
+        }
+
+        .hero-name .akaza {
+            background: linear-gradient(135deg, #fff 0%, var(--pink) 30%, var(--blood) 60%, #8b1530 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 4s linear infinite;
+        }
+
+        .hero-name .rank {
+            font-size: 0.5em;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--gold) 0%, #f0c050 50%, var(--gold) 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s linear infinite reverse;
+        }
+
+        .hero-tagline {
+            font-size: clamp(1.25rem, 3vw, 2rem);
+            font-weight: 300;
+            color: var(--bone-dim);
+            line-height: 1.4;
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            animation: text-reveal 1s ease-out 0.6s forwards;
+            opacity: 0;
+        }
+
+        .hero-tagline .highlight {
+            color: var(--pink);
+            font-weight: 500;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: clamp(1.5rem, 4vw, 3rem);
+            flex-wrap: wrap;
+            margin-top: 2rem;
+            animation: text-reveal 1s ease-out 0.9s forwards;
+            opacity: 0;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 1.5rem 2rem;
+            background: rgba(26, 26, 38, 0.6);
+            border: 1px solid rgba(232, 46, 74, 0.2);
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            transition: var(--transition-smooth);
+            min-width: 140px;
+        }
+
+        .stat:hover {
+            border-color: var(--pink);
+            box-shadow: 0 20px 40px rgba(232, 46, 74, 0.15), inset 0 0 40px rgba(232, 46, 74, 0.05);
+            transform: translateY(-4px);
+        }
+
+        .stat-value {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--pink), var(--blood));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--bone-dim);
+            margin-top: 0.5rem;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--bone-dim);
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            animation: text-reveal 1s ease-out 1.2s forwards, float 3s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .scroll-indicator svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--pink);
+            animation: float 2s ease-in-out infinite;
+        }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: rgba(26, 26, 38, 0.5);
+            border: 1px solid rgba(232, 46, 74, 0.15);
+            border-radius: 20px;
+            padding: clamp(2rem, 4vw, 3rem);
+            backdrop-filter: blur(30px);
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            animation: card-reveal 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 107, 138, 0.5), transparent);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(232, 46, 74, 0.4);
+            box-shadow: 0 30px 60px rgba(232, 46, 74, 0.1), inset 0 0 60px rgba(232, 46, 74, 0.03);
+            transform: translateY(-8px);
+        }
+
+        .glass-card:nth-child(1) { animation-delay: 0.1s; }
+        .glass-card:nth-child(2) { animation-delay: 0.2s; }
+        .glass-card:nth-child(3) { animation-delay: 0.3s; }
+        .glass-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(232, 46, 74, 0.2), rgba(196, 30, 58, 0.1));
+            border: 1px solid rgba(232, 46, 74, 0.3);
+            border-radius: 16px;
+            color: var(--pink);
+        }
+
+        .card-icon svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .card-title {
+            font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--bone), var(--pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card-text {
+            color: var(--bone-dim);
+            line-height: 1.8;
+            font-size: clamp(0.95rem, 1.2vw, 1.05rem);
+        }
+
+        .card-text strong {
+            color: var(--pink);
+            font-weight: 600;
+        }
+
+        /* Techniques Grid */
+        .techniques-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .technique-card {
+            background: rgba(26, 26, 38, 0.6);
+            border: 1px solid rgba(232, 46, 74, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .technique-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--pink), var(--blood), var(--gold));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .technique-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .technique-card:hover {
+            border-color: rgba(232, 46, 74, 0.5);
+            box-shadow: 0 20px 40px rgba(232, 46, 74, 0.15);
+            transform: translateY(-6px);
+        }
+
+        .technique-rank {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--gold);
+            background: rgba(212, 168, 67, 0.15);
+            padding: 0.25rem 0.75rem;
+            border-radius: 100px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(212, 168, 67, 0.3);
+        }
+
+        .technique-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--bone);
+            margin-bottom: 0.75rem;
+        }
+
+        .technique-name .japanese {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: var(--pink);
+            font-family: 'Noto Serif JP', serif;
+            margin-top: 0.25rem;
+        }
+
+        .technique-desc {
+            color: var(--bone-dim);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            background: linear-gradient(180deg, transparent, var(--pink), var(--blood), transparent);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 2rem 0;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            animation: card-reveal 0.8s ease-out forwards;
+        }
+
+        .timeline-item:nth-child(1) { animation-delay: 0.1s; }
+        .timeline-item:nth-child(2) { animation-delay: 0.2s; }
+        .timeline-item:nth-child(3) { animation-delay: 0.3s; }
+        .timeline-item:nth-child(4) { animation-delay: 0.4s; }
+
+        .timeline-item:nth-child(odd) {
+            flex-direction: row-reverse;
+            padding-right: calc(50% + 3rem);
+            padding-left: 2rem;
+        }
+
+        .timeline-item:nth-child(even) {
+            padding-left: calc(50% + 3rem);
+            padding-right: 2rem;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: var(--void);
+            border: 3px solid var(--pink);
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--pink-glow), 0 0 40px var(--blood);
+            z-index: 1;
+        }
+
+        .timeline-marker::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background: var(--pink);
+            border-radius: 50%;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .timeline-content {
+            width: 100%;
+            background: rgba(26, 26, 38, 0.6);
+            border: 1px solid rgba(232, 46, 74, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            backdrop-filter: blur(20px);
+            transition: var(--transition-smooth);
+        }
+
+        .timeline-content:hover {
+            border-color: rgba(232, 46, 74, 0.4);
+            box-shadow: 0 10px 30px rgba(232, 46, 74, 0.1);
+        }
+
+        .timeline-era {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--bone);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-desc {
+            color: var(--bone-dim);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* Personality Traits */
+        .traits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .trait-card {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            background: rgba(26, 26, 38, 0.5);
+            border: 1px solid rgba(232, 46, 74, 0.15);
+            border-radius: 20px;
+            backdrop-filter: blur(30px);
+            transition: var(--transition-smooth);
+            animation: card-reveal 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        .trait-card:nth-child(1) { animation-delay: 0.1s; }
+        .trait-card:nth-child(2) { animation-delay: 0.2s; }
+        .trait-card:nth-child(3) { animation-delay: 0.3s; }
+        .trait-card:nth-child(4) { animation-delay: 0.4s; }
+        .trait-card:nth-child(5) { animation-delay: 0.5s; }
+        .trait-card:nth-child(6) { animation-delay: 0.6s; }
+
+        .trait-card:hover {
+            border-color: rgba(232, 46, 74, 0.4);
+            box-shadow: 0 20px 40px rgba(232, 46, 74, 0.15), inset 0 0 40px rgba(232, 46, 74, 0.05);
+            transform: translateY(-8px) scale(1.02);
+        }
+
+        .trait-icon {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(232, 46, 74, 0.2), rgba(196, 30, 58, 0.1));
+            border: 1px solid rgba(232, 46, 74, 0.3);
+            border-radius: 50%;
+            color: var(--pink);
+            transition: var(--transition-smooth);
+        }
+
+        .trait-card:hover .trait-icon {
+            background: linear-gradient(135deg, var(--pink), var(--blood));
+            color: var(--void);
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .trait-icon svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .trait-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--bone);
+            margin-bottom: 0.5rem;
+        }
+
+        .trait-desc {
+            font-size: 0.9rem;
+            color: var(--bone-dim);
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(232, 46, 74, 0.1);
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+        }
+
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .footer-quote {
+            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+            font-style: italic;
+            color: var(--pink);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            font-family: 'Georgia', serif;
+        }
+
+        .footer-quote .quote-mark {
+            font-size: 3em;
+            color: rgba(232, 46, 74, 0.3);
+            vertical-align: top;
+            line-height: 0;
+        }
+
+        .footer-credit {
+            font-size: 0.9rem;
+            color: var(--bone-dim);
+        }
+
+        .footer-credit a {
+            color: var(--pink);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: var(--transition-fast);
+        }
+
+        .footer-credit a:hover {
+            border-bottom-color: var(--pink);
+        }
+
+        /* Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .timeline::before {
+                left: 20px;
+            }
+
+            .timeline-item:nth-child(odd),
+            .timeline-item:nth-child(even) {
+                flex-direction: column;
+                padding-left: 50px !important;
+                padding-right: 1rem !important;
+                text-align: left;
+            }
+
+            .timeline-marker {
+                left: 20px;
+            }
+
+            .hero-stats {
+                gap: 1rem;
+            }
+
+            .stat {
+                min-width: 120px;
+                padding: 1rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            section {
+                padding: 3rem 1.5rem;
+            }
+
+            .glass-card {
+                padding: 1.5rem;
+            }
+
+            .technique-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="bg-gradient"></div>
+    <div id="particles"></div>
+
+    <div class="kanji-watermark top-left">猗窩座</div>
+    <div class="kanji-watermark bottom-right">上弦</div>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="hero">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span>Upper Rank Three • Twelve Kizuki</span>
+                </div>
+                <h1 class="hero-name">
+                    <span class="line akaza">Akaza</span>
+                    <span class="line rank">上弦の参</span>
+                </h1>
+                <p class="hero-tagline">
+                    The demon who seeks only the <span class="highlight">strong</span>.<br>
+                    Master of <span class="highlight">Destructive Death</span> — a martial art that shatters all defense.
+                </p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-value">100+</div>
+                        <div class="stat-label">Years Active</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">∞</div>
+                        <div class="stat-label">Regeneration</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">Upper Rank</div>
+                    </div>
+                </div>
+            </div>
+            <div class="scroll-indicator">
+                <span>Scroll</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14M19 12l-7 7-7-7"/>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Blood Demon Art Section -->
+        <section id="bda">
+            <div class="container">
+                <header class="section-header">
+                    <span class="section-label">Blood Demon Art</span>
+                    <h2 class="section-title">Destructive <span class="accent">Death</span></h2>
+                    <div class="divider"></div>
+                </header>
+                <div class="glass-card">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            <path d="M8 14a6 6 0 0 1 12 0"/>
+                            <path d="M12 16v4"/>
+                        </svg>
+                    </div>
+                    <h3 class="card-title">Compulsory Law: Destructive Death</h3>
+                    <p class="card-text">
+                        Akaza's Blood Demon Art manifests as a <strong>martial arts style</strong> that generates <strong>shockwaves</strong> and <strong>destructive force</strong> from his strikes. Unlike typical demon abilities that rely on projectiles or elemental manipulation, Destructive Death enhances his already formidable hand-to-hand combat, allowing him to strike with precision and overwhelming power.
+                    </p>
+                    <p class="card-text" style="margin-top: 1rem;">
+                        The technique creates <strong>invisible shockwaves</strong> that extend the range and impact of his blows, making defense nearly impossible. He can control the <strong>trajectory and intensity</strong> of each shockwave, targeting vital points with surgical precision. This art represents the pinnacle of his human life's pursuit — the <strong>Soryu Style</strong> — perfected through demonic enhancement.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Techniques Section -->
+        <section id="techniques">
+            <div class="container">
+                <header class="section-header">
+                    <span class="section-label">Signature Techniques</span>
+                    <h2 class="section-title">Forms of <span class="accent">Annihilation</span></h2>
+                    <div class="divider"></div>
+                </header>
+                <div class="techniques-grid">
+                    <article class="technique-card">
+                        <span class="technique-rank">Type: Battle Spirit</span>
+                        <h3 class="technique-name">
+                            Destructive Death: Compass Needle
+                            <span class="japanese">破壊死・羅針</span>
+                        </h3>
+                        <p class="technique-desc">Akaza's battle spirit manifests as a compass needle that detects the fighting spirit and killing intent of opponents. The stronger the opponent's will to fight, the more precisely he can track and counter them. This makes him nearly impossible to surprise in combat.</p>
+                    </article>
+
+                    <article class="technique-card">
+                        <span class="technique-rank">Type: Melee / Shockwave</span>
+                        <h3 class="technique-name">
+                            Destructive Death: Air Type
+                            <span class="japanese">破壊死・空式</span>
+                        </h3>
+                        <p class="technique-desc">Generates powerful shockwaves from punches and kicks that travel through air, striking targets at a distance. The shockwaves are invisible and can be angled, allowing Akaza to attack from unexpected vectors. Each strike carries enough force to shatter boulders.</p>
+                    </article>
+
+                    <article class="technique-card">
+                        <span class="technique-rank">Type: Melee / Close Range</span>
+                        <h3 class="technique-name">
+                            Destructive Death: Disorder
+                            <span class="japanese">破壊死・乱式</span>
+                        </h3>
+                        <p class="technique-desc">A barrage of high-speed strikes from all angles, each accompanied by shockwaves. The chaotic pattern makes it impossible to predict or block every hit. Used to overwhelm even the most skilled swordsmen who rely on reading attack patterns.</p>
+                    </article>
+
+                    <article class="technique-card">
+                        <span class="technique-rank">Type: Ultimate / Annihilation</span>
+                        <h3 class="technique-name">
+                            Destructive Death: Annihilation Type
+                            <span class="japanese">破壊死・滅式</span>
+                        </h3>
+                        <p class="technique-desc">Akaza's ultimate technique — a single strike concentrating all his power and battle spirit into one point. The shockwave bypasses physical defense entirely, targeting the opponent's very life force. Reserved for those he acknowledges as truly strong.</p>
+                    </article>
+
+                    <article class="technique-card">
+                        <span class="technique-rank">Type: Sensory / Perception</span>
+                        <h3 class="technique-name">
+                            Technique Deployment: Compass Needle
+                            <span class="japanese">技展開・羅針</span>
+                        </h3>
+                        <p class="technique-desc">An advanced application where Akaza visualizes a 3D compass in his mind, mapping every living being's fighting spirit within range. Allows him to fight without sight, reacting to killing intent alone. Range expands with his emotional intensity.</p>
+                    </article>
+
+                    <article class="technique-card">
+                        <span class="technique-rank">Type: Movement / Evasion</span>
+                        <h3 class="technique-name">
+                            Destructive Death: Leg Type
+                            <span class="japanese">破壊死・脚式</span>
+                        </h3>
+                        <p class="technique-desc">Kicks enhanced with shockwaves that can launch Akaza through the air, change trajectory mid-jump, or create defensive shockwave barriers. His leg techniques are faster and have longer reach than his arms, making his lower body his deadliest weapon.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- History Timeline -->
+        <section id="history">
+            <div class="container">
+                <header class="section-header">
+                    <span class="section-label">Origins</span>
+                    <h2 class="section-title">From <span class="accent">Human</span> to Demon</h2>
+                    <div class="divider"></div>
+                </header>
+                <div class="timeline">
+                    <article class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-era">Human Era — Edo Period</div>
+                            <h3 class="timeline-title">Hakuji — The Demon Slayer's Son</h3>
+                            <p class="timeline-desc">Born as Hakuji, he grew up in poverty with a sickly father. After his father committed suicide to spare Hakuji the burden of stealing medicine, Hakuji became a delinquent. He was taken in by Keizo, a martial arts master, and fell in love with his daughter Koyuki.</p>
+                        </div>
+                    </article>
+
+                    <article class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-era">Human Era — Tragedy Strikes</div>
+                            <h3 class="timeline-title">The Poisoned Well</h3>
+                            <p class="timeline-desc">While Hakuji was away, a rival dojo poisoned the well at Keizo's dojo. Both Keizo and Koyuki died. In a rage, Hakuji slaughtered all 67 members of the rival dojo with his bare hands, earning the name "Demon of the Dojo" before being found by Muzan Kibutsuji.</p>
+                        </div>
+                    </article>
+
+                    <article class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-era">Demon Era — Transformation</div>
+                            <h3 class="timeline-title">Becoming Akaza</h3>
+                            <p class="timeline-desc">Muzan turned Hakuji into a demon, erasing his human memories. He took the name Akaza and rose through the ranks of the Twelve Kizuki over a century, driven by a subconscious desire to become strong enough to protect those he lost — though he no longer remembers them.</p>
+                        </div>
+                    </article>
+
+                    <article class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-era">Demon Era — Upper Rank Three</div>
+                            <h3 class="timeline-title">The Eternal Seeker</h3>
+                            <p class="timeline-desc">As Upper Rank Three, Akaza has killed countless Hashira. He respects only strength and despises the weak. His battles with Kyojuro Rengoku and later Tanjiro Kamado and Giyu Tomioka reignited fragments of his humanity, leading to his eventual redemption and self-destruction.</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Personality Section -->
+        <section id="personality">
+            <div class="container">
+                <header class="section-header">
+                    <span class="section-label">Character</span>
+                    <h2 class="section-title">The <span class="accent">Soul</span> Within</h2>
+                    <div class="divider"></div>
+                </header>
+                <div class="traits-grid">
+                    <article class="trait-card">
+                        <div class="trait-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                            </svg>
+                        </div>
+                        <h3 class="trait-name">Martial Honor</h3>
+                        <p class="trait-desc">Refuses to kill women or the weak. Seeks only those with strong fighting spirit. Bowed to Rengoku's strength even as an enemy.</p>
+                    </article>
+
+                    <article class="trait-card">
+                        <div class="trait-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                        </div>
+                        <h3 class="trait-name">Relentless Growth</h3>
+                        <p class="trait-desc">Believes strength is everything. Constantly seeks stronger opponents. Views weakness as a sin — both in others and himself.</p>
+                    </article>
+
+                    <article class="trait-card">
+                        <div class="trait-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                        </div>
+                        <h3 class="trait-name">Buried Humanity</h3>
+                        <p class="trait-desc">Memories of Koyuki and Keizo linger subconsciously. His drive to protect manifests as obsession with strength. Rengoku's flame awakened what Muzan tried to erase.</p>
+                    </article>
+
+                    <article class="trait-card">
+                        <div class="trait-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <h3 class="trait-name">Prideful Combatant</h3>
+                        <p class="trait-desc">Fights bare-handed by choice. Disdains weapons as crutches for the weak. Demands opponents fight at their absolute best.</p>
+                    </article>
+
+                    <article class="trait-card">
+                        <div class="trait-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 18a5 5 0 0 0-10 0"/>
+                                <path d="M12 2v6"/>
+                                <path d="M12 16v6"/>
+                            </svg>
+                        </div>
+                        <h3 class="trait-name">Tragic Resolve</h3>
+                        <p class="trait-desc">In his final moments, reclaimed his human name Hakuji. Chose to destroy himself rather than kill Tanjiro. Found peace in the memories he swore he'd forgotten.</p>
+                    </article>
+
+                    <article class="trait-card">
+                        <div class="trait-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </div>
+                        <h3 class="trait-name">Eternal Rival</h3>
+                        <p class="trait-desc">Views every battle as a dialogue of fists. Remembers the names of every Hashira he's killed. Sees combat as the only true form of communication between warriors.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final Quote Section -->
+        <section id="finale" style="background: linear-gradient(180deg, transparent, rgba(196, 30, 58, 0.05));">
+            <div class="container" style="text-align: center; max-width: 800px;">
+                <div class="glass-card" style="max-width: 700px; margin: 0 auto;">
+                    <h2 class="section-title" style="margin-bottom: 2rem; animation: none; opacity: 1;">Final <span class="accent">Words</span></h2>
+                    <blockquote style="font-size: clamp(1.25rem, 3vw, 2rem); font-style: italic; line-height: 1.5; color: var(--pink); font-family: 'Georgia', serif; position: relative;">
+                        <span style="font-size: 3em; color: rgba(232, 46, 74, 0.2); vertical-align: top; line-height: 0;">"</span>
+                        <br>
+                        "I wanted to become strong... to protect the people I loved."
+                        <br>
+                        <span style="font-size: 3em; color: rgba(232, 46, 74, 0.2); vertical-align: bottom; line-height: 0;">"</span>
+                    </blockquote>
+                    <p style="margin-top: 2rem; color: var(--bone-dim); font-size: 1rem;">— Hakuji, recalling his human name in his final moments</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <blockquote class="footer-quote">
+                <span class="quote-mark">"</span>
+                Strength isn't about destroying others. It's about protecting what matters.
+            </blockquote>
+            <p class="footer-credit">
+                Character from <a href="https://kimetsu-no-yaiba.fandom.com/wiki/Akaza" target="_blank" rel="noopener">Demon Slayer: Kimetsu no Yaiba</a> by Koyoharu Gotouge<br>
+                Landing page crafted with darkness and elegance
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // Particle System
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 35;
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            function createParticles() {
+                if (prefersReducedMotion) return;
+
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+
+                    const size = Math.random() * 4 + 3;
+                    const startX = Math.random() * 100;
+                    const driftX = (Math.random() - 0.5) * 200;
+                    const duration = Math.random() * 15 + 12;
+                    const delay = Math.random() * 20;
+
+                    particle.style.cssText = `
+                        width: ${size}px;
+                        height: ${size}px;
+                        left: ${startX}%;
+                        --drift-x: ${driftX}px;
+                        --duration: ${duration}s;
+                        animation-delay: ${delay}s;
+                    `;
+
+                    particlesContainer.appendChild(particle);
+                }
+            }
+
+            // Intersection Observer for scroll animations
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px 0px -10% 0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'none';
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all animated elements
+            document.querySelectorAll('.glass-card, .technique-card, .timeline-item, .trait-card').forEach(el => {
+                observer.observe(el);
+            });
+
+            // Parallax effect on kanji watermarks
+            let ticking = false;
+            const kanjiTop = document.querySelector('.kanji-watermark.top-left');
+            const kanjiBottom = document.querySelector('.kanji-watermark.bottom-right');
+
+            function updateParallax() {
+                const scrollY = window.scrollY;
+                if (kanjiTop) {
+                    kanjiTop.style.transform = `translateY(${scrollY * 0.15}px)`;
+                }
+                if (kanjiBottom) {
+                    kanjiBottom.style.transform = `translateY(${scrollY * -0.1}px)`;
+                }
+                ticking = false;
+            }
+
+            window.addEventListener('scroll', () => {
+                if (!ticking && !prefersReducedMotion) {
+                    requestAnimationFrame(updateParallax);
+                    ticking = true;
+                }
+            }, { passive: true });
+
+            // Dynamic hero stats counter animation
+            function animateCounters() {
+                const counters = document.querySelectorAll('.stat-value');
+                counters.forEach(counter => {
+                    const target = counter.textContent;
+                    if (target === '∞' || target.includes('+')) return;
+
+                    const numTarget = parseInt(target);
+                    if (isNaN(numTarget)) return;
+
+                    let current = 0;
+                    const increment = numTarget / 40;
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= numTarget) {
+                            counter.textContent = target;
+                            clearInterval(timer);
+                        } else {
+                            counter.textContent = Math.floor(current);
+                        }
+                    }, 40);
+                });
+            }
+
+            // Trigger counter animation when hero is visible
+            const heroObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateCounters();
+                        heroObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            const heroSection = document.getElementById('hero');
+            if (heroSection) {
+                heroObserver.observe(heroSection);
+            }
+
+            // Mouse-following glow effect on cards
+            document.querySelectorAll('.glass-card, .technique-card, .trait-card').forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    if (prefersReducedMotion) return;
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    card.style.setProperty('--mouse-x', `${x}px`);
+                    card.style.setProperty('--mouse-y', `${y}px`);
+                });
+            });
+
+            // Initialize
+            createParticles();
+
+            // Add entrance stagger to hero elements
+            const heroElements = document.querySelectorAll('#hero .hero-badge, #hero .hero-name, #hero .hero-tagline, #hero .hero-stats, #hero .scroll-indicator');
+            heroElements.forEach((el, i) => {
+                el.style.animationDelay = `${0.1 * (i + 1)}s`;
+            });
+
+            // Smooth reveal for section headers
+            const headerObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const header = entry.target;
+                        header.querySelectorAll('.section-label, .section-title').forEach((el, i) => {
+                            el.style.animationDelay = `${i * 0.1}s`;
+                            el.style.opacity = '1';
+                        });
+                        headerObserver.unobserve(header);
+                    }
+                });
+            }, { threshold: 0.3 });
+
+            document.querySelectorAll('.section-header').forEach(header => {
+                headerObserver.observe(header);
+            });
+
+        })();
+    </script>
+</body>
+</html>

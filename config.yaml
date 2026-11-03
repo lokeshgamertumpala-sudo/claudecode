@@ -1,4 +1,12 @@
 model_list:
+  # 0. Claude Sonnet 5 (Canonical route for Claude Code CLI mapping to Mistral Large 4)
+  - model_name: "claude-sonnet-5"
+    litellm_params:
+      model: "nvidia_nim/mistralai/mistral-large-4-1t-a52b"
+      api_key: "os.environ/NVIDIA_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
   # 1. Mistral Large 4 (Frontier 1.05T MoE, 52B Active - Primary Default Flagship)
   - model_name: "mistralai/mistral-large-4-1t-a52b"
     litellm_params:
@@ -373,10 +381,10 @@ model_list:
       timeout: 1800
       max_tokens: 8192
 
-  # Auto Smart Routing (Default: NVIDIA Nemotron Ultra 550B MoE - Sub-Second Fast)
+  # Auto Smart Routing (Default: Mistral Large 4 - Primary Flagship Frontier MoE)
   - model_name: "auto"
     litellm_params:
-      model: "nvidia_nim/nvidia/nemotron-3-ultra-550b-a55b"
+      model: "nvidia_nim/mistralai/mistral-large-4-1t-a52b"
       api_key: "os.environ/NVIDIA_API_KEY"
       timeout: 1800
       max_tokens: 8192

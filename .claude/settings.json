@@ -77,5 +77,30 @@
       "WebSearch",
       "WebFetch"
     ]
-  }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .agents/motion/tool_motion_hook.py pre"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .agents/motion/tool_motion_hook.py post"
+          }
+        ]
+      }
+    ]
+  },
+  "model": "claude-sonnet-5"
 }

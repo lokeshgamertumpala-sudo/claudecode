@@ -6,7 +6,152 @@ import asyncio
 import re
 import requests
 from litellm.integrations.custom_logger import CustomLogger
-from typing import Any
+from typing import Any, Optional, Dict, List, Set
+import contextvars
+
+# Global context tracking for conversational requests across middleware and hooks
+_request_is_conversational: contextvars.ContextVar[bool] = contextvars.ContextVar("_request_is_conversational", default=False)
+
+COMMON_CODE_EXTENSIONS = (
+    "py", "js", "ts", "tsx", "jsx", "html", "css", "json", "yaml", "yml",
+    "toml", "md", "rs", "go", "c", "cpp", "h", "java", "sh", "bat", "ps1",
+    "sql", "env", "lock", "txt", "xml", "svg"
+)
+
+CODING_ACTION_KEYWORDS = (
+    "write", "create", "make", "edit", "modify", "update", "delete", "remove",
+    "fix", "patch", "build", "run", "execute", "test", "tests", "install", "git",
+    "commit", "push", "pull", "repo", "file", "files", "folder", "directory",
+    "script", "scripts", "code", "bug", "bugs", "error", "errors", "refactor",
+    "implement", "deploy", "compile", "lint", "debug", "bash", "command",
+    "powershell", "python", "node", "npm", "pnpm", "yarn", "cargo", "docker",
+    "rust", "golang", "go", "java", "cpp", "c", "typescript", "javascript",
+    "ts", "js", "html", "css", "json", "yaml", "toml", "sql", "api", "apis",
+    "server", "database", "db", "endpoint", "endpoints", "component", "components",
+    "function", "functions", "class", "method", "methods", "algorithm",
+    "optimize", "benchmark", "review", "pr", "setup", "configure", "config",
+    "investigate", "analyze", "trace", "issue", "issues", "inspect", "find", "check",
+    "solve", "add", "show", "search",
+    "ls", "dir", "cat", "grep", "pwd", "cd", "diff", "status", "log", "checkout",
+    "branch", "merge", "rebase", "stash", "pytest", "pip", "pip3", "poetry",
+    "app", "apps", "web", "page", "routes", "router", "schema", "module"
+)
+
+CONVERSATIONAL_GREETINGS = (
+    "hi", "hello", "hey", "sup", "good morning", "good evening",
+    "good afternoon", "howdy", "greetings", "test", "ping", "yo", "hola"
+)
+
+CONTINUATION_PHRASES = (
+    "do it", "continue", "proceed", "go ahead", "done", "next",
+    "keep going", "finish", "proceed with implementation",
+    "do that", "execute", "start", "run it"
+)
+
+CONTINUATION_ACTION_TERMS = ("do it", "continue", "proceed", "go ahead", "do that", "execute", "keep going")
+
+PURE_HELP_PHRASES = ("help", "help me", "help me please", "please help me", "help please")
+
+CONVERSATIONAL_PHRASES = (
+    "how are you", "how are you doing", "how's it going", "hows it going",
+    "how are things", "how do you do", "what's up", "whats up", "wassup",
+    "how r u", "how you doing",
+    "who are you", "what are you", "what is your name", "who made you",
+    "who created you", "tell me about yourself", "tell me who you are",
+    "introduce yourself", "what model are you", "what model is this",
+    "which model are you", "what engine are you", "what ai are you",
+    "what can you do", "what can u do", "what are your capabilities",
+    "what do you do", "what are you capable of", "how can you help",
+    "how can you help me", "what help can you provide",
+    "thank you", "thanks", "thx", "thank you so much", "thanks a lot",
+    "good job", "well done", "ok thanks", "okay thanks", "bye", "goodbye", "see you"
+)
+
+def evaluate_is_conversational_text(user_text: str, boost_triggered: bool = False, user_is_motion: bool = False) -> bool:
+    if not user_text:
+        return False
+    user_text_clean = user_text.strip(".!?, \t\r\n").lower()
+    words = re.findall(r'[a-zA-Z0-9_\-\.]+', user_text.lower())
+    word_count = len(words)
+
+    has_file_ext = any("." in w and w.rsplit(".", 1)[-1].lower() in COMMON_CODE_EXTENSIONS for w in words)
+    is_ping_test = (word_count == 1 and user_text_clean in ("test", "ping"))
+
+    has_coding_action = has_file_ext or any(
+        k in words for k in CODING_ACTION_KEYWORDS
+        if not (is_ping_test and k in ("test", "tests"))
+    )
+
+    continuation_triggered = (
+        user_text_clean in CONTINUATION_PHRASES or
+        any(p in user_text_clean for p in CONTINUATION_ACTION_TERMS)
+    )
+
+    is_pure_help = (user_text_clean in PURE_HELP_PHRASES)
+    is_pure_greeting = (
+        user_text_clean in CONVERSATIONAL_GREETINGS or
+        (word_count <= 2 and any(user_text_clean.startswith(g) for g in CONVERSATIONAL_GREETINGS))
+    )
+    is_conversational_phrase = (
+        not has_coding_action and
+        any(
+            user_text_clean == p or
+            user_text_clean.startswith(p + " ") or
+            user_text_clean.endswith(" " + p) or
+            f" {p} " in f" {user_text_clean} "
+            for p in CONVERSATIONAL_PHRASES
+        )
+    )
+    is_acknowledgment = (user_text_clean in (
+        "nice", "cool", "great", "awesome", "ok", "okay", "k", "sure",
+        "got it", "understood", "all right", "alright", "perfect", "sounds good"
+    ))
+    is_conversational_question = (
+        not has_coding_action and (
+            (user_text.strip().endswith("?") and word_count <= 15) or
+            user_text_clean.startswith((
+                "explain ", "tell me ", "what is ", "what are ",
+                "who is ", "who was ", "why is ", "why are ",
+                "how does ", "how do ", "describe "
+            ))
+        )
+    )
+
+    is_short_non_coding = (
+        word_count <= 3 and
+        not has_coding_action and
+        not continuation_triggered
+    )
+
+    if not boost_triggered and not user_is_motion and not continuation_triggered and not has_coding_action:
+        if (is_pure_greeting or is_pure_help or is_conversational_phrase or
+            is_acknowledgment or is_conversational_question or is_short_non_coding):
+            return True
+    return False
+
+def evaluate_is_conversational_payload(data: dict) -> bool:
+    if not isinstance(data, dict):
+        return False
+    messages = data.get("messages", [])
+    if not isinstance(messages, list) or not messages:
+        return False
+    last_user_msg = None
+    for m in messages:
+        if isinstance(m, dict) and m.get("role") == "user":
+            last_user_msg = m
+    if not last_user_msg:
+        return False
+    c = last_user_msg.get("content")
+    user_text = ""
+    if isinstance(c, str):
+        user_text = c
+    elif isinstance(c, list):
+        user_text = " ".join(
+            str(p.get("text", "")).strip()
+            for p in c if isinstance(p, dict) and p.get("type") == "text"
+        )
+    return evaluate_is_conversational_text(user_text)
+
 
 # Register custom endpoints on FastAPI app (hello, web-search, web-fetch, and SSE reasoning stream hook)
 try:
@@ -68,13 +213,19 @@ try:
                 block_open = False
                 message_stopped = False
                 current_block_index = 0
+                highest_seen_index = -1
                 active_block_type = "text"
                 has_emitted_body_block = False
                 buffered_start_payload = None
+                closed_blocks = set()
+                done_emitted = False
 
                 def build_closure() -> bytes:
-                    nonlocal message_stopped, block_open, current_block_index, has_emitted_body_block, buffered_start_payload
+                    nonlocal message_stopped, block_open, current_block_index, highest_seen_index, has_emitted_body_block, buffered_start_payload, done_emitted
                     if message_stopped:
+                        if not done_emitted:
+                            done_emitted = True
+                            return b"data: [DONE]\n\n"
                         return b""
                     parts = []
                     if not message_started:
@@ -82,15 +233,25 @@ try:
                             'event: message_start\n'
                             'data: {"type": "message_start", "message": {"id": "msg_fallback", "type": "message", "role": "assistant", "content": [], "model": "mistralai/mistral-large-4-1t-a52b", "stop_reason": null, "stop_sequence": null, "usage": {"input_tokens": 0, "output_tokens": 0}}}'
                         )
+
+                    # Release any buffered block before closing
+                    if buffered_start_payload is not None:
+                        current_block_index = buffered_start_payload.get("index", current_block_index)
+                        highest_seen_index = max(highest_seen_index, current_block_index)
+                        parts.append(f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}')
+                        block_open = True
+                        buffered_start_payload = None
+
                     if block_open:
                         parts.append(
                             f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}'
                         )
+                        closed_blocks.add(current_block_index)
                         block_open = False
 
                     # If no body block (text or tool_use) was emitted before closure, synthesize one so Claude Code never errors
                     if not has_emitted_body_block:
-                        target_idx = current_block_index + 1 if message_started else 0
+                        target_idx = (highest_seen_index + 1) if highest_seen_index >= 0 else 0
                         parts.append(
                             f'event: content_block_start\ndata: {{"type": "content_block_start", "index": {target_idx}, "content_block": {{"type": "text", "text": ""}}}}'
                         )
@@ -100,6 +261,8 @@ try:
                         parts.append(
                             f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {target_idx}}}'
                         )
+                        closed_blocks.add(target_idx)
+                        highest_seen_index = max(highest_seen_index, target_idx)
                         has_emitted_body_block = True
 
                     parts.append(
@@ -108,6 +271,7 @@ try:
                     parts.append('event: message_stop\ndata: {"type": "message_stop"}')
                     parts.append('data: [DONE]')
                     message_stopped = True
+                    done_emitted = True
                     return ("\n\n".join(parts) + "\n\n").encode("utf-8")
 
                 # High capacity queue to prevent artificial backpressure pauses
@@ -176,11 +340,22 @@ try:
 
                                 data_str = "\n".join(data_lines)
                                 if data_str == "[DONE]":
+                                    if buffered_start_payload is not None:
+                                        current_block_index = buffered_start_payload.get("index", current_block_index)
+                                        highest_seen_index = max(highest_seen_index, current_block_index)
+                                        block_open = True
+                                        yield f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}\n\n'.encode("utf-8")
+                                        buffered_start_payload = None
                                     if block_open:
                                         yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                        closed_blocks.add(current_block_index)
                                         block_open = False
-                                    message_stopped = True
-                                    yield b"data: [DONE]\n\n"
+                                    if not message_stopped:
+                                        message_stopped = True
+                                        yield b'event: message_delta\ndata: {"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": null}, "usage": {"output_tokens": 0}}\n\n'
+                                        yield b'event: message_stop\ndata: {"type": "message_stop"}\n\n'
+                                    yield b'data: [DONE]\n\n'
+                                    done_emitted = True
                                     continue
 
                                 try:
@@ -192,9 +367,11 @@ try:
                                         message_stopped = False
                                         block_open = False
                                         current_block_index = 0
+                                        highest_seen_index = -1
                                         has_emitted_body_block = False
                                         active_block_type = "text"
                                         buffered_start_payload = None
+                                        closed_blocks.clear()
                                         yield f"event: message_start\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
 
                                     elif p_type == "content_block_start":
@@ -203,8 +380,10 @@ try:
                                         if b_type == "thinking":
                                             if block_open:
                                                 yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                                closed_blocks.add(current_block_index)
                                             block_open = True
                                             current_block_index = payload.get("index", 0)
+                                            highest_seen_index = max(highest_seen_index, current_block_index)
                                             active_block_type = "thinking"
                                             buffered_start_payload = None
                                             yield f"event: content_block_start\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
@@ -214,8 +393,10 @@ try:
                                         else:
                                             if block_open:
                                                 yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                                closed_blocks.add(current_block_index)
                                             block_open = True
                                             current_block_index = payload.get("index", current_block_index)
+                                            highest_seen_index = max(highest_seen_index, current_block_index)
                                             active_block_type = b_type
                                             if active_block_type in ("text", "tool_use"):
                                                 has_emitted_body_block = True
@@ -230,6 +411,7 @@ try:
                                             if "<think>" in raw_text or d_type == "thinking_delta" or "reasoning_content" in delta:
                                                 active_block_type = "thinking"
                                                 current_block_index = 0
+                                                highest_seen_index = max(highest_seen_index, 0)
                                                 block_open = True
                                                 buffered_start_payload = None
                                                 yield b'event: content_block_start\ndata: {"type": "content_block_start", "index": 0, "content_block": {"type": "thinking", "thinking": ""}}\n\n'
@@ -239,8 +421,10 @@ try:
                                                     if th_part:
                                                         yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(th_part)}}}}}\n\n'.encode("utf-8")
                                                     yield b'event: content_block_stop\ndata: {"type": "content_block_stop", "index": 0}\n\n'
+                                                    closed_blocks.add(0)
                                                     yield b'event: content_block_start\ndata: {"type": "content_block_start", "index": 1, "content_block": {"type": "text", "text": ""}}\n\n'
                                                     current_block_index = 1
+                                                    highest_seen_index = max(highest_seen_index, 1)
                                                     active_block_type = "text"
                                                     has_emitted_body_block = True
                                                     if tx_part:
@@ -253,6 +437,7 @@ try:
                                                 # Release initial text block start
                                                 active_block_type = "text"
                                                 current_block_index = buffered_start_payload.get("index", 0)
+                                                highest_seen_index = max(highest_seen_index, current_block_index)
                                                 block_open = True
                                                 has_emitted_body_block = True
                                                 yield f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}\n\n'.encode("utf-8")
@@ -264,8 +449,10 @@ try:
                                                 if th_part:
                                                     yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(th_part)}}}}}\n\n'.encode("utf-8")
                                                 yield b'event: content_block_stop\ndata: {"type": "content_block_stop", "index": 0}\n\n'
+                                                closed_blocks.add(0)
                                                 yield b'event: content_block_start\ndata: {"type": "content_block_start", "index": 1, "content_block": {"type": "text", "text": ""}}\n\n'
                                                 current_block_index = 1
+                                                highest_seen_index = max(highest_seen_index, 1)
                                                 active_block_type = "text"
                                                 has_emitted_body_block = True
                                                 if tx_part:
@@ -275,7 +462,12 @@ try:
                                                 if clean_th:
                                                     yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(clean_th)}}}}}\n\n'.encode("utf-8")
                                         elif active_block_type == "text":
-                                            payload["index"] = current_block_index
+                                            delta_idx = payload.get("index")
+                                            if delta_idx is None or delta_idx in closed_blocks:
+                                                payload["index"] = current_block_index
+                                            else:
+                                                current_block_index = delta_idx
+                                                highest_seen_index = max(highest_seen_index, current_block_index)
                                             if d_type not in ("input_json_delta",):
                                                 delta["type"] = "text_delta"
                                                 txt = delta.get("text", "") or delta.get("content", "")
@@ -291,27 +483,40 @@ try:
                                     elif p_type == "content_block_stop":
                                         if buffered_start_payload is not None:
                                             current_block_index = buffered_start_payload.get("index", current_block_index)
+                                            highest_seen_index = max(highest_seen_index, current_block_index)
+                                            block_open = True
+                                            yield f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}\n\n'.encode("utf-8")
+                                            buffered_start_payload = None
+                                        if block_open:
+                                            stop_idx = current_block_index
+                                            yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {stop_idx}}}\n\n'.encode("utf-8")
+                                            closed_blocks.add(stop_idx)
+                                            block_open = False
+
+                                    elif p_type == "message_delta":
+                                        # Release buffered start payload before message delta
+                                        if buffered_start_payload is not None:
+                                            current_block_index = buffered_start_payload.get("index", current_block_index)
+                                            highest_seen_index = max(highest_seen_index, current_block_index)
                                             block_open = True
                                             yield f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}\n\n'.encode("utf-8")
                                             buffered_start_payload = None
                                         if block_open:
                                             yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
-                                            block_open = False
-
-                                    elif p_type == "message_delta":
-                                        if block_open:
-                                            yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                            closed_blocks.add(current_block_index)
                                             block_open = False
                                         if not has_emitted_body_block:
-                                            target_idx = current_block_index + 1
+                                            target_idx = (highest_seen_index + 1) if highest_seen_index >= 0 else 0
                                             synth_block = (
                                                 f'event: content_block_start\ndata: {{"type": "content_block_start", "index": {target_idx}, "content_block": {{"type": "text", "text": ""}}}}\n\n'
                                                 f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": {target_idx}, "delta": {{"type": "text_delta", "text": "Proceeding with implementation."}}}}\n\n'
                                                 f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {target_idx}}}\n\n'
                                             )
                                             yield synth_block.encode("utf-8")
+                                            closed_blocks.add(target_idx)
                                             has_emitted_body_block = True
                                             current_block_index = target_idx
+                                            highest_seen_index = max(highest_seen_index, target_idx)
 
                                         delta = payload.get("delta", {})
                                         if isinstance(delta, dict):
@@ -320,8 +525,15 @@ try:
                                         yield f"event: message_delta\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
 
                                     elif p_type == "message_stop":
+                                        if buffered_start_payload is not None:
+                                            current_block_index = buffered_start_payload.get("index", current_block_index)
+                                            highest_seen_index = max(highest_seen_index, current_block_index)
+                                            block_open = True
+                                            yield f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}\n\n'.encode("utf-8")
+                                            buffered_start_payload = None
                                         if block_open:
                                             yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
+                                            closed_blocks.add(current_block_index)
                                             block_open = False
                                         message_stopped = True
                                         yield f"event: message_stop\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
@@ -351,6 +563,9 @@ try:
                         closure = build_closure()
                         if closure:
                             yield closure
+                    elif not done_emitted:
+                        yield b"data: [DONE]\n\n"
+                        done_emitted = True
 
                 except Exception as outer_exc:
                     print(f"[SSE-STREAM] Fatal generator error: {outer_exc}. Yielding graceful closure.", flush=True)
@@ -688,7 +903,7 @@ When designing, modifying, or executing software projects, you MUST adhere stric
 NATIVE_THINKING_DIRECTIVE = """
 [CRITICAL NATIVE THINKING MANDATE - MANDATORY REASONING PHASE]
 You MUST ALWAYS begin your response with your thorough internal reasoning and architectural analysis enclosed within <think> and </think> tags.
-Think deeply through requirements, edge cases, root causes, and implementation steps inside <think>...</think>.
+Deliver concise, focused reasoning (<10-20s) inside <think>...</think>. Focus strictly on the exact requirements, edge cases, and root causes needed for immediate execution.
 Only AFTER closing the </think> tag, proceed directly with your user-facing response, code implementation, or tool calls.
 """
 
@@ -1073,7 +1288,7 @@ class RequestSanitizer(CustomLogger):
             )
             continuation_phrases = (
                 "do it", "continue", "proceed", "go ahead", "done", "next",
-                "keep going", "finish", "yes", "ok", "proceed with implementation",
+                "keep going", "finish", "proceed with implementation",
                 "do that", "execute", "start", "run it"
             )
 
@@ -1081,21 +1296,41 @@ class RequestSanitizer(CustomLogger):
             words = re.findall(r'[a-zA-Z0-9_\-\.]+', user_text.lower())
             word_count = len(words)
 
+            # Check for file extension references in words (.py, .js, .ts, etc.)
+            common_code_extensions = (
+                "py", "js", "ts", "tsx", "jsx", "html", "css", "json", "yaml", "yml",
+                "toml", "md", "rs", "go", "c", "cpp", "h", "java", "sh", "bat", "ps1",
+                "sql", "env", "lock", "txt", "xml", "svg"
+            )
+            has_file_ext = any("." in w and w.rsplit(".", 1)[-1].lower() in common_code_extensions for w in words)
+
             coding_action_keywords = (
                 "write", "create", "make", "edit", "modify", "update", "delete", "remove",
-                "fix", "patch", "build", "run", "execute", "test", "install", "git",
-                "commit", "push", "pull", "repo", "file", "folder", "directory",
-                "script", "code", "bug", "error", "refactor", "implement", "deploy",
-                "compile", "lint", "debug", "bash", "command", "powershell", "python",
-                "node", "npm", "cargo", "docker", "rust", "golang", "go", "java",
-                "cpp", "c", "typescript", "javascript", "ts", "js", "html", "css",
-                "json", "yaml", "toml", "sql", "api", "server", "database", "db",
-                "endpoint", "component", "function", "class", "method", "algorithm",
+                "fix", "patch", "build", "run", "execute", "test", "tests", "install", "git",
+                "commit", "push", "pull", "repo", "file", "files", "folder", "directory",
+                "script", "scripts", "code", "bug", "bugs", "error", "errors", "refactor",
+                "implement", "deploy", "compile", "lint", "debug", "bash", "command",
+                "powershell", "python", "node", "npm", "pnpm", "yarn", "cargo", "docker",
+                "rust", "golang", "go", "java", "cpp", "c", "typescript", "javascript",
+                "ts", "js", "html", "css", "json", "yaml", "toml", "sql", "api", "apis",
+                "server", "database", "db", "endpoint", "endpoints", "component", "components",
+                "function", "functions", "class", "method", "methods", "algorithm",
                 "optimize", "benchmark", "review", "pr", "setup", "configure", "config",
-                "investigate", "analyze", "trace", "issue", "inspect", "find", "check",
-                "solve", "add", "show", "search"
+                "investigate", "analyze", "trace", "issue", "issues", "inspect", "find", "check",
+                "solve", "add", "show", "search",
+                # Developer CLI commands & toolchains
+                "ls", "dir", "cat", "grep", "pwd", "cd", "diff", "status", "log", "checkout",
+                "branch", "merge", "rebase", "stash", "pytest", "pip", "pip3", "poetry",
+                "app", "apps", "web", "page", "routes", "router", "schema", "module"
             )
-            has_coding_action = any(k in words for k in coding_action_keywords)
+
+            # Standalone 'test' or 'ping' with word_count == 1 is a connectivity ping/greeting, NOT a coding action
+            is_ping_test = (word_count == 1 and user_text_clean in ("test", "ping"))
+
+            has_coding_action = has_file_ext or any(
+                k in words for k in coding_action_keywords
+                if not (is_ping_test and k in ("test", "tests"))
+            )
 
             # 1. Action Triggers take priority over conversational detection
             if "/boost" in user_text or "turbo boost" in user_text:
@@ -1152,17 +1387,61 @@ class RequestSanitizer(CustomLogger):
                 )
             )
 
-            is_acknowledgment = (user_text_clean in ("nice", "cool", "great", "awesome"))
+            is_acknowledgment = (user_text_clean in (
+                "nice", "cool", "great", "awesome", "ok", "okay", "k", "sure",
+                "got it", "understood", "all right", "alright", "perfect", "sounds good"
+            ))
 
             is_conversational_question = (
-                user_text.strip().endswith("?") and
-                not has_coding_action and
-                word_count <= 15
+                not has_coding_action and (
+                    (user_text.strip().endswith("?") and word_count <= 15) or
+                    user_text_clean.startswith((
+                        "explain ", "tell me ", "what is ", "what are ",
+                        "who is ", "who was ", "why is ", "why are ",
+                        "how does ", "how do ", "describe "
+                    ))
+                )
             )
 
-            # 3. Final Determination: ONLY enter conversational mode if no action/coding/continuation
-            if not boost_triggered and not user_is_motion and not continuation_triggered and not has_coding_action:
-                if is_pure_greeting or is_pure_help or is_conversational_phrase or is_acknowledgment or is_conversational_question:
+            # Capability inquiry detection: inquiries asking about abilities without coding commands
+            capability_prefixes = (
+                "what can you do", "what can u do", "what are your capabilities",
+                "what do you do", "what are you capable of", "how can you help",
+                "how can you help me", "what help can you provide",
+                "tell me about yourself", "who are you", "what are you",
+                "introduce yourself", "what model are you", "what model is this",
+                "which model are you", "what engine are you", "what ai are you",
+                "what is this project", "explain how this project works"
+            )
+            is_capability_inquiry = any(
+                user_text_clean == p or user_text_clean.startswith(p + " ") or f" {p} " in f" {user_text_clean} "
+                for p in capability_prefixes
+            )
+            imperative_coding_verbs = (
+                "write", "create", "make", "edit", "modify", "update", "delete", "remove",
+                "fix", "patch", "build", "run", "execute", "install", "commit", "push",
+                "pull", "refactor", "implement", "deploy", "compile", "benchmark"
+            )
+            has_imperative_command = any(v in words for v in imperative_coding_verbs)
+
+            if is_capability_inquiry and not has_imperative_command:
+                has_coding_action = False
+
+            # Short non-coding prompt rule:
+            # Single words or short inputs (1 <= word_count <= 3) lacking coding action and continuation
+            # enter conversational mode with zero tool pressure (e.g. 'akazza', 'asdf', 'foo', 'ping', 'test')
+            is_short_non_coding = (
+                1 <= word_count <= 3 and
+                bool(user_text_clean) and
+                not has_coding_action and
+                not continuation_triggered
+            )
+
+            # 3. Final Determination: ONLY enter conversational mode if non-empty and no action/coding/continuation
+            if bool(user_text_clean) and not boost_triggered and not user_is_motion and not continuation_triggered and not has_coding_action:
+                if (is_pure_greeting or is_pure_help or is_conversational_phrase or
+                    is_acknowledgment or is_conversational_question or is_capability_inquiry or
+                    is_short_non_coding):
                     is_conversational = True
 
             # Inject mandate into user message (supports both str and list content)
@@ -1371,13 +1650,26 @@ DO NOT use tools, DO NOT analyze code or files, and DO NOT emit <think> tags."""
             if not is_classifier and not is_conversational:
                 thinking = data.get("thinking")
                 req_budget = thinking.get("budget_tokens") if isinstance(thinking, dict) else None
+
+                # Configurable thinking budget via MAX_THINKING_TOKENS (default: 4096, max ceiling: 8192)
+                # Prevents extreme 5-minute thinking stalls on coding requests while preserving high-quality reasoning
+                env_max_thinking = os.getenv("MAX_THINKING_TOKENS")
+                default_budget = 8192
+                if env_max_thinking:
+                    try:
+                        val = int(env_max_thinking)
+                        if val > 0:
+                            default_budget = min(val, 8192)
+                    except (ValueError, TypeError):
+                        default_budget = 8192
+
                 if req_budget is not None:
                     try:
-                        budget_val = min(max(int(req_budget), 1024), 60000)
+                        budget_val = min(max(int(req_budget), 1024), 8192)
                     except (ValueError, TypeError):
-                        budget_val = 32768
+                        budget_val = default_budget
                 else:
-                    budget_val = 32768
+                    budget_val = default_budget
                 data["thinking"] = {"type": "enabled", "budget_tokens": budget_val}
                 curr_max = data.get("max_tokens", 8192)
                 try:

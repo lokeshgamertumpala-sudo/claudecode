@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stellar Horizon — Space Exploration Initiative</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #03050d;
+      --bg-surface: #0c1022;
+      --bg-elevated: #141a33;
+      --text-primary: #eaf2ff;
+      --text-secondary: #7280a5;
+      --text-muted: #4a5a8a;
+      --accent-primary: #7928ca;
+      --accent-secondary: #0070f3;
+      --accent-glow: rgba(121, 40, 202, 0.4);
+      --accent-glow-strong: rgba(121, 40, 202, 0.7);
+      --accent-cyan: #00d4ff;
+      --accent-gold: #ffd700;
+      --border: rgba(121, 40, 202, 0.2);
+      --border-bright: rgba(121, 40, 202, 0.4);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ===== STARFIELD BACKGROUND ===== */
+    #starfield {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    #nebula {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 30%, rgba(121, 40, 202, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 80% 70%, rgba(0, 112, 243, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse 100% 60% at 50% 50%, rgba(121, 40, 202, 0.05) 0%, transparent 70%);
+    }
+
+    /* ===== LAYOUT ===== */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section { padding: 100px 0; }
+
+    /* ===== TYPOGRAPHY ===== */
+    .display-font {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    h1 { font-size: clamp(2.5rem, 6vw, 5rem); }
+    h2 { font-size: clamp(1.75rem, 4vw, 3rem); }
+    h3 { font-size: clamp(1.25rem, 2.5vw, 1.75rem); }
+
+    .text-gradient {
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 50%, var(--accent-gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .text-gradient-purple {
+      background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 32px;
+      border-radius: 100px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      opacity: 0;
+      transition: opacity 0.3s;
+      border-radius: inherit;
+    }
+
+    .btn-primary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 2px solid var(--accent-primary);
+    }
+
+    .btn-primary:hover {
+      color: #03050d;
+      border-color: transparent;
+    }
+
+    .btn-primary:hover::before { opacity: 1; }
+    .btn-primary span { position: relative; z-index: 1; }
+
+    .btn-secondary {
+      background: rgba(121, 40, 202, 0.15);
+      color: var(--accent-cyan);
+      border: 2px solid var(--accent-cyan);
+    }
+
+    .btn-secondary:hover {
+      background: var(--accent-cyan);
+      color: var(--bg-deep);
+    }
+
+    .btn-group { display: flex; flex-wrap: wrap; gap: 16px; }
+
+    /* ===== HERO SECTION ===== */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 120px 0;
+    }
+
+    .hero-content { text-align: center; max-width: 900px; }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: rgba(121, 40, 202, 0.15);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--accent-cyan);
+      margin-bottom: 32px;
+      animation: fadeUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 8px; height: 8px;
+      background: var(--accent-cyan);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .hero-title {
+      margin-bottom: 24px;
+      animation: fadeUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+    }
+
+    .hero-title .line { display: block; }
+
+    .hero-subtitle {
+      font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+      color: var(--text-secondary);
+      max-width: 700px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+      animation: fadeUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+      margin-top: 48px;
+      animation: fadeUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both;
+    }
+
+    .stat-item { text-align: center; }
+    .stat-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+    .stat-label { font-size: 0.875rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* ===== MISSION CARDS ===== */
+    #missions {
+      background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-surface) 100%);
+    }
+
+    .section-header { text-align: center; margin-bottom: 64px; }
+    .section-tag {
+      display: inline-block;
+      padding: 6px 16px;
+      background: rgba(121, 40, 202, 0.15);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-primary);
+      margin-bottom: 16px;
+    }
+    .section-title { margin-bottom: 12px; }
+    .section-desc { color: var(--text-secondary); max-width: 600px; margin: 0 auto; }
+
+    .missions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .mission-card {
+      position: relative;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .mission-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      opacity: 0;
+      transition: opacity 0.4s;
+      z-index: 0;
+    }
+
+    .mission-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--border-bright);
+      box-shadow:
+        0 24px 48px -12px rgba(121, 40, 202, 0.25),
+        0 0 0 1px var(--border-bright);
+    }
+
+    .mission-card:hover::before { opacity: 0.05; }
+    .mission-card > * { position: relative; z-index: 1; }
+
+    .mission-icon {
+      width: 56px; height: 56px;
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, rgba(121, 40, 202, 0.2), rgba(0, 112, 243, 0.2));
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+      transition: all 0.3s;
+    }
+
+    .mission-card:hover .mission-icon {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      border-color: transparent;
+      transform: scale(1.05);
+    }
+
+    .mission-title { font-size: 1.25rem; margin-bottom: 12px; }
+    .mission-desc { color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px; }
+    .mission-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .mission-tag {
+      padding: 4px 12px;
+      background: rgba(121, 40, 202, 0.1);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ===== TIMELINE ===== */
+    #timeline { background: var(--bg-deep); }
+
+    .timeline {
+      position: relative;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
+      transform: translateX(-50%);
+    }
+
+    .timeline-item {
+      position: relative;
+      display: flex;
+      margin-bottom: 48px;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .timeline-item.visible { opacity: 1; transform: translateY(0); }
+
+    .timeline-item:nth-child(odd) { flex-direction: row; }
+    .timeline-item:nth-child(even) { flex-direction: row-reverse; }
+
+    .timeline-content {
+      width: 45%;
+      padding: 24px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .timeline-content::before {
+      content: '';
+      position: absolute;
+      top: 50%; right: -12px;
+      width: 24px; height: 24px;
+      background: var(--bg-elevated);
+      border: 2px solid var(--accent-primary);
+      border-radius: 50%;
+      transform: translateY(-50%);
+      z-index: 2;
+    }
+
+    .timeline-item:nth-child(even) .timeline-content::before {
+      left: -12px; right: auto;
+      border-color: var(--accent-secondary);
+    }
+
+    .timeline-date {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      margin-bottom: 8px;
+    }
+    .timeline-title { font-size: 1.125rem; margin-bottom: 8px; }
+    .timeline-desc { color: var(--text-secondary); font-size: 0.9375rem; }
+
+    .timeline-marker {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--accent-primary);
+      border: 3px solid var(--bg-deep);
+      position: absolute;
+      left: 50%; top: 32px;
+      transform: translateX(-50%);
+      z-index: 3;
+      box-shadow: 0 0 20px var(--accent-glow-strong);
+    }
+
+    .timeline-item:nth-child(even) .timeline-marker { background: var(--accent-secondary); }
+
+    /* ===== INTERACTIVE ORBIT VISUALIZATION ===== */
+    #exploration {
+      background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-deep) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #orbit-canvas {
+      width: 100%;
+      height: 600px;
+      display: block;
+      border-radius: 24px;
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+    }
+
+    .orbit-controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .orbit-btn {
+      padding: 10px 20px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .orbit-btn:hover,
+    .orbit-btn.active {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      border-color: transparent;
+      color: var(--text-primary);
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    /* ===== NEWSLETTER / CTA ===== */
+    #join {
+      background: linear-gradient(135deg, rgba(121, 40, 202, 0.15), rgba(0, 112, 243, 0.1));
+      position: relative;
+      overflow: hidden;
+    }
+
+    #join::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+    }
+
+    .join-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .join-form {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .form-input {
+      flex: 1;
+      min-width: 280px;
+      padding: 16px 24px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      color: var(--text-primary);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+
+    .form-input::placeholder { color: var(--text-muted); }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border);
+      padding: 48px 0 24px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr repeat(3, 1fr);
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+
+    .footer-brand { max-width: 280px; }
+    .footer-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .footer-logo svg { width: 32px; height: 32px; }
+    .footer-brand p { color: var(--text-secondary); font-size: 0.9375rem; line-height: 1.7; }
+
+    .footer-col h4 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 10px; }
+    .footer-col a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-col a:hover { color: var(--accent-cyan); }
+
+    .footer-bottom {
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-bottom p { color: var(--text-muted); font-size: 0.875rem; }
+    .social-links { display: flex; gap: 16px; }
+    .social-links a {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary);
+      transition: all 0.3s;
+    }
+    .social-links a:hover {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      border-color: transparent;
+      color: var(--text-primary);
+      transform: translateY(-2px);
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.1); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+    }
+
+    @keyframes orbit {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    /* ===== SCROLL REVEAL ===== */
+    .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      section { padding: 60px 0; }
+      .hero-stats { gap: 32px; }
+      .timeline::before { left: 24px; }
+      .timeline-item { flex-direction: row !important; }
+      .timeline-content { width: calc(100% - 72px); margin-left: 72px; }
+      .timeline-content::before { left: -36px !important; right: auto !important; }
+      .timeline-marker { left: 24px !important; transform: none; }
+      .timeline-item:nth-child(even) .timeline-content::before { left: -36px !important; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .footer-brand { grid-column: span 2; }
+      #orbit-canvas { height: 400px; }
+    }
+
+    @media (max-width: 480px) {
+      .container { padding: 0 16px; }
+      .btn { padding: 14px 24px; }
+      .hero-stats { gap: 24px; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .footer-brand { grid-column: span 1; }
+      .join-form { flex-direction: column; align-items: stretch; }
+      .form-input { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Layers -->
+  <div id="nebula"></div>
+  <canvas id="starfield"></canvas>
+
+  <!-- Hero Section -->
+  <section id="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span>🚀 Mission Control Active</span>
+        </div>
+        <h1 class="hero-title display-font">
+          <span class="line text-gradient-purple">Explore the</span>
+          <span class="line text-gradient">Final Frontier</span>
+        </h1>
+        <p class="hero-subtitle">
+          Join humanity's greatest adventure. From lunar bases to Martian colonies,
+          we're building the infrastructure for multi-planetary civilization.
+        </p>
+        <div class="btn-group">
+          <a href="#missions" class="btn btn-primary">
+            <span>View Missions</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+          <a href="#join" class="btn btn-secondary">Join the Journey</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <div class="stat-value" data-count="47">0</div>
+            <div class="stat-label">Active Missions</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" data-count="12">0</div>
+            <div class="stat-label">Countries United</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" data-count="842">0</div>
+            <div class="stat-label">Days in Orbit</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" data-count="3">0</div>
+            <div class="stat-label">Active Rovers</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+    <!-- Missions Section -->
+    <section id="missions">
+      <div class="container">
+        <header class="section-header reveal">
+          <span class="section-tag">Active Programs</span>
+          <h2 class="section-title display-font">Current Missions</h2>
+          <p class="section-desc">Our fleet spans the solar system, from Earth orbit to the outer planets</p>
+        </header>
+        <div class="missions-grid">
+          <article class="mission-card reveal">
+            <div class="mission-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                <path d="M2 12h20"/>
+              </svg>
+            </div>
+            <h3 class="mission-title">Artemis Program</h3>
+            <p class="mission-desc">Returning humans to the Moon with sustainable lunar exploration, establishing the first permanent lunar base at the South Pole.</p>
+            <div class="mission-tags">
+              <span class="mission-tag">Lunar</span>
+              <span class="mission-tag">Crewed</span>
+              <span class="mission-tag">2025-2030</span>
+            </div>
+          </article>
+
+          <article class="mission-card reveal">
+            <div class="mission-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                <path d="M12 2v20M2 12h20"/>
+              </svg>
+            </div>
+            <h3 class="mission-title">Mars Sample Return</h3>
+            <p class="mission-desc">Joint NASA-ESA mission to retrieve Perseverance's cached samples and bring Martian material to Earth for the first time in history.</p>
+            <div class="mission-tags">
+              <span class="mission-tag">Mars</span>
+              <span class="mission-tag">Robotic</span>
+              <span class="mission-tag">2028-2033</span>
+            </div>
+          </article>
+
+          <article class="mission-card reveal">
+            <div class="mission-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                <ellipse cx="12" cy="12" rx="8" ry="4"/>
+                <path d="M4 12c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4"/>
+              </svg>
+            </div>
+            <h3 class="mission-title">Europa Clipper</h3>
+            <p class="mission-desc">Investigating Jupiter's ocean moon Europa to determine if it has conditions suitable for life beneath its icy crust.</p>
+            <div class="mission-tags">
+              <span class="mission-tag">Jupiter</span>
+              <span class="mission-tag">Ocean World</span>
+              <span class="mission-tag">2024-2034</span>
+            </div>
+          </article>
+
+          <article class="mission-card reveal">
+            <div class="mission-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                <path d="M12 2v20"/>
+                <ellipse cx="12" cy="12" rx="6" ry="2"/>
+              </svg>
+            </div>
+            <h3 class="mission-title">Dragonfly</h3>
+            <p class="mission-desc">Rotorcraft lander mission to Saturn's moon Titan, exploring prebiotic chemistry and habitability across diverse locations.</p>
+            <div class="mission-tags">
+              <span class="mission-tag">Titan</span>
+              <span class="mission-tag">Rotorcraft</span>
+              <span class="mission-tag">2028-2034</span>
+            </div>
+          </article>
+
+          <article class="mission-card reveal">
+            <div class="mission-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                <path d="M12 2v20M2 12h20"/>
+                <circle cx="12" cy="12" r="4"/>
+              </svg>
+            </div>
+            <h3 class="mission-title">Roman Space Telescope</h3>
+            <p class="mission-desc">Wide-field infrared survey telescope designed to answer fundamental questions about dark energy, exoplanets, and infrared astrophysics.</p>
+            <div class="mission-tags">
+              <span class="mission-tag">Observatory</span>
+              <span class="mission-tag">Infrared</span>
+              <span class="mission-tag">2027</span>
+            </div>
+          </article>
+
+          <article class="mission-card reveal">
+            <div class="mission-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                <path d="M12 2v20M2 12h20"/>
+                <path d="M12 6a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/>
+                <circle cx="12" cy="12" r="2"/>
+              </svg>
+            </div>
+            <h3 class="mission-title">VIPER Lunar Rover</h3>
+            <p class="mission-desc">Mobile robot exploring the Moon's South Pole to map water ice deposits, critical for sustainable lunar exploration and fuel production.</p>
+            <div class="mission-tags">
+              <span class="mission-tag">Lunar</span>
+              <span class="mission-tag">Rover</span>
+              <span class="mission-tag">2024</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Timeline Section -->
+    <section id="timeline">
+      <div class="container">
+        <header class="section-header reveal">
+          <span class="section-tag">Roadmap</span>
+          <h2 class="section-title display-font">Exploration Timeline</h2>
+          <p class="section-desc">Key milestones shaping the next decade of space exploration</p>
+        </header>
+        <div class="timeline">
+          <div class="timeline-item reveal">
+            <div class="timeline-content">
+              <div class="timeline-date">2024</div>
+              <h3 class="timeline-title">Artemis II Crewed Flyby</h3>
+              <p class="timeline-desc">First crewed mission around the Moon since Apollo 17, testing Orion systems with astronauts aboard.</p>
+            </div>
+            <div class="timeline-marker"></div>
+          </div>
+
+          <div class="timeline-item reveal">
+            <div class="timeline-content">
+              <div class="timeline-date">2024</div>
+              <h3 class="timeline-title">Europa Clipper Launch</h3>
+              <p class="timeline-desc">NASA's flagship mission to Jupiter's ocean moon begins its 5.5-year journey to assess Europa's habitability.</p>
+            </div>
+            <div class="timeline-marker"></div>
+          </div>
+
+          <div class="timeline-item reveal">
+            <div class="timeline-content">
+              <div class="timeline-date">2025</div>
+              <h3 class="timeline-title">VIPER Moon Landing</h3>
+              <p class="timeline-desc">First resource mapping rover touches down at lunar South Pole to prospect for water ice deposits.</p>
+            </div>
+            <div class="timeline-marker"></div>
+          </div>
+
+          <div class="timeline-item reveal">
+            <div class="timeline-content">
+              <div class="timeline-date">2026</div>
+              <h3 class="timeline-title">Artemis III Moon Landing</h3>
+              <p class="timeline-desc">First woman and next man walk on the lunar surface, establishing sustainable presence at the South Pole.</p>
+            </div>
+            <div class="timeline-marker"></div>
+          </div>
+
+          <div class="timeline-item reveal">
+            <div class="timeline-content">
+              <div class="timeline-date">2027</div>
+              <h3 class="timeline-title">Roman Telescope Launch</h3>
+              <p class="timeline-desc">Wide-field infrared observatory begins survey of dark energy, exoplanets, and galactic structure.</p>
+            </div>
+            <div class="timeline-marker"></div>
+          </div>
+
+          <div class="timeline-item reveal">
+            <div class="timeline-content">
+              <div class="timeline-date">2028</div>
+              <h3 class="timeline-title">Mars Sample Return Launch</h3>
+              <p class="timeline-desc">Earth Return Orbiter and Sample Retrieval Lander depart for Mars to collect cached samples.</p>
+            </div>
+            <div class="timeline-marker"></div>
+          </div>
+
+          <div class="timeline-item reveal">
+            <div class="timeline-content">
+              <div class="timeline-date">2028</div>
+              <h3 class="timeline-title">Dragonfly Launch to Titan</h3>
+              <p class="timeline-desc">Rotorcraft begins 7-year journey to Saturn's largest moon to explore prebiotic chemistry.</p>
+            </div>
+            <div class="timeline-marker"></div>
+          </div>
+
+          <div class="timeline-item reveal">
+            <div class="timeline-content">
+              <div class="timeline-date">2030s</div>
+              <h3 class="timeline-title">Lunar Base Operational</h3>
+              <p class="timeline-desc">Permanent human presence established at lunar South Pole with in-situ resource utilization.</p>
+            </div>
+            <div class="timeline-marker"></div>
+          </div>
+
+          <div class="timeline-item reveal">
+            <div class="timeline-content">
+              <div class="timeline-date">2033</div>
+              <h3 class="timeline-title">Mars Samples Return to Earth</h3>
+              <p class="timeline-desc">First pristine Martian samples arrive on Earth for laboratory analysis worldwide.</p>
+            </div>
+            <div class="timeline-marker"></div>
+          </div>
+
+          <div class="timeline-item reveal">
+            <div class="timeline-content">
+              <div class="timeline-date">2034</div>
+              <h3 class="timeline-title">Dragonfly Arrives at Titan</h3>
+              <p class="timeline-desc">Rotorcraft begins aerial exploration of Titan's diverse environments over 2.7-year mission.</p>
+            </div>
+            <div class="timeline-marker"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Orbit Visualization -->
+    <section id="exploration">
+      <div class="container">
+        <header class="section-header reveal">
+          <span class="section-tag">Interactive</span>
+          <h2 class="section-title display-font">Solar System Explorer</h2>
+          <p class="section-desc">Real-time positions of planets and active missions</p>
+        </header>
+        <canvas id="orbit-canvas" class="reveal"></canvas>
+        <div class="orbit-controls">
+          <button class="orbit-btn active" data-view="inner">Inner Planets</button>
+          <button class="orbit-btn" data-view="outer">Outer Planets</button>
+          <button class="orbit-btn" data-view="missions">Active Missions</button>
+          <button class="orbit-btn" data-speed="0.5">½ Speed</button>
+          <button class="orbit-btn" data-speed="1" class="active">1× Speed</button>
+          <button class="orbit-btn" data-speed="2">2× Speed</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Join Section -->
+    <section id="join">
+      <div class="container">
+        <div class="join-content reveal">
+          <span class="section-tag">Join Us</span>
+          <h2 class="section-title display-font">Be Part of History</h2>
+          <p class="section-desc">Receive mission updates, launch notifications, and exclusive content from the frontier of exploration.</p>
+          <form class="join-form" id="newsletter-form">
+            <input type="email" class="form-input" placeholder="Enter your email address" required aria-label="Email address">
+            <button type="submit" class="btn btn-primary">
+              <span>Subscribe</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </form>
+          <p style="margin-top: 16px; color: var(--text-muted); font-size: 0.875rem;">
+            No spam. Unsubscribe anytime. <a href="#" style="color: var(--accent-cyan);">Privacy Policy</a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div class="footer-logo">
+              <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="15" stroke="url(#grad)" stroke-width="2"/>
+                <path d="M16 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z" stroke="url(#grad)" stroke-width="1.5"/>
+                <path d="M16 2v28M2 16h28" stroke="url(#grad)" stroke-width="1.5"/>
+                <defs>
+                  <linearGradient id="grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#7928ca"/>
+                    <stop offset="1" stop-color="#0070f3"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              Stellar Horizon
+            </div>
+            <p>Advancing humanity's reach into the cosmos through collaborative exploration, innovative technology, and shared discovery.</p>
+          </div>
+          <div class="footer-col">
+            <h4>Missions</h4>
+            <ul>
+              <li><a href="#missions">Current Programs</a></li>
+              <li><a href="#timeline">Timeline</a></li>
+              <li><a href="#">Mission Control</a></li>
+              <li><a href="#">Launch Schedule</a></li>
+              <li><a href="#">Payload Services</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Explore</h4>
+            <ul>
+              <li><a href="#exploration">Solar System Map</a></li>
+              <li><a href="#">Live Tracking</a></li>
+              <li><a href="#">Image Gallery</a></li>
+              <li><a href="#">Science Data</a></li>
+              <li><a href="#">Education</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Organization</h4>
+            <ul>
+              <li><a href="#">About Us</a></li>
+              <li><a href="#">Partners</a></li>
+              <li><a href="#">Careers</a></li>
+              <li><a href="#">Press</a></li>
+              <li><a href="#">Contact</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2024 Stellar Horizon Initiative. All rights reserved.</p>
+          <div class="social-links">
+            <a href="#" aria-label="Twitter"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg></a>
+            <a href="#" aria-label="YouTube"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/></svg></a>
+            <a href="#" aria-label="GitHub"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 1.981-1.552 2.987-1.23 2.987-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg></a>
+            <a href="#" aria-label="LinkedIn"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 1-2 2v7h-4v-7a2 2 0 0 1 2-2 2 2 0 0 1 2 2v7h-4v-7a2 2 0 0 1 2-2 2 2 0 0 0 2-2 2 2 0 0 0 2-2v-7h4v7a2 2 0 0 1-2 2 2 2 0 0 0-2 2 2 2 0 0 1-2 2v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 1-2 2v7h-4V9a2 2 0 0 0-2-2 2 2 0 0 1-2 2v7H2V9a2 2 0 0 1 2-2h2V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7z"/></svg></a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+  <script>
+    // ===== STARFIELD =====
+    const starfield = document.getElementById('starfield');
+    const starCtx = starfield.getContext('2d');
+    let stars = [];
+    let starfieldW = 0, starfieldH = 0;
+    let mouseX = 0, mouseY = 0;
+
+    function resizeStarfield() {
+      starfieldW = window.innerWidth;
+      starfieldH = window.innerHeight;
+      starfield.width = starfieldW * devicePixelRatio;
+      starfield.height = starfieldH * devicePixelRatio;
+      starCtx.scale(devicePixelRatio, devicePixelRatio);
+      initStars();
+    }
+
+    function initStars() {
+      const count = Math.min(300, Math.floor((starfieldW * starfieldH) / 40000));
+      stars = [];
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * starfieldW,
+          y: Math.random() * starfieldH,
+          size: Math.random() * 1.5 + 0.5,
+          speed: Math.random() * 0.3 + 0.1,
+          opacity: Math.random() * 0.8 + 0.2,
+          twinkle: Math.random() * Math.PI * 2,
+          twinkleSpeed: Math.random() * 0.02 + 0.005,
+          color: Math.random() > 0.7 ? '#00d4ff' : (Math.random() > 0.5 ? '#ffd700' : '#ffffff')
+        });
+      }
+    }
+
+    function animateStars() {
+      starCtx.clearRect(0, 0, starfieldW, starfieldH);
+
+      const dx = (mouseX - starfieldW / 2) * 0.0005;
+      const dy = (mouseY - starfieldH / 2) * 0.0005;
+
+      stars.forEach(star => {
+        star.y += star.speed * 0.5;
+        star.twinkle += star.twinkleSpeed;
+        if (star.y > starfieldH) star.y = 0;
+
+        const op = star.opacity + Math.sin(star.twinkle) * 0.3;
+        starCtx.globalAlpha = Math.max(0.1, Math.min(1, op));
+        starCtx.fillStyle = star.color;
+        starCtx.beginPath();
+        starCtx.arc(star.x + dx, star.y + dy, star.size, 0, Math.PI * 2);
+        starCtx.fill();
+      });
+
+      requestAnimationFrame(animateStars);
+    }
+
+    // ===== ORBIT VISUALIZATION =====
+    const orbitCanvas = document.getElementById('orbit-canvas');
+    const orbitCtx = orbitCanvas.getContext('2d');
+    let orbitW = 0, orbitH = 0;
+    let orbitTime = 0;
+    let orbitSpeed = 1;
+    let currentView = 'inner';
+    let animationId = null;
+
+    const planets = {
+      inner: [
+        { name: 'Mercury', distance: 50, radius: 4, color: '#b5b5b5', speed: 4.15, eccentricity: 0.2 },
+        { name: 'Venus', distance: 75, radius: 6, color: '#e6c87a', speed: 1.62, eccentricity: 0.01 },
+        { name: 'Earth', distance: 105, radius: 6.5, color: '#4a90d9', speed: 1.0, eccentricity: 0.017, hasMoon: true },
+        { name: 'Mars', distance: 140, radius: 5, color: '#e74c3c', speed: 0.53, eccentricity: 0.093 }
+      ],
+      outer: [
+        { name: 'Jupiter', distance: 90, radius: 20, color: '#d4a574', speed: 0.084, eccentricity: 0.048 },
+        { name: 'Saturn', distance: 140, radius: 18, color: '#f4e4b2', speed: 0.034, eccentricity: 0.054, hasRing: true },
+        { name: 'Uranus', distance: 185, radius: 12, color: '#7de3f4', speed: 0.012, eccentricity: 0.047 },
+        { name: 'Neptune', distance: 230, radius: 11.5, color: '#4b70dd', speed: 0.006, eccentricity: 0.009 }
+      ],
+      missions: [
+        { name: 'Artemis', distance: 105, radius: 3, color: '#00d4ff', speed: 1.0, label: 'Artemis', angle: 0 },
+        { name: 'Europa Clipper', distance: 90, radius: 3, color: '#7de3f4', speed: 0.084, label: 'Europa Clipper', angle: 45 },
+        { name: 'Dragonfly', distance: 140, radius: 3, color: '#f4e4b2', speed: 0.034, label: 'Dragonfly', angle: 120 },
+        { name: 'Perseverance', distance: 140, radius: 3, color: '#e74c3c', speed: 0.53, label: 'Perseverance', angle: 200 },
+        { name: 'VIPER', distance: 105, radius: 3, color: '#ffd700', speed: 1.0, label: 'VIPER', angle: 300 },
+        { name: 'Roman', distance: 105, radius: 3, color: '#a855f7', speed: 1.0, label: 'Roman', angle: 180 }
+      ]
+    };
+
+    function resizeOrbit() {
+      const rect = orbitCanvas.parentElement.getBoundingClientRect();
+      orbitW = rect.width;
+      orbitH = 500;
+      orbitCanvas.width = orbitW * devicePixelRatio;
+      orbitCanvas.height = orbitH * devicePixelRatio;
+      orbitCanvas.style.width = orbitW + 'px';
+      orbitCanvas.style.height = orbitH + 'px';
+      orbitCtx.scale(devicePixelRatio, devicePixelRatio);
+    }
+
+    function drawOrbit() {
+      orbitCtx.clearRect(0, 0, orbitW, orbitH);
+
+      const cx = orbitW / 2;
+      const cy = orbitH / 2;
+
+      // Draw sun
+      const sunGradient = orbitCtx.createRadialGradient(cx, cy, 0, cx, cy, 35);
+      sunGradient.addColorStop(0, '#fff8e7');
+      sunGradient.addColorStop(0.3, '#ffd700');
+      sunGradient.addColorStop(0.7, '#ff8c00');
+      sunGradient.addColorStop(1, '#ff4500');
+
+      orbitCtx.beginPath();
+      orbitCtx.arc(cx, cy, 35, 0, Math.PI * 2);
+      orbitCtx.fillStyle = sunGradient;
+      orbitCtx.fill();
+
+      // Sun glow
+      const glowGradient = orbitCtx.createRadialGradient(cx, cy, 35, cx, cy, 80);
+      glowGradient.addColorStop(0, 'rgba(255, 215, 0, 0.3)');
+      glowGradient.addColorStop(1, 'rgba(255, 69, 0, 0)');
+      orbitCtx.beginPath();
+      orbitCtx.arc(cx, cy, 80, 0, Math.PI * 2);
+      orbitCtx.fillStyle = glowGradient;
+      orbitCtx.fill();
+
+      const planetSet = planets[currentView];
+
+      // Draw orbits
+      planetSet.forEach(planet => {
+        orbitCtx.beginPath();
+        orbitCtx.ellipse(cx, cy, planet.distance, planet.distance * 0.9, 0, 0, Math.PI * 2);
+        orbitCtx.strokeStyle = 'rgba(121, 40, 202, 0.1)';
+        orbitCtx.lineWidth = 1;
+        orbitCtx.stroke();
+      });
+
+      // Draw planets
+      planetSet.forEach(planet => {
+        const angle = orbitTime * planet.speed + (planet.angle || 0);
+        const x = cx + Math.cos(angle) * planet.distance;
+        const y = cy + Math.sin(angle) * planet.distance * 0.9;
+
+        // Saturn ring
+        if (planet.hasRing) {
+          orbitCtx.save();
+          orbitCtx.translate(x, y);
+          orbitCtx.rotate(-0.3);
+          const ringGrad = orbitCtx.createRadialGradient(0, 0, planet.radius * 1.3, 0, 0, planet.radius * 2.2);
+          ringGrad.addColorStop(0, 'rgba(244, 228, 178, 0.1)');
+          ringGrad.addColorStop(0.5, 'rgba(244, 228, 178, 0.4)');
+          ringGrad.addColorStop(1, 'rgba(244, 228, 178, 0)');
+          orbitCtx.beginPath();
+          orbitCtx.ellipse(0, 0, planet.radius * 2.2, planet.radius * 0.6, 0, 0, Math.PI * 2);
+          orbitCtx.fillStyle = ringGrad;
+          orbitCtx.fill();
+          orbitCtx.restore();
+        }
+
+        // Planet
+        const planetGrad = orbitCtx.createRadialGradient(
+          x - planet.radius * 0.3, y - planet.radius * 0.3, 0,
+          x, y, planet.radius
+        );
+        planetGrad.addColorStop(0, lightenColor(planet.color, 30));
+        planetGrad.addColorStop(1, planet.color);
+
+        orbitCtx.beginPath();
+        orbitCtx.arc(x, y, planet.radius, 0, Math.PI * 2);
+        orbitCtx.fillStyle = planetGrad;
+        orbitCtx.fill();
+
+        // Moon for Earth
+        if (planet.hasMoon) {
+          const moonAngle = orbitTime * 13 + 45;
+          const mx = x + Math.cos(moonAngle) * (planet.radius + 12);
+          const my = y + Math.sin(moonAngle) * (planet.radius + 12) * 0.9;
+          orbitCtx.beginPath();
+          orbitCtx.arc(mx, my, 2.5, 0, Math.PI * 2);
+          orbitCtx.fillStyle = '#aaa';
+          orbitCtx.fill();
+        }
+
+        // Label
+        orbitCtx.fillStyle = 'rgba(234, 242, 255, 0.7)';
+        orbitCtx.font = '11px "Space Grotesk"';
+        orbitCtx.textAlign = 'center';
+        orbitCtx.fillText(planet.name, x, y + planet.radius + 16);
+      });
+
+      orbitTime += 0.003 * orbitSpeed;
+      animationId = requestAnimationFrame(drawOrbit);
+    }
+
+    function lightenColor(hex, percent) {
+      const num = parseInt(hex.replace('#', ''), 16);
+      const amt = Math.round(2.55 * percent);
+      const R = Math.min(255, (num >> 16) + amt);
+      const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+      const B = Math.min(255, (num & 0x0000FF) + amt);
+      return `rgb(${R},${G},${B})`;
+    }
+
+    // ===== UI INTERACTIONS =====
+    const orbitBtns = document.querySelectorAll('.orbit-btn[data-view]');
+    const speedBtns = document.querySelectorAll('.orbit-btn[data-speed]');
+
+    orbitBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        orbitBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentView = btn.dataset.view;
+        if (animationId) cancelAnimationFrame(animationId);
+        drawOrbit();
+      });
+    });
+
+    speedBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        speedBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        orbitSpeed = parseFloat(btn.dataset.speed);
+      });
+    });
+
+    // ===== SCROLL REVEAL =====
+    const revealElements = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    revealElements.forEach(el => observer.observe(el));
+
+    // Timeline specific observer
+    const timelineObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('visible'), i * 100);
+        }
+      });
+    }, { threshold: 0.2 });
+    document.querySelectorAll('.timeline-item').forEach(el => timelineObserver.observe(el));
+
+    // ===== COUNTER ANIMATION =====
+    const statValues = document.querySelectorAll('.stat-value[data-count]');
+    const statObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseInt(el.dataset.count);
+          let current = 0;
+          const duration = 2000;
+          const step = target / (duration / 16);
+          const timer = setInterval(() => {
+            current += step;
+            if (current >= target) {
+              current = target;
+              clearInterval(timer);
+            }
+            el.textContent = Math.floor(current).toLocaleString();
+          }, 16);
+          statObserver.unobserve(el);
+        }
+      });
+    }, { threshold: 0.5 });
+    statValues.forEach(el => statObserver.observe(el));
+
+    // ===== FORM HANDLING =====
+    const form = document.getElementById('newsletter-form');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = form.querySelector('input[type="email"]');
+      const btn = form.querySelector('button[type="submit"]');
+      const originalText = btn.querySelector('span').textContent;
+      btn.querySelector('span').textContent = 'Subscribed!';
+      btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+      btn.style.borderColor = 'transparent';
+      input.value = '';
+      setTimeout(() => {
+        btn.querySelector('span').textContent = originalText;
+        btn.style.background = '';
+        btn.style.borderColor = '';
+      }, 2000);
+    });
+
+    // ===== MOUSE PARALLAX =====
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+
+      // Parallax for hero content
+      const heroContent = document.querySelector('.hero-content');
+      if (heroContent) {
+        const dx = (e.clientX - window.innerWidth / 2) * 0.02;
+        const dy = (e.clientY - window.innerHeight / 2) * 0.02;
+        heroContent.style.transform = `translate(${dx}px, ${dy}px)`;
+      }
+    });
+
+    // ===== INIT =====
+    function init() {
+      resizeStarfield();
+      resizeOrbit();
+      animateStars();
+      drawOrbit();
+
+      window.addEventListener('resize', () => {
+        resizeStarfield();
+        resizeOrbit();
+      });
+    }
+
+    // Start when DOM ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>
