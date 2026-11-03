@@ -370,6 +370,7 @@ try:
                                         highest_seen_index = -1
                                         has_emitted_body_block = False
                                         active_block_type = "text"
+                                        is_synthetic_split = False
                                         buffered_start_payload = None
                                         closed_blocks.clear()
                                         yield f"event: message_start\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
@@ -377,17 +378,19 @@ try:
                                     elif p_type == "content_block_start":
                                         c_block = payload.get("content_block", {})
                                         b_type = c_block.get("type", "text") if isinstance(c_block, dict) else "text"
+                                        p_idx = payload.get("index", current_block_index)
                                         if b_type == "thinking":
                                             if block_open:
                                                 yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
                                                 closed_blocks.add(current_block_index)
                                             block_open = True
-                                            current_block_index = payload.get("index", 0)
+                                            current_block_index = p_idx
                                             highest_seen_index = max(highest_seen_index, current_block_index)
                                             active_block_type = "thinking"
+                                            is_synthetic_split = False
                                             buffered_start_payload = None
                                             yield f"event: content_block_start\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
-                                        elif b_type == "text" and not has_emitted_body_block and payload.get("index", 0) == 0:
+                                        elif b_type == "text" and not has_emitted_body_block and p_idx == 0:
                                             # Buffer initial text block start until first delta
                                             buffered_start_payload = payload
                                         else:
@@ -395,7 +398,7 @@ try:
                                                 yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {current_block_index}}}\n\n'.encode("utf-8")
                                                 closed_blocks.add(current_block_index)
                                             block_open = True
-                                            current_block_index = payload.get("index", current_block_index)
+                                            current_block_index = p_idx
                                             highest_seen_index = max(highest_seen_index, current_block_index)
                                             active_block_type = b_type
                                             if active_block_type in ("text", "tool_use"):
@@ -410,6 +413,7 @@ try:
                                         if buffered_start_payload is not None:
                                             if "<think>" in raw_text or d_type == "thinking_delta" or "reasoning_content" in delta:
                                                 active_block_type = "thinking"
+                                                is_synthetic_split = True
                                                 current_block_index = 0
                                                 highest_seen_index = max(highest_seen_index, 0)
                                                 block_open = True
@@ -436,6 +440,7 @@ try:
                                             else:
                                                 # Release initial text block start
                                                 active_block_type = "text"
+                                                is_synthetic_split = False
                                                 current_block_index = buffered_start_payload.get("index", 0)
                                                 highest_seen_index = max(highest_seen_index, current_block_index)
                                                 block_open = True
@@ -444,23 +449,34 @@ try:
                                                 buffered_start_payload = None
 
                                         if active_block_type == "thinking":
-                                            if "</think>" in raw_text:
-                                                th_part, tx_part = raw_text.split("</think>", 1)
-                                                if th_part:
-                                                    yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(th_part)}}}}}\n\n'.encode("utf-8")
-                                                yield b'event: content_block_stop\ndata: {"type": "content_block_stop", "index": 0}\n\n'
-                                                closed_blocks.add(0)
-                                                yield b'event: content_block_start\ndata: {"type": "content_block_start", "index": 1, "content_block": {"type": "text", "text": ""}}\n\n'
-                                                current_block_index = 1
-                                                highest_seen_index = max(highest_seen_index, 1)
-                                                active_block_type = "text"
-                                                has_emitted_body_block = True
-                                                if tx_part:
-                                                    yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 1, "delta": {{"type": "text_delta", "text": {json.dumps(tx_part)}}}}}\n\n'.encode("utf-8")
+                                            if is_synthetic_split:
+                                                if "</think>" in raw_text:
+                                                    th_part, tx_part = raw_text.split("</think>", 1)
+                                                    if th_part:
+                                                        yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(th_part)}}}}}\n\n'.encode("utf-8")
+                                                    yield b'event: content_block_stop\ndata: {"type": "content_block_stop", "index": 0}\n\n'
+                                                    closed_blocks.add(0)
+                                                    yield b'event: content_block_start\ndata: {"type": "content_block_start", "index": 1, "content_block": {"type": "text", "text": ""}}\n\n'
+                                                    current_block_index = 1
+                                                    highest_seen_index = max(highest_seen_index, 1)
+                                                    active_block_type = "text"
+                                                    has_emitted_body_block = True
+                                                    if tx_part:
+                                                        yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 1, "delta": {{"type": "text_delta", "text": {json.dumps(tx_part)}}}}}\n\n'.encode("utf-8")
+                                                else:
+                                                    clean_th = raw_text.replace("<think>", "")
+                                                    if clean_th:
+                                                        yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(clean_th)}}}}}\n\n'.encode("utf-8")
                                             else:
-                                                clean_th = raw_text.replace("<think>", "")
-                                                if clean_th:
-                                                    yield f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": 0, "delta": {{"type": "thinking_delta", "thinking": {json.dumps(clean_th)}}}}}\n\n'.encode("utf-8")
+                                                clean_th = raw_text.replace("<think>", "").replace("</think>", "")
+                                                if clean_th or d_type == "signature_delta":
+                                                    delta_copy = dict(delta)
+                                                    if "thinking" in delta_copy:
+                                                        delta_copy["thinking"] = clean_th
+                                                    elif "text" in delta_copy:
+                                                        delta_copy["text"] = clean_th
+                                                    payload["delta"] = delta_copy
+                                                    yield f"event: content_block_delta\ndata: {json.dumps(payload)}\n\n".encode("utf-8")
                                         elif active_block_type == "text":
                                             delta_idx = payload.get("index")
                                             if delta_idx is None or delta_idx in closed_blocks:
@@ -488,10 +504,12 @@ try:
                                             yield f'event: content_block_start\ndata: {json.dumps(buffered_start_payload)}\n\n'.encode("utf-8")
                                             buffered_start_payload = None
                                         if block_open:
-                                            stop_idx = current_block_index
-                                            yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {stop_idx}}}\n\n'.encode("utf-8")
-                                            closed_blocks.add(stop_idx)
-                                            block_open = False
+                                            p_stop_idx = payload.get("index", current_block_index)
+                                            stop_idx = current_block_index if is_synthetic_split else p_stop_idx
+                                            if stop_idx not in closed_blocks:
+                                                yield f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {stop_idx}}}\n\n'.encode("utf-8")
+                                                closed_blocks.add(stop_idx)
+                                                block_open = False
 
                                     elif p_type == "message_delta":
                                         # Release buffered start payload before message delta
