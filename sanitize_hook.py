@@ -1263,12 +1263,11 @@ class RequestSanitizer(CustomLogger):
 
         motion_keywords = (
             "remotion", "motion-studio", "motion graphic", "motion graphics",
-            "/motion", "cinematic", "explainer", "animation", "neural network video",
+            "/motion", "neural network video",
             "space intro", "beyond earth", "openclaudex", "video structure",
-            "video-export", "visual direction", "4k quality", "aspect ratio",
+            "video-export", "visual direction",
             "60-second", "10-second", "60s cinematic", "10s cinematic",
-            "particle physics", "three.js", "motion-design", "neural network",
-            "massively interconnected"
+            "motion-design"
         )
         continuation_phrases = (
             "do it", "continue", "proceed", "go ahead", "done", "next",
@@ -1355,7 +1354,7 @@ class RequestSanitizer(CustomLogger):
                 boost_triggered = True
 
             user_is_motion = any(k in user_text for k in motion_keywords) or (
-                ("video" in user_text or "motion" in user_text or "animation" in user_text or "intro" in user_text) and
+                ("video" in user_text or "motion graphics" in user_text or "remotion" in user_text) and
                 any(act in user_text for act in ("create", "make", "generate", "render", "explainer", "build", "remotion", "show", "test", "deliverable"))
             )
             if user_is_motion:
@@ -1498,17 +1497,16 @@ class RequestSanitizer(CustomLogger):
             "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-haiku-4-5",
             "claude-opus-4", "claude-opus-4-5", "claude-3-opus-20240229", "*", "auto", ""
         )
-        if boost_triggered:
-            print("[SMART-ROUTER] /boost, Motion, or TURBO BOOST detected! Pinning directly to Nemotron Ultra 550B MoE (backup-ultra).", flush=True)
+        pref = self.get_selected_model()
+        if boost_triggered and ("/boost" in user_text.lower() or "turbo boost" in user_text.lower()):
+            print("[SMART-ROUTER] /boost command detected! Pinning directly to Nemotron Ultra 550B MoE (backup-ultra).", flush=True)
             target_model = "backup-ultra"
+        elif pref and pref != "auto":
+            target_model = self.resolve_target_model(pref, total_chars=total_chars)
+        elif req_model and req_model not in generic_claude_models:
+            target_model = self.resolve_target_model(req_model, total_chars=total_chars)
         else:
-            pref = self.get_selected_model()
-            if pref and pref != "auto":
-                target_model = self.resolve_target_model(pref, total_chars=total_chars)
-            elif req_model and req_model not in generic_claude_models:
-                target_model = self.resolve_target_model(req_model, total_chars=total_chars)
-            else:
-                target_model = self.resolve_target_model("auto", total_chars=total_chars)
+            target_model = self.resolve_target_model("auto", total_chars=total_chars)
         data["model"] = target_model
 
         active_name = MODEL_DISPLAY_NAMES.get(target_model, "NVIDIA Nemotron Ultra 550B MoE (NVIDIA NIM)")
@@ -1672,14 +1670,14 @@ DO NOT use tools, DO NOT analyze code or files, and DO NOT emit <think> tags."""
                 # Configurable thinking budget via MAX_THINKING_TOKENS (default: 4096, max ceiling: 8192)
                 # Prevents extreme 5-minute thinking stalls on coding requests while preserving high-quality reasoning
                 env_max_thinking = os.getenv("MAX_THINKING_TOKENS")
-                default_budget = 8192
+                default_budget = 4096
                 if env_max_thinking:
                     try:
                         val = int(env_max_thinking)
                         if val > 0:
-                            default_budget = min(val, 8192)
+                            default_budget = min(max(val, 1024), 8192)
                     except (ValueError, TypeError):
-                        default_budget = 8192
+                        default_budget = 4096
 
                 if req_budget is not None:
                     try:
