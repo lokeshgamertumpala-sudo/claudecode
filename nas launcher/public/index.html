@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StellarForge AI - Satellite Design Validator</title>
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --bg-elevated: #111827;
+      --fg: #e8eef8;
+      --muted: #8b9ab5;
+      --accent: #00d4aa;
+      --accent-dim: #00d4aa33;
+      --warn: #ffb800;
+      --error: #ff4d6a;
+      --card: #141d2f;
+      --border: #1e2d45;
+      --input-bg: #0d1426;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--fg); min-height: 100vh; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .logo { display: flex; align-items: center; gap: 12px; font-size: 1.5rem; font-weight: 700; }
+    .logo svg { width: 40px; height: 40px; color: var(--accent); }
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: var(--accent-dim); color: var(--accent); }
+    .status-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    main { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 1024px) { main { grid-template-columns: 1fr; } }
+    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; }
+    .panel h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .panel h2 svg { width: 20px; height: 20px; color: var(--accent); }
+    .sketch-area { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+    .canvas-wrapper { position: relative; flex: 1; background: var(--input-bg); border: 2px dashed var(--border); border-radius: 8px; overflow: hidden; min-height: 400px; }
+    .canvas-wrapper.drag-active { border-color: var(--accent); background: var(--accent-dim); }
+    #sketchCanvas { display: block; width: 100%; height: 100%; touch-action: none; }
+    .canvas-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--muted); pointer-events: none; }
+    .canvas-placeholder svg { width: 64px; height: 64px; opacity: 0.5; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; background: var(--bg-elevated); border-radius: 8px; border: 1px solid var(--border); }
+    .tool-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--fg); font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
+    .tool-btn:hover { border-color: var(--accent); background: var(--accent-dim); }
+    .tool-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+    .tool-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .tool-btn svg { width: 18px; height: 18px; }
+    .color-picker { width: 36px; height: 36px; border: none; border-radius: 6px; cursor: pointer; background: none; padding: 2px; }
+    .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-picker::-webkit-color-swatch { border: 2px solid var(--border); border-radius: 4px; }
+    .slider-group { display: flex; align-items: center; gap: 12px; font-size: 0.8rem; color: var(--muted); }
+    .slider-group input[type=range] { flex: 1; max-width: 120px; accent-color: var(--accent); }
+    .actions { display: flex; gap: 12px; padding-top: 8px; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.15s; border: none; }
+    .btn-primary { background: var(--accent); color: var(--bg); }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary { background: var(--bg-elevated); color: var(--fg); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--accent); }
+    .btn svg { width: 18px; height: 18px; }
+    .results-area { flex: 1; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; max-height: 80vh; }
+    .result-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 16px; }
+    .tab-btn { padding: 8px 16px; background: none; border: none; color: var(--muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; border-radius: 6px 6px 0 0; transition: all 0.15s; }
+    .tab-btn:hover { color: var(--fg); background: var(--bg-elevated); }
+    .tab-btn.active { color: var(--accent); background: var(--accent-dim); }
+    .tab-panel { display: none; animation: fadeIn 0.2s; }
+    .tab-panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .validation-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .validation-card.passed { border-left: 4px solid var(--accent); }
+    .validation-card.failed { border-left: 4px solid var(--error); }
+    .validation-card.warning { border-left: 4px solid var(--warn); }
+    .validation-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .validation-title { font-weight: 600; font-size: 0.95rem; }
+    .validation-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+    .validation-status.pass { background: var(--accent-dim); color: var(--accent); }
+    .validation-status.fail { background: rgba(255, 77, 106, 0.15); color: var(--error); }
+    .validation-status.warn { background: rgba(255, 184, 0, 0.15); color: var(--warn); }
+    .validation-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .validation-item { display: flex; flex-direction: column; gap: 4px; }
+    .validation-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .validation-value { font-size: 0.9rem; font-weight: 500; font-family: 'JetBrains Mono', monospace; }
+    .validation-value.warn { color: var(--warn); }
+    .validation-value.error { color: var(--error); }
+    .validation-value.pass { color: var(--accent); }
+    .messages-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+    .message { padding: 10px 12px; border-radius: 6px; font-size: 0.85rem; line-height: 1.5; }
+    .message.warning { background: rgba(255, 184, 0, 0.1); border: 1px solid rgba(255, 184, 0, 0.3); }
+    .message.error { background: rgba(255, 77, 106, 0.1); border: 1px solid rgba(255, 77, 106, 0.3); }
+    .message.info { background: rgba(0, 212, 170, 0.1); border: 1px solid rgba(0, 212, 170, 0.3); }
+    .three-container { width: 100%; height: 400px; background: var(--input-bg); border-radius: 8px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+    #threeCanvas { width: 100%; height: 100%; display: block; }
+    .three-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--muted); }
+    .three-placeholder svg { width: 48px; height: 48px; opacity: 0.4; }
+    .spec-output { background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; max-height: 300px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.6; white-space: pre-wrap; color: var(--fg); }
+    .loading-overlay { position: fixed; inset: 0; background: rgba(10, 14, 26, 0.95); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 16px; z-index: 1000; }
+    .loading-overlay.active { display: flex; }
+    .spinner { width: 48px; height: 48px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: var(--muted); font-size: 0.95rem; }
+    .progress-bar { width: 300px; height: 4px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s; }
+    footer { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.8rem; text-align: center; }
+    .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; border-radius: 8px; background: var(--card); border: 1px solid var(--border); box-shadow: 0 10px 40px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; z-index: 1001; transform: translateX(400px); opacity: 0; transition: all 0.3s; max-width: 360px; }
+    .toast.show { transform: none; opacity: 1; }
+    .toast.success { border-left: 4px solid var(--accent); }
+    .toast.error { border-left: 4px solid var(--error); }
+    .toast.warning { border-left: 4px solid var(--warn); }
+    .toast svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .toast.success svg { color: var(--accent); }
+    .toast.error svg { color: var(--error); }
+    .toast.warning svg { color: var(--warn); }
+    @media (max-width: 640px) { .container { padding: 16px; } .toolbar { justify-content: center; } .actions { flex-direction: column; } .btn { width: 100%; justify-content: center; } }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        StellarForge AI
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div class="status-badge" id="wsStatus"><span class="dot"></span>WS Disconnected</div>
+        <div class="status-badge"><span class="dot"></span>NIM Ready</div>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel sketch-area">
+        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M2 22l20-20M10 22V12m-2 0h4m-6 10h4"/></svg>Sketch & Analyze</h2>
+
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="sketchCanvas"></canvas>
+          <div class="canvas-placeholder" id="canvasPlaceholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M2 22l20-20M10 22V12m-2 0h4m-6 10h4"/></svg>
+            <p>Draw your satellite or drag an image here</p>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <button class="tool-btn active" data-tool="pen" title="Pen (P)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg><span>Pen</span></button>
+          <button class="tool-btn" data-tool="rect" title="Rectangle (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg><span>Rectangle</span></button>
+          <button class="tool-btn" data-tool="circle" title="Circle (C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg><span>Circle</span></button>
+          <button class="tool-btn" data-tool="line" title="Line (L)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/></svg><span>Line</span></button>
+          <button class="tool-btn" data-tool="eraser" title="Eraser (E)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20H7L2 15l9-9 9 9 4 4z"/><path d="M15 7l5 5"/></svg><span>Eraser</span></button>
+          <input type="color" class="color-picker" id="colorPicker" value="#00d4aa" title="Stroke Color">
+          <div class="slider-group"><span>Size:</span><input type="range" id="brushSize" min="1" max="20" value="3"><span id="brushSizeVal">3</span></div>
+          <div class="slider-group"><span>Opacity:</span><input type="range" id="brushOpacity" min="0.1" max="1" step="0.1" value="1"><span id="brushOpacityVal">100%</span></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="analyzeBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span>Analyze with NIM</span></button>
+          <button class="btn btn-secondary" id="clearBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Clear Canvas</span></button>
+          <button class="btn btn-secondary" id="loadSampleBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Load Sample</span></button>
+        </div>
+      </section>
+
+      <section class="panel results-area">
+        <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Validation Results</h2>
+
+        <div class="result-tabs">
+          <button class="tab-btn active" data-tab="validation">Validation</button>
+          <button class="tab-btn" data-tab="3d">3D View</button>
+          <button class="tab-btn" data-tab="spec">Spec JSON</button>
+        </div>
+
+        <div class="tab-panel active" id="tab-validation">
+          <div id="validationResults">
+            <div class="validation-card">
+              <div class="validation-header">
+                <span class="validation-title">Draw a sketch and click Analyze</span>
+                <span class="validation-status">Ready</span>
+              </div>
+              <p style="color: var(--muted); font-size: 0.85rem;">AI will extract satellite parameters from your sketch and validate against orbital, power, and structural constraints.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-3d">
+          <div class="three-container">
+            <canvas id="threeCanvas"></canvas>
+            <div class="three-placeholder" id="threePlaceholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <p>3D visualization appears after analysis</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-spec">
+          <pre class="spec-output" id="specOutput">{"message": "Analyze a sketch to generate satellite specification"}</pre>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      StellarForge AI — NASA Space Apps Challenge | Powered by NVIDIA NIM
+    </footer>
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Analyzing sketch...</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <div class="toast" id="toast" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span id="toastMsg"></span></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+    // Canvas Sketch
+    const canvas = document.getElementById('sketchCanvas');
+    const ctx = canvas.getContext('2d');
+    const wrapper = document.getElementById('canvasWrapper');
+    const placeholder = document.getElementById('canvasPlaceholder');
+    const colorPicker = document.getElementById('colorPicker');
+    const brushSize = document.getElementById('brushSize');
+    const brushSizeVal = document.getElementById('brushSizeVal');
+    const brushOpacity = document.getElementById('brushOpacity');
+    const brushOpacityVal = document.getElementById('brushOpacityVal');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const loadSampleBtn = document.getElementById('loadSampleBtn');
+    const toolBtns = document.querySelectorAll('.tool-btn[data-tool]');
+    const tabs = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    const validationResults = document.getElementById('validationResults');
+    const specOutput = document.getElementById('specOutput');
+    const threeCanvas = document.getElementById('threeCanvas');
+    const threePlaceholder = document.getElementById('threePlaceholder');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = document.getElementById('loadingText');
+    const progressFill = document.getElementById('progressFill');
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toastMsg');
+
+    let currentTool = 'pen';
+    let isDrawing = false;
+    let lastPoint = null;
+    let strokes = [];
+    let animationId = null;
+    let threeScene = null;
+    let threeRenderer = null;
+    let labelRenderer = null;
+    let threeCamera = null;
+    let threeControls = null;
+
+    function resizeCanvas() {
+      const rect = wrapper.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      redrawCanvas();
+    }
+    function redrawCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#0d1426';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      strokes.forEach(drawStroke);
+      placeholder.style.display = strokes.length ? 'none' : 'flex';
+    }
+    function drawStroke(stroke) {
+      if (stroke.type === 'pen' || stroke.type === 'eraser') {
+        ctx.beginPath();
+        ctx.strokeStyle = stroke.type === 'eraser' ? '#0d1426' : stroke.color;
+        ctx.lineWidth = stroke.size;
+        ctx.globalAlpha = stroke.opacity;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        stroke.points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      } else if (stroke.type === 'rect') {
+        const [s, e] = stroke.points;
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.size;
+        ctx.globalAlpha = stroke.opacity;
+        ctx.strokeRect(s.x, s.y, e.x - s.x, e.y - s.y);
+        ctx.globalAlpha = 1;
+      } else if (stroke.type === 'circle') {
+        const [s, e] = stroke.points;
+        const r = Math.hypot(e.x - s.x, e.y - s.y);
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.size;
+        ctx.globalAlpha = stroke.opacity;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      } else if (stroke.type === 'line') {
+        const [s, e] = stroke.points;
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.size;
+        ctx.globalAlpha = stroke.opacity;
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y);
+        ctx.lineTo(e.x, e.y);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function getPoint(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      lastPoint = getPoint(e);
+      if (currentTool === 'pen' || currentTool === 'eraser') {
+        strokes.push({ type: currentTool, color: colorPicker.value, size: parseInt(brushSize.value), opacity: parseFloat(brushOpacity.value), points: [lastPoint] });
+      } else {
+        strokes.push({ type: currentTool, color: colorPicker.value, size: parseInt(brushSize.value), opacity: parseFloat(brushOpacity.value), points: [lastPoint, lastPoint] });
+      }
+      redrawCanvas();
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const pt = getPoint(e);
+      if (currentTool === 'pen' || currentTool === 'eraser') {
+        strokes[strokes.length - 1].points.push(pt);
+      } else {
+        strokes[strokes.length - 1].points[1] = pt;
+      }
+      redrawCanvas();
+      lastPoint = pt;
+    }
+
+    function stopDrawing() { isDrawing = false; }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); }, { passive: false });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, { passive: false });
+    canvas.addEventListener('touchend', stopDrawing);
+
+    toolBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        toolBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTool = btn.dataset.tool;
+      });
+    });
+
+    brushSize.addEventListener('input', () => { brushSizeVal.textContent = brushSize.value; });
+    brushOpacity.addEventListener('input', () => { brushOpacityVal.textContent = Math.round(brushOpacity.value * 100) + '%'; });
+
+    clearBtn.addEventListener('click', () => { strokes = []; redrawCanvas(); });
+
+    loadSampleBtn.addEventListener('click', () => {
+      strokes = [
+        { type: 'rect', color: '#00d4aa', size: 3, opacity: 1, points: [{ x: 120, y: 180 }, { x: 280, y: 320 }] },
+        { type: 'rect', color: '#00d4aa', size: 3, opacity: 1, points: [{ x: 60, y: 220 }, { x: 120, y: 280 }] },
+        { type: 'rect', color: '#00d4aa', size: 3, opacity: 1, points: [{ x: 280, y: 220 }, { x: 340, y: 280 }] },
+        { type: 'circle', color: '#00d4aa', size: 2, opacity: 1, points: [{ x: 200, y: 140 }, { x: 220, y: 160 }] },
+        { type: 'line', color: '#00d4aa', size: 2, opacity: 1, points: [{ x: 200, y: 320 }, { x: 200, y: 360 }] }
+      ];
+      redrawCanvas();
+      showToast('Sample satellite loaded', 'success');
+    });
+
+    function canvasToBlob() {
+      return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    }
+
+    async function analyzeSketch() {
+      if (strokes.length === 0) { showToast('Draw something first!', 'warning'); return; }
+      analyzeBtn.disabled = true;
+      loadingOverlay.classList.add('active');
+      loadingText.textContent = 'Uploading sketch...';
+      progressFill.style.width = '20%';
+
+      try {
+        const blob = await canvasToBlob();
+        const formData = new FormData();
+        formData.append('sketch', blob, 'sketch.png');
+
+        loadingText.textContent = 'Analyzing with NIM...';
+        progressFill.style.width = '50%';
+
+        const res = await fetch('/api/analyze-sketch', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        loadingText.textContent = 'Generating 3D model...';
+        progressFill.style.width = '75%';
+
+        displayResults(data);
+        sendWSValidation(data);
+
+        loadingText.textContent = 'Complete!';
+        progressFill.style.width = '100%';
+        await new Promise(r => setTimeout(r, 300));
+        loadingOverlay.classList.remove('active');
+        progressFill.style.width = '0%';
+        showToast('Analysis complete', 'success');
+      } catch (err) {
+        console.error(err);
+        loadingOverlay.classList.remove('active');
+        showToast('Analysis failed: ' + err.message, 'error');
+      } finally {
+        analyzeBtn.disabled = false;
+      }
+    }
+
+    analyzeBtn.addEventListener('click', analyzeSketch);
+
+    function displayResults(satellite) {
+      specOutput.textContent = JSON.stringify(satellite, null, 2);
+      renderValidation(satellite);
+      initThreeJS(satellite);
+      tabs[0].click();
+    }
+
+    async function renderValidation(sat) {
+      try {
+        const res = await fetch('/api/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ satellite: sat })
+        });
+        const result = await res.json();
+        buildValidationUI(result);
+      } catch (err) {
+        validationResults.innerHTML = `<div class="validation-card failed"><div class="validation-header"><span class="validation-title">Validation Error</span><span class="validation-status fail">FAIL</span></div><p>${err.message}</p></div>`;
+      }
+    }
+
+    function buildValidationUI(result) {
+      const cards = [];
+      const sections = [
+        { key: 'orbital', title: 'Orbital Mechanics', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>' },
+        { key: 'power', title: 'Power Budget', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' },
+        { key: 'structural', title: 'Structural Integrity', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>' }
+      ];
+
+      sections.forEach(sec => {
+        const data = result[sec.key];
+        if (!data) return;
+        const statusClass = data.passed ? 'passed' : (data.errors.length ? 'failed' : 'warning');
+        const statusText = data.passed ? 'PASS' : (data.errors.length ? 'FAIL' : 'WARN');
+        const statusBadgeClass = data.passed ? 'pass' : (data.errors.length ? 'fail' : 'warn');
+
+        let gridItems = '';
+        if (data.orbital_parameters) {
+          const op = data.orbital_parameters;
+          gridItems = `
+            <div class="validation-item"><span class="validation-label">Period</span><span class="validation-value">${op.period_min} min</span></div>
+            <div class="validation-item"><span class="validation-label">Velocity</span><span class="validation-value">${op.velocity_kms} km/s</span></div>
+            <div class="validation-item"><span class="validation-label">Eclipse</span><span class="validation-value">${(op.eclipse_fraction * 100).toFixed(1)}%</span></div>
+            <div class="validation-item"><span class="validation-label">Lifetime</span><span class="validation-value ${op.estimated_lifetime_years < 1 ? 'error' : op.estimated_lifetime_years < 3 ? 'warn' : 'pass'}">${op.estimated_lifetime_years} yrs</span></div>
+          `;
+        } else if (data.power_budget) {
+          const pb = data.power_budget;
+          gridItems = `
+            <div class="validation-item"><span class="validation-label">Generated</span><span class="validation-value">${pb.generated_power_w} W</span></div>
+            <div class="validation-item"><span class="validation-label">Load</span><span class="validation-value">${pb.total_load_w} W</span></div>
+            <div class="validation-item"><span class="validation-label">Battery Usable</span><span class="validation-value">${pb.battery.usable_wh} Wh</span></div>
+            <div class="validation-item"><span class="validation-label">DoD/orbit</span><span class="validation-value ${pb.battery.depth_of_discharge_pct > 80 ? 'error' : pb.battery.depth_of_discharge_pct > 50 ? 'warn' : 'pass'}">${pb.battery.depth_of_discharge_pct}%</span></div>
+          `;
+        } else if (data.structural_analysis) {
+          const sa = data.structural_analysis;
+          gridItems = `
+            <div class="validation-item"><span class="validation-label">Material</span><span class="validation-value">${sa.material}</span></div>
+            <div class="validation-item"><span class="validation-label">Yield SF</span><span class="validation-value ${sa.stress_analysis.yield_safety_factor < 1.5 ? 'error' : sa.stress_analysis.yield_safety_factor < 2 ? 'warn' : 'pass'}">${sa.stress_analysis.yield_safety_factor}</span></div>
+            <div class="validation-item"><span class="validation-label">1st Mode</span><span class="validation-value ${sa.dynamics.first_frequency_hz < 50 ? 'error' : sa.dynamics.first_frequency_hz < 100 ? 'warn' : 'pass'}">${sa.dynamics.first_frequency_hz} Hz</span></div>
+            <div class="validation-item"><span class="validation-label">Combined SF</span><span class="validation-value ${sa.stress_analysis.combined_safety_factor < 1.5 ? 'error' : sa.stress_analysis.combined_safety_factor < 2 ? 'warn' : 'pass'}">${sa.stress_analysis.combined_safety_factor}</span></div>
+          `;
+        }
+
+        let messagesHtml = '';
+        [...(data.warnings || []), ...(data.errors || [])].forEach(msg => {
+          const isError = data.errors.includes(msg);
+          messagesHtml += `<div class="message ${isError ? 'error' : 'warning'}">${msg}</div>`;
+        });
+
+        cards.push(`
+          <div class="validation-card ${statusClass}">
+            <div class="validation-header">
+              <span class="validation-title">${sec.icon} ${sec.title}</span>
+              <span class="validation-status ${statusBadgeClass}">${statusText}</span>
+            </div>
+            <div class="validation-grid">${gridItems}</div>
+            ${messagesHtml ? `<div class="messages-list">${messagesHtml}</div>` : ''}
+          </div>
+        `);
+      });
+
+      validationResults.innerHTML = cards.join('') || '<div class="validation-card"><p style="color: var(--muted)">No validation data</p></div>';
+    }
+
+    function initThreeJS(sat) {
+      if (threeScene) {
+        cancelAnimationFrame(animationId);
+        threeRenderer.dispose();
+        labelRenderer.domElement.remove();
+        threeCanvas.removeEventListener('mousemove', onMouseMove);
+        threeCanvas.removeEventListener('click', onClick);
+      }
+
+      threePlaceholder.style.display = 'none';
+      threeCanvas.style.display = 'block';
+
+      const container = threeCanvas.parentElement;
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      threeRenderer = new THREE.WebGLRenderer({ canvas: threeCanvas, antialias: true, alpha: true });
+      threeRenderer.setSize(width, height);
+      threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      threeRenderer.shadowMap.enabled = true;
+      threeRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      labelRenderer = new CSS2DRenderer();
+      labelRenderer.setSize(width, height);
+      labelRenderer.domElement.style.position = 'absolute';
+      labelRenderer.domElement.style.top = '0';
+      labelRenderer.domElement.style.pointerEvents = 'none';
+      container.appendChild(labelRenderer.domElement);
+
+      threeScene = new THREE.Scene();
+      threeScene.background = new THREE.Color(0x0d1426);
+
+      threeCamera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+      threeCamera.position.set(2, 1.5, 2);
+
+      threeControls = new OrbitControls(threeCamera, threeCanvas);
+      threeControls.enableDamping = true;
+      threeControls.dampingFactor = 0.05;
+      threeControls.minDistance = 0.5;
+      threeControls.maxDistance = 10;
+
+      const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+      threeScene.add(ambient);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+      dirLight.position.set(5, 10, 7);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 2048;
+      dirLight.shadow.mapSize.height = 2048;
+      threeScene.add(dirLight);
+
+      const dirLight2 = new THREE.DirectionalLight(0x4488ff, 0.3);
+      dirLight2.position.set(-5, -2, -5);
+      threeScene.add(dirLight2);
+
+      buildSatellite(sat);
+
+      const grid = new THREE.GridHelper(5, 20, 0x1e2d45, 0x141d2f);
+      threeScene.add(grid);
+
+      function animate() {
+        animationId = requestAnimationFrame(animate);
+        threeControls.update();
+        threeRenderer.render(threeScene, threeCamera);
+        labelRenderer.render(threeScene, threeCamera);
+      }
+      animate();
+
+      window.addEventListener('resize', onResize);
+      threeCanvas.addEventListener('mousemove', onMouseMove);
+      threeCanvas.addEventListener('click', onClick);
+    }
+
+    function buildSatellite(sat) {
+      const bus = sat.bus || {};
+      const power = sat.power || {};
+      const comms = sat.comms || {};
+      const thermal = sat.thermal || {};
+      const payload = sat.payload || {};
+
+      const [bx, by, bz] = bus.dimensions_m || [0.1, 0.1, 0.3];
+      const matColor = getMaterialColor(bus.structure_material || 'aluminum');
+      const busMat = new THREE.MeshStandardMaterial({ color: matColor, metalness: 0.7, roughness: 0.3 });
+
+      const busGeo = new THREE.BoxGeometry(bx, by, bz);
+      const busMesh = new THREE.Mesh(busGeo, busMat);
+      busMesh.castShadow = true;
+      busMesh.receiveShadow = true;
+      busMesh.userData = { name: 'Bus', type: 'bus' };
+      threeScene.add(busMesh);
+      addLabel(busMesh, 'Bus', new THREE.Vector3(0, by / 2 + 0.05, 0));
+
+      const solarArea = power.solar_array_area_m2 || 0.04;
+      const panelCount = Math.max(1, Math.round(solarArea / 0.02));
+      const panelWidth = Math.sqrt(solarArea / panelCount * 2);
+      const panelHeight = panelWidth / 2;
+
+      for (let i = 0; i < panelCount; i++) {
+        const side = i % 2 === 0 ? 1 : -1;
+        const panelGeo = new THREE.PlaneGeometry(panelWidth, panelHeight);
+        const panelMat = new THREE.MeshStandardMaterial({ color: 0x1a3a5c, metalness: 0.3, roughness: 0.2, side: THREE.DoubleSide, emissive: 0x002244, emissiveIntensity: 0.2 });
+        const panel = new THREE.Mesh(panelGeo, panelMat);
+        panel.position.set(side * (bx / 2 + 0.01), 0, (i - (panelCount - 1) / 2) * (panelHeight * 1.1));
+        panel.rotation.y = -side * Math.PI / 2;
+        panel.castShadow = true;
+        panel.userData = { name: `Solar Panel ${i + 1}`, type: 'power' };
+        threeScene.add(panel);
+        addLabel(panel, `Solar Panel ${i + 1}`, new THREE.Vector3(side * (bx / 2 + panelWidth / 2 + 0.05), 0, panel.position.z));
+      }
+
+      const antType = comms.antenna_type || 'patch';
+      if (antType === 'dish') {
+        const dishGeo = new THREE.ConeGeometry(0.15, 0.08, 16);
+        const dishMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 });
+        const dish = new THREE.Mesh(dishGeo, dishMat);
+        dish.position.set(0, bz / 2 + 0.04, 0);
+        dish.rotation.x = -Math.PI / 2;
+        dish.castShadow = true;
+        dish.userData = { name: 'Dish Antenna', type: 'comms' };
+        threeScene.add(dish);
+        addLabel(dish, 'Dish Antenna', new THREE.Vector3(0, bz / 2 + 0.15, 0));
+      } else {
+        const antGeo = new THREE.BoxGeometry(0.08, 0.02, 0.08);
+        const antMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.5, roughness: 0.4 });
+        const ant = new THREE.Mesh(antGeo, antMat);
+        ant.position.set(0, by / 2 + 0.01, bz / 2 + 0.01);
+        ant.castShadow = true;
+        ant.userData = { name: 'Patch Antenna', type: 'comms' };
+        threeScene.add(ant);
+        addLabel(ant, 'Patch Antenna', new THREE.Vector3(0, by / 2 + 0.08, bz / 2 + 0.05));
+      }
+
+      const radArea = thermal.radiator_area_m2 || 0.02;
+      const radGeo = new THREE.PlaneGeometry(Math.sqrt(radArea), Math.sqrt(radArea));
+      const radMat = new THREE.MeshStandardMaterial({ color: 0x882222, metalness: 0.1, roughness: 0.9, side: THREE.DoubleSide, emissive: 0x440000, emissiveIntensity: 0.5 });
+      const rad = new THREE.Mesh(radGeo, radMat);
+      rad.position.set(-bx / 2 - 0.01, 0, 0);
+      rad.rotation.y = Math.PI / 2;
+      rad.userData = { name: 'Radiator', type: 'thermal' };
+      threeScene.add(rad);
+      addLabel(rad, 'Radiator', new THREE.Vector3(-bx / 2 - 0.08, 0, 0));
+
+      if (payload.type) {
+        const plGeo = new THREE.BoxGeometry(0.08, 0.08, 0.08);
+        const plMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.4, roughness: 0.5, emissive: 0x332200, emissiveIntensity: 0.3 });
+        const pl = new THREE.Mesh(plGeo, plMat);
+        pl.position.set(0, by / 2 + 0.04, -bz / 2 - 0.04);
+        pl.castShadow = true;
+        pl.userData = { name: `Payload: ${payload.type}`, type: 'payload' };
+        threeScene.add(pl);
+        addLabel(pl, `Payload: ${payload.type}`, new THREE.Vector3(0, by / 2 + 0.15, -bz / 2 - 0.08));
+      }
+    }
+
+    function addLabel(object, text, offset) {
+      const div = document.createElement('div');
+      div.className = 'three-label';
+      div.style.cssText = 'padding: 4px 8px; background: rgba(10,14,26,0.9); border: 1px solid #1e2d45; border-radius: 4px; font-size: 11px; color: #e8eef8; white-space: nowrap; pointer-events: none; font-family: Inter, sans-serif;';
+      div.textContent = text;
+      const label = new CSS2DObject(div);
+      label.position.copy(offset);
+      object.add(label);
+    }
+
+    function getMaterialColor(mat) {
+      const colors = { aluminum: 0xb0bec5, 'aluminum-7075': 0x90a4ae, titanium: 0x78909c, 'carbon-fiber': 0x263238, 'carbon-fiber-epoxy': 0x1a1a1a, invar: 0x607d8b, steel: 0x546e7a };
+      return colors[mat] || 0xb0bec5;
+    }
+
+    function onResize() {
+      const container = threeCanvas.parentElement;
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      threeCamera.aspect = width / height;
+      threeCamera.updateProjectionMatrix();
+      threeRenderer.setSize(width, height);
+      labelRenderer.setSize(width, height);
+    }
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let hoveredObject = null;
+
+    function onMouseMove(event) {
+      const rect = threeCanvas.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, threeCamera);
+      const intersects = raycaster.intersectObjects(threeScene.children, true);
+      if (intersects.length > 0) {
+        const obj = intersects[0].object;
+        if (obj.userData.name && obj !== hoveredObject) {
+          threeCanvas.style.cursor = 'pointer';
+          hoveredObject = obj;
+        }
+      } else {
+        threeCanvas.style.cursor = 'grab';
+        hoveredObject = null;
+      }
+    }
+
+    function onClick(event) {
+      const rect = threeCanvas.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, threeCamera);
+      const intersects = raycaster.intersectObjects(threeScene.children, true);
+      if (intersects.length > 0) {
+        const obj = intersects[0].object;
+        if (obj.userData.name) {
+          showToast(`Selected: ${obj.userData.name}`, 'info');
+        }
+      }
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tabPanels.forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    function showToast(message, type = 'info') {
+      toastMsg.textContent = message;
+      toast.className = 'toast ' + type;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let ws = null;
+    let wsReconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+
+    function connectWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log('[WS] Connected');
+        wsReconnectAttempts = 0;
+        updateWSStatus(true);
+      };
+
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        handleWSMessage(msg);
+      };
+
+      ws.onclose = () => {
+        console.log('[WS] Disconnected');
+        updateWSStatus(false);
+        if (wsReconnectAttempts < maxReconnectAttempts) {
+          wsReconnectAttempts++;
+          setTimeout(connectWebSocket, 1000 * wsReconnectAttempts);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.error('[WS] Error:', err);
+      };
+    }
+
+    function updateWSStatus(connected) {
+      const badge = document.getElementById('wsStatus');
+      if (badge) {
+        badge.textContent = connected ? 'WS Connected' : 'WS Disconnected';
+        badge.style.background = connected ? 'var(--accent-dim)' : 'rgba(255,77,106,0.15)';
+        badge.style.color = connected ? 'var(--accent)' : 'var(--error)';
+        const dot = badge.querySelector('.dot');
+        if (dot) dot.style.background = connected ? 'var(--accent)' : 'var(--error)';
+      }
+    }
+
+    function handleWSMessage(msg) {
+      if (msg.type === 'welcome') {
+        showToast('Real-time validation connected', 'success');
+      } else if (msg.type === 'progress') {
+        showToast(`Validation: ${msg.stage} (${msg.progress}%)`, 'info');
+      } else if (msg.type === 'validation_complete') {
+        displayResults(msg.result.satellite || msg.result);
+      } else if (msg.type === 'pong') {
+        console.log('[WS] Ping:', Date.now() - msg.timestamp, 'ms');
+      } else if (msg.type === 'error') {
+        showToast('WS Error: ' + msg.message, 'error');
+      }
+    }
+
+    function sendWSValidation(satellite) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'validate', satellite }));
+      }
+    }
+
+    setInterval(() => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+      }
+    }, 30000);
+
+    connectWebSocket();
+
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      const keys = { p: 'pen', r: 'rect', c: 'circle', l: 'line', e: 'eraser' };
+      if (keys[e.key.toLowerCase()]) {
+        const btn = document.querySelector(`[data-tool="${keys[e.key.toLowerCase()]}"]`);
+        if (btn) btn.click();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,2179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code - Commands Directory & Guide</title>
+  <style>
+    :root {
+      --bg-main: #0d1117;
+      --bg-card: #161b22;
+      --bg-card-hover: #1f242c;
+      --border: #30363d;
+      --text-main: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-hover: #79c0ff;
+      --badge-bg: #21262d;
+      --font-mono: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 30px 20px 60px;
+    }
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 600px;
+      margin: 0 auto 20px;
+    }
+    .search-bar {
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto 20px;
+      display: block;
+      padding: 12px 18px;
+      font-size: 15px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-bar:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+    }
+    .cat-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+    .cat-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .cat-btn:hover, .cat-btn.active {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 16px;
+    }
+    .command-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .command-card:hover {
+      transform: translateY(-2px);
+      border-color: #484f58;
+      background: var(--bg-card-hover);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .cmd-badge {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--accent);
+      background: var(--badge-bg);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      font-size: 11px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .copy-btn:hover {
+      color: var(--text-main);
+      border-color: var(--accent);
+    }
+    .card-category {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      flex-grow: 1;
+    }
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>⚡ Claude Code Commands Directory</h1>
+      <p class="subtitle">Complete catalog of 195 native slash commands with instant usage descriptions and 1-click copy.</p>
+      <input type="text" id="search" class="search-bar" placeholder="Search commands, keywords, or categories (e.g. tdd, bottleneck, memory)..." oninput="filterCommands()">
+      <div class="cat-bar">
+        <button class="cat-btn active" onclick="filterCategory('all', this)">All (195)</button> <button class="cat-btn" onclick="filterCategory('agents', this)">agents (13)</button> <button class="cat-btn" onclick="filterCategory('analysis', this)">analysis (7)</button> <button class="cat-btn" onclick="filterCategory('automation', this)">automation (7)</button> <button class="cat-btn" onclick="filterCategory('coordination', this)">coordination (7)</button> <button class="cat-btn" onclick="filterCategory('flow-nexus', this)">flow-nexus (9)</button> <button class="cat-btn" onclick="filterCategory('general', this)">general (21)</button> <button class="cat-btn" onclick="filterCategory('github', this)">github (19)</button> <button class="cat-btn" onclick="filterCategory('hive-mind', this)">hive-mind (12)</button> <button class="cat-btn" onclick="filterCategory('hooks', this)">hooks (8)</button> <button class="cat-btn" onclick="filterCategory('memory', this)">memory (6)</button> <button class="cat-btn" onclick="filterCategory('monitoring', this)">monitoring (6)</button> <button class="cat-btn" onclick="filterCategory('optimization', this)">optimization (6)</button> <button class="cat-btn" onclick="filterCategory('pair', this)">pair (7)</button> <button class="cat-btn" onclick="filterCategory('sparc', this)">sparc (32)</button> <button class="cat-btn" onclick="filterCategory('stream-chain', this)">stream-chain (2)</button> <button class="cat-btn" onclick="filterCategory('swarm', this)">swarm (18)</button> <button class="cat-btn" onclick="filterCategory('training', this)">training (6)</button> <button class="cat-btn" onclick="filterCategory('truth', this)">truth (1)</button> <button class="cat-btn" onclick="filterCategory('verify', this)">verify (2)</button> <button class="cat-btn" onclick="filterCategory('workflows', this)">workflows (6)</button>
+      </div>
+    </header>
+
+    <div class="grid" id="grid">
+      
+    <div class="command-card" data-category="general" data-search="/analyze 🔍 codebase analyzer (/analyze) static code analytics, dependency topologies, circular import detection, and security scanning">
+      <div class="card-header">
+        <span class="cmd-badge">/analyze</span>
+        <button class="copy-btn" onclick="copyCmd('/analyze', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">🔍 Codebase Analyzer (/analyze)</div>
+      <div class="card-desc">Static code analytics, dependency topologies, circular import detection, and security scanning</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/apex 🛡️ apex coder (/apex) activate apex coder - the premier autonomous coding intelligence suite for claude code">
+      <div class="card-header">
+        <span class="cmd-badge">/apex</span>
+        <button class="copy-btn" onclick="copyCmd('/apex', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">🛡️ Apex Coder (/apex)</div>
+      <div class="card-desc">Activate Apex Coder - The Premier Autonomous Coding Intelligence Suite for Claude Code</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/boost 🚀 turbo boost activated (sub-second latency &amp; 1-shot 60fps remotion protocol) turbocharge motion graphics &amp; remotion 60fps rendering for maximum speed and 1-shot accuracy">
+      <div class="card-header">
+        <span class="cmd-badge">/boost</span>
+        <button class="copy-btn" onclick="copyCmd('/boost', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">🚀 TURBO BOOST ACTIVATED (Sub-Second Latency &amp; 1-Shot 60FPS Remotion Protocol)</div>
+      <div class="card-desc">Turbocharge motion graphics &amp; Remotion 60fps rendering for maximum speed and 1-shot accuracy</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/claude-flow-help claude-flow commands show claude-flow commands and usage">
+      <div class="card-header">
+        <span class="cmd-badge">/claude-flow-help</span>
+        <button class="copy-btn" onclick="copyCmd('/claude-flow-help', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">Claude-Flow Commands</div>
+      <div class="card-desc">Show Claude-Flow commands and usage</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/claude-flow-memory 🧠 claude-flow memory system interact with claude-flow memory system">
+      <div class="card-header">
+        <span class="cmd-badge">/claude-flow-memory</span>
+        <button class="copy-btn" onclick="copyCmd('/claude-flow-memory', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">🧠 Claude-Flow Memory System</div>
+      <div class="card-desc">Interact with Claude-Flow memory system</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/claude-flow-swarm 🐝 claude-flow swarm coordination coordinate multi-agent swarms for complex tasks">
+      <div class="card-header">
+        <span class="cmd-badge">/claude-flow-swarm</span>
+        <button class="copy-btn" onclick="copyCmd('/claude-flow-swarm', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">🐝 Claude-Flow Swarm Coordination</div>
+      <div class="card-desc">Coordinate multi-agent swarms for complex tasks</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/clean 🧹 workspace cleanup protocol (/clean) clean temporary files, build caches, test artifacts, and orphaned logs">
+      <div class="card-header">
+        <span class="cmd-badge">/clean</span>
+        <button class="copy-btn" onclick="copyCmd('/clean', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">🧹 Workspace Cleanup Protocol (/clean)</div>
+      <div class="card-desc">Clean temporary files, build caches, test artifacts, and orphaned logs</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/code-craft 🛠️ code craftsman (/code-craft) autonomous code craftsman for module generation, architectural refactoring, and zero-error syntax repair">
+      <div class="card-header">
+        <span class="cmd-badge">/code-craft</span>
+        <button class="copy-btn" onclick="copyCmd('/code-craft', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">🛠️ Code Craftsman (/code-craft)</div>
+      <div class="card-desc">Autonomous code craftsman for module generation, architectural refactoring, and zero-error syntax repair</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/coder 🛡️ coder (/coder) run the apex coder verification and synthesis suite">
+      <div class="card-header">
+        <span class="cmd-badge">/coder</span>
+        <button class="copy-btn" onclick="copyCmd('/coder', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">🛡️ Coder (/coder)</div>
+      <div class="card-desc">Run the Apex Coder verification and synthesis suite</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/company 🏢 execution steps: 1. run the local company intelligence tool:">
+      <div class="card-header">
+        <span class="cmd-badge">/company</span>
+        <button class="copy-btn" onclick="copyCmd('/company', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">🏢 Execution Steps:</div>
+      <div class="card-desc">1. Run the local company intelligence tool:</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/fan /fan agent - fan out specialized agents fan out specialized agents to a task using ruflo swarm">
+      <div class="card-header">
+        <span class="cmd-badge">/fan</span>
+        <button class="copy-btn" onclick="copyCmd('/fan', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">/fan agent - Fan Out Specialized Agents</div>
+      <div class="card-desc">Fan out specialized agents to a task using Ruflo swarm</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/git-sync 🔄 1-click git synchronization protocol (/git-sync) 1-click git pull, status check, atomic commit, and push to origin/main">
+      <div class="card-header">
+        <span class="cmd-badge">/git-sync</span>
+        <button class="copy-btn" onclick="copyCmd('/git-sync', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">🔄 1-Click Git Synchronization Protocol (/git-sync)</div>
+      <div class="card-desc">1-click git pull, status check, atomic commit, and push to origin/main</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/grill-me 🎯 interactive architectural interview protocol (/grill-me) 1-by-1 interactive interview walking down each branch of the design tree to stress-test requirements">
+      <div class="card-header">
+        <span class="cmd-badge">/grill-me</span>
+        <button class="copy-btn" onclick="copyCmd('/grill-me', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">🎯 Interactive Architectural Interview Protocol (/grill-me)</div>
+      <div class="card-desc">1-by-1 Interactive Interview walking down each branch of the design tree to stress-test requirements</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/model 🤖 frontier model switcher (/model) switch active model across all 5 nvidia nim frontier models or list available engines">
+      <div class="card-header">
+        <span class="cmd-badge">/model</span>
+        <button class="copy-btn" onclick="copyCmd('/model', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">🤖 Frontier Model Switcher (/model)</div>
+      <div class="card-desc">Switch active model across all 5 NVIDIA NIM frontier models or list available engines</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/plan 📐 strict zero-edit planning protocol strict zero-edit planning - inspect codebase, build architectural design, and require explicit user approval before touching code">
+      <div class="card-header">
+        <span class="cmd-badge">/plan</span>
+        <button class="copy-btn" onclick="copyCmd('/plan', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">📐 Strict Zero-Edit Planning Protocol</div>
+      <div class="card-desc">Strict Zero-Edit Planning - inspect codebase, build architectural design, and require explicit user approval before touching code</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/review 🕵️ autonomous code review protocol (/review) automated code review on git diff for bugs, memory leaks, missing types, and security vulnerabilities">
+      <div class="card-header">
+        <span class="cmd-badge">/review</span>
+        <button class="copy-btn" onclick="copyCmd('/review', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">🕵️ Autonomous Code Review Protocol (/review)</div>
+      <div class="card-desc">Automated code review on git diff for bugs, memory leaks, missing types, and security vulnerabilities</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/sparc ⚡️ sparc development methodology execute sparc methodology workflows with claude-flow">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">⚡️ SPARC Development Methodology</div>
+      <div class="card-desc">Execute SPARC methodology workflows with Claude-Flow</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/test 🧪 autonomous multi-language test runner (/test) autonomous multi-language test runner for node, python, and remotion with zero manual intervention">
+      <div class="card-header">
+        <span class="cmd-badge">/test</span>
+        <button class="copy-btn" onclick="copyCmd('/test', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">🧪 Autonomous Multi-Language Test Runner (/test)</div>
+      <div class="card-desc">Autonomous multi-language test runner for Node, Python, and Remotion with zero manual intervention</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/verify-all verify-all run universal multi-language integrity check across all project files">
+      <div class="card-header">
+        <span class="cmd-badge">/verify-all</span>
+        <button class="copy-btn" onclick="copyCmd('/verify-all', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">verify-all</div>
+      <div class="card-desc">Run universal multi-language integrity check across all project files</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/verify verify execute specialized workflow">
+      <div class="card-header">
+        <span class="cmd-badge">/verify</span>
+        <button class="copy-btn" onclick="copyCmd('/verify', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">verify</div>
+      <div class="card-desc">Execute specialized workflow</div>
+    </div>
+     
+    <div class="command-card" data-category="general" data-search="/workflow ⚡ workflow automator (/workflow) multi-step pipeline execution, dual-workspace release synchronization, and slash command validation">
+      <div class="card-header">
+        <span class="cmd-badge">/workflow</span>
+        <button class="copy-btn" onclick="copyCmd('/workflow', this)">Copy</button>
+      </div>
+      <div class="card-category">general</div>
+      <div class="card-title">⚡ Workflow Automator (/workflow)</div>
+      <div class="card-desc">Multi-step pipeline execution, dual-workspace release synchronization, and slash command validation</div>
+    </div>
+     
+    <div class="command-card" data-category="agents" data-search="/agents/readme agents commands commands for agents operations in claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/agents/README</span>
+        <button class="copy-btn" onclick="copyCmd('/agents/README', this)">Copy</button>
+      </div>
+      <div class="card-category">agents</div>
+      <div class="card-title">Agents Commands</div>
+      <div class="card-desc">Commands for agents operations in Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="agents" data-search="/agents/agent-capabilities agent-capabilities matrix of agent capabilities and their specializations.">
+      <div class="card-header">
+        <span class="cmd-badge">/agents/agent-capabilities</span>
+        <button class="copy-btn" onclick="copyCmd('/agents/agent-capabilities', this)">Copy</button>
+      </div>
+      <div class="card-category">agents</div>
+      <div class="card-title">agent-capabilities</div>
+      <div class="card-desc">Matrix of agent capabilities and their specializations.</div>
+    </div>
+     
+    <div class="command-card" data-category="agents" data-search="/agents/agent-coordination agent-coordination coordination patterns for multi-agent collaboration.">
+      <div class="card-header">
+        <span class="cmd-badge">/agents/agent-coordination</span>
+        <button class="copy-btn" onclick="copyCmd('/agents/agent-coordination', this)">Copy</button>
+      </div>
+      <div class="card-category">agents</div>
+      <div class="card-title">agent-coordination</div>
+      <div class="card-desc">Coordination patterns for multi-agent collaboration.</div>
+    </div>
+     
+    <div class="command-card" data-category="agents" data-search="/agents/agent-spawning agent-spawning guide to spawning agents with claude code&#x27;s task tool.">
+      <div class="card-header">
+        <span class="cmd-badge">/agents/agent-spawning</span>
+        <button class="copy-btn" onclick="copyCmd('/agents/agent-spawning', this)">Copy</button>
+      </div>
+      <div class="card-category">agents</div>
+      <div class="card-title">agent-spawning</div>
+      <div class="card-desc">Guide to spawning agents with Claude Code&#x27;s Task tool.</div>
+    </div>
+     
+    <div class="command-card" data-category="agents" data-search="/agents/agent-types agent-types complete guide to all 54 available agent types in claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/agents/agent-types</span>
+        <button class="copy-btn" onclick="copyCmd('/agents/agent-types', this)">Copy</button>
+      </div>
+      <div class="card-category">agents</div>
+      <div class="card-title">agent-types</div>
+      <div class="card-desc">Complete guide to all 54 available agent types in Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="agents" data-search="/agents/health agent health command show agent health and metrics">
+      <div class="card-header">
+        <span class="cmd-badge">/agents/health</span>
+        <button class="copy-btn" onclick="copyCmd('/agents/health', this)">Copy</button>
+      </div>
+      <div class="card-category">agents</div>
+      <div class="card-title">Agent Health Command</div>
+      <div class="card-desc">Show agent health and metrics</div>
+    </div>
+     
+    <div class="command-card" data-category="agents" data-search="/agents/list agent list command list all active agents">
+      <div class="card-header">
+        <span class="cmd-badge">/agents/list</span>
+        <button class="copy-btn" onclick="copyCmd('/agents/list', this)">Copy</button>
+      </div>
+      <div class="card-category">agents</div>
+      <div class="card-title">Agent List Command</div>
+      <div class="card-desc">List all active agents</div>
+    </div>
+     
+    <div class="command-card" data-category="agents" data-search="/agents/logs agent logs command show agent activity logs">
+      <div class="card-header">
+        <span class="cmd-badge">/agents/logs</span>
+        <button class="copy-btn" onclick="copyCmd('/agents/logs', this)">Copy</button>
+      </div>
+      <div class="card-category">agents</div>
+      <div class="card-title">Agent Logs Command</div>
+      <div class="card-desc">Show agent activity logs</div>
+    </div>
+     
+    <div class="command-card" data-category="agents" data-search="/agents/metrics agent metrics command show agent performance metrics">
+      <div class="card-header">
+        <span class="cmd-badge">/agents/metrics</span>
+        <button class="copy-btn" onclick="copyCmd('/agents/metrics', this)">Copy</button>
+      </div>
+      <div class="card-category">agents</div>
+      <div class="card-title">Agent Metrics Command</div>
+      <div class="card-desc">Show agent performance metrics</div>
+    </div>
+     
+    <div class="command-card" data-category="agents" data-search="/agents/pool agent pool command manage agent pool for scaling">
+      <div class="card-header">
+        <span class="cmd-badge">/agents/pool</span>
+        <button class="copy-btn" onclick="copyCmd('/agents/pool', this)">Copy</button>
+      </div>
+      <div class="card-category">agents</div>
+      <div class="card-title">Agent Pool Command</div>
+      <div class="card-desc">Manage agent pool for scaling</div>
+    </div>
+     
+    <div class="command-card" data-category="agents" data-search="/agents/spawn agent spawn command spawn a new agent with v3 capabilities">
+      <div class="card-header">
+        <span class="cmd-badge">/agents/spawn</span>
+        <button class="copy-btn" onclick="copyCmd('/agents/spawn', this)">Copy</button>
+      </div>
+      <div class="card-category">agents</div>
+      <div class="card-title">Agent Spawn Command</div>
+      <div class="card-desc">Spawn a new agent with V3 capabilities</div>
+    </div>
+     
+    <div class="command-card" data-category="agents" data-search="/agents/status agent status command show detailed status of an agent">
+      <div class="card-header">
+        <span class="cmd-badge">/agents/status</span>
+        <button class="copy-btn" onclick="copyCmd('/agents/status', this)">Copy</button>
+      </div>
+      <div class="card-category">agents</div>
+      <div class="card-title">Agent Status Command</div>
+      <div class="card-desc">Show detailed status of an agent</div>
+    </div>
+     
+    <div class="command-card" data-category="agents" data-search="/agents/stop agent stop command stop a running agent">
+      <div class="card-header">
+        <span class="cmd-badge">/agents/stop</span>
+        <button class="copy-btn" onclick="copyCmd('/agents/stop', this)">Copy</button>
+      </div>
+      <div class="card-category">agents</div>
+      <div class="card-title">Agent Stop Command</div>
+      <div class="card-desc">Stop a running agent</div>
+    </div>
+     
+    <div class="command-card" data-category="analysis" data-search="/analysis/command_compliance_report analysis commands compliance report reviewed all command files in `.claude/commands/analysis/` directory to ensure proper usage of:">
+      <div class="card-header">
+        <span class="cmd-badge">/analysis/COMMAND_COMPLIANCE_REPORT</span>
+        <button class="copy-btn" onclick="copyCmd('/analysis/COMMAND_COMPLIANCE_REPORT', this)">Copy</button>
+      </div>
+      <div class="card-category">analysis</div>
+      <div class="card-title">Analysis Commands Compliance Report</div>
+      <div class="card-desc">Reviewed all command files in `.claude/commands/analysis/` directory to ensure proper usage of:</div>
+    </div>
+     
+    <div class="command-card" data-category="analysis" data-search="/analysis/readme analysis commands commands for analysis operations in claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/analysis/README</span>
+        <button class="copy-btn" onclick="copyCmd('/analysis/README', this)">Copy</button>
+      </div>
+      <div class="card-category">analysis</div>
+      <div class="card-title">Analysis Commands</div>
+      <div class="card-desc">Commands for analysis operations in Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="analysis" data-search="/analysis/bottleneck-detect bottleneck detect analyze performance bottlenecks in swarm operations and suggest optimizations.">
+      <div class="card-header">
+        <span class="cmd-badge">/analysis/bottleneck-detect</span>
+        <button class="copy-btn" onclick="copyCmd('/analysis/bottleneck-detect', this)">Copy</button>
+      </div>
+      <div class="card-category">analysis</div>
+      <div class="card-title">bottleneck detect</div>
+      <div class="card-desc">Analyze performance bottlenecks in swarm operations and suggest optimizations.</div>
+    </div>
+     
+    <div class="command-card" data-category="analysis" data-search="/analysis/performance-bottlenecks performance bottleneck analysis identify and resolve performance bottlenecks in your development workflow.">
+      <div class="card-header">
+        <span class="cmd-badge">/analysis/performance-bottlenecks</span>
+        <button class="copy-btn" onclick="copyCmd('/analysis/performance-bottlenecks', this)">Copy</button>
+      </div>
+      <div class="card-category">analysis</div>
+      <div class="card-title">Performance Bottleneck Analysis</div>
+      <div class="card-desc">Identify and resolve performance bottlenecks in your development workflow.</div>
+    </div>
+     
+    <div class="command-card" data-category="analysis" data-search="/analysis/performance-report performance-report generate comprehensive performance reports for swarm operations.">
+      <div class="card-header">
+        <span class="cmd-badge">/analysis/performance-report</span>
+        <button class="copy-btn" onclick="copyCmd('/analysis/performance-report', this)">Copy</button>
+      </div>
+      <div class="card-category">analysis</div>
+      <div class="card-title">performance-report</div>
+      <div class="card-desc">Generate comprehensive performance reports for swarm operations.</div>
+    </div>
+     
+    <div class="command-card" data-category="analysis" data-search="/analysis/token-efficiency token usage optimization reduce token consumption while maintaining quality through intelligent coordination.">
+      <div class="card-header">
+        <span class="cmd-badge">/analysis/token-efficiency</span>
+        <button class="copy-btn" onclick="copyCmd('/analysis/token-efficiency', this)">Copy</button>
+      </div>
+      <div class="card-category">analysis</div>
+      <div class="card-title">Token Usage Optimization</div>
+      <div class="card-desc">Reduce token consumption while maintaining quality through intelligent coordination.</div>
+    </div>
+     
+    <div class="command-card" data-category="analysis" data-search="/analysis/token-usage token-usage analyze token usage patterns and optimize for efficiency.">
+      <div class="card-header">
+        <span class="cmd-badge">/analysis/token-usage</span>
+        <button class="copy-btn" onclick="copyCmd('/analysis/token-usage', this)">Copy</button>
+      </div>
+      <div class="card-category">analysis</div>
+      <div class="card-title">token-usage</div>
+      <div class="card-desc">Analyze token usage patterns and optimize for efficiency.</div>
+    </div>
+     
+    <div class="command-card" data-category="automation" data-search="/automation/readme automation commands commands for automation operations in claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/automation/README</span>
+        <button class="copy-btn" onclick="copyCmd('/automation/README', this)">Copy</button>
+      </div>
+      <div class="card-category">automation</div>
+      <div class="card-title">Automation Commands</div>
+      <div class="card-desc">Commands for automation operations in Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="automation" data-search="/automation/auto-agent auto agent automatically spawn and manage agents based on task requirements.">
+      <div class="card-header">
+        <span class="cmd-badge">/automation/auto-agent</span>
+        <button class="copy-btn" onclick="copyCmd('/automation/auto-agent', this)">Copy</button>
+      </div>
+      <div class="card-category">automation</div>
+      <div class="card-title">auto agent</div>
+      <div class="card-desc">Automatically spawn and manage agents based on task requirements.</div>
+    </div>
+     
+    <div class="command-card" data-category="automation" data-search="/automation/self-healing self-healing workflows automatically detect and recover from errors without interrupting your flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/automation/self-healing</span>
+        <button class="copy-btn" onclick="copyCmd('/automation/self-healing', this)">Copy</button>
+      </div>
+      <div class="card-category">automation</div>
+      <div class="card-title">Self-Healing Workflows</div>
+      <div class="card-desc">Automatically detect and recover from errors without interrupting your flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="automation" data-search="/automation/session-memory cross-session memory maintain context and learnings across claude code sessions for continuous improvement.">
+      <div class="card-header">
+        <span class="cmd-badge">/automation/session-memory</span>
+        <button class="copy-btn" onclick="copyCmd('/automation/session-memory', this)">Copy</button>
+      </div>
+      <div class="card-category">automation</div>
+      <div class="card-title">Cross-Session Memory</div>
+      <div class="card-desc">Maintain context and learnings across Claude Code sessions for continuous improvement.</div>
+    </div>
+     
+    <div class="command-card" data-category="automation" data-search="/automation/smart-agents smart agent auto-spawning automatically spawn the right agents at the right time without manual intervention.">
+      <div class="card-header">
+        <span class="cmd-badge">/automation/smart-agents</span>
+        <button class="copy-btn" onclick="copyCmd('/automation/smart-agents', this)">Copy</button>
+      </div>
+      <div class="card-category">automation</div>
+      <div class="card-title">Smart Agent Auto-Spawning</div>
+      <div class="card-desc">Automatically spawn the right agents at the right time without manual intervention.</div>
+    </div>
+     
+    <div class="command-card" data-category="automation" data-search="/automation/smart-spawn smart-spawn intelligently spawn agents based on workload analysis.">
+      <div class="card-header">
+        <span class="cmd-badge">/automation/smart-spawn</span>
+        <button class="copy-btn" onclick="copyCmd('/automation/smart-spawn', this)">Copy</button>
+      </div>
+      <div class="card-category">automation</div>
+      <div class="card-title">smart-spawn</div>
+      <div class="card-desc">Intelligently spawn agents based on workload analysis.</div>
+    </div>
+     
+    <div class="command-card" data-category="automation" data-search="/automation/workflow-select workflow-select automatically select optimal workflow based on task type.">
+      <div class="card-header">
+        <span class="cmd-badge">/automation/workflow-select</span>
+        <button class="copy-btn" onclick="copyCmd('/automation/workflow-select', this)">Copy</button>
+      </div>
+      <div class="card-category">automation</div>
+      <div class="card-title">workflow-select</div>
+      <div class="card-desc">Automatically select optimal workflow based on task type.</div>
+    </div>
+     
+    <div class="command-card" data-category="coordination" data-search="/coordination/readme coordination commands commands for coordination operations in claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/coordination/README</span>
+        <button class="copy-btn" onclick="copyCmd('/coordination/README', this)">Copy</button>
+      </div>
+      <div class="card-category">coordination</div>
+      <div class="card-title">Coordination Commands</div>
+      <div class="card-desc">Commands for coordination operations in Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="coordination" data-search="/coordination/agent-spawn agent-spawn spawn a new agent in the current swarm.">
+      <div class="card-header">
+        <span class="cmd-badge">/coordination/agent-spawn</span>
+        <button class="copy-btn" onclick="copyCmd('/coordination/agent-spawn', this)">Copy</button>
+      </div>
+      <div class="card-category">coordination</div>
+      <div class="card-title">agent-spawn</div>
+      <div class="card-desc">Spawn a new agent in the current swarm.</div>
+    </div>
+     
+    <div class="command-card" data-category="coordination" data-search="/coordination/init initialize coordination framework **this tool coordinates claude code&#x27;s actions. it does not write code or create content.**">
+      <div class="card-header">
+        <span class="cmd-badge">/coordination/init</span>
+        <button class="copy-btn" onclick="copyCmd('/coordination/init', this)">Copy</button>
+      </div>
+      <div class="card-category">coordination</div>
+      <div class="card-title">Initialize Coordination Framework</div>
+      <div class="card-desc">**This tool coordinates Claude Code&#x27;s actions. It does NOT write code or create content.**</div>
+    </div>
+     
+    <div class="command-card" data-category="coordination" data-search="/coordination/orchestrate coordinate task execution **this tool coordinates claude code&#x27;s actions. it does not write code or create content.**">
+      <div class="card-header">
+        <span class="cmd-badge">/coordination/orchestrate</span>
+        <button class="copy-btn" onclick="copyCmd('/coordination/orchestrate', this)">Copy</button>
+      </div>
+      <div class="card-category">coordination</div>
+      <div class="card-title">Coordinate Task Execution</div>
+      <div class="card-desc">**This tool coordinates Claude Code&#x27;s actions. It does NOT write code or create content.**</div>
+    </div>
+     
+    <div class="command-card" data-category="coordination" data-search="/coordination/spawn create cognitive patterns **this tool coordinates claude code&#x27;s actions. it does not write code or create content.**">
+      <div class="card-header">
+        <span class="cmd-badge">/coordination/spawn</span>
+        <button class="copy-btn" onclick="copyCmd('/coordination/spawn', this)">Copy</button>
+      </div>
+      <div class="card-category">coordination</div>
+      <div class="card-title">Create Cognitive Patterns</div>
+      <div class="card-desc">**This tool coordinates Claude Code&#x27;s actions. It does NOT write code or create content.**</div>
+    </div>
+     
+    <div class="command-card" data-category="coordination" data-search="/coordination/swarm-init swarm init initialize a claude flow swarm with specified topology and configuration.">
+      <div class="card-header">
+        <span class="cmd-badge">/coordination/swarm-init</span>
+        <button class="copy-btn" onclick="copyCmd('/coordination/swarm-init', this)">Copy</button>
+      </div>
+      <div class="card-category">coordination</div>
+      <div class="card-title">swarm init</div>
+      <div class="card-desc">Initialize a Claude Flow swarm with specified topology and configuration.</div>
+    </div>
+     
+    <div class="command-card" data-category="coordination" data-search="/coordination/task-orchestrate task-orchestrate orchestrate complex tasks across the swarm.">
+      <div class="card-header">
+        <span class="cmd-badge">/coordination/task-orchestrate</span>
+        <button class="copy-btn" onclick="copyCmd('/coordination/task-orchestrate', this)">Copy</button>
+      </div>
+      <div class="card-category">coordination</div>
+      <div class="card-title">task-orchestrate</div>
+      <div class="card-desc">Orchestrate complex tasks across the swarm.</div>
+    </div>
+     
+    <div class="command-card" data-category="flow-nexus" data-search="/flow-nexus/app-store flow nexus app store browse, publish, and deploy applications">
+      <div class="card-header">
+        <span class="cmd-badge">/flow-nexus/app-store</span>
+        <button class="copy-btn" onclick="copyCmd('/flow-nexus/app-store', this)">Copy</button>
+      </div>
+      <div class="card-category">flow-nexus</div>
+      <div class="card-title">Flow Nexus App Store</div>
+      <div class="card-desc">Browse, publish, and deploy applications</div>
+    </div>
+     
+    <div class="command-card" data-category="flow-nexus" data-search="/flow-nexus/challenges flow nexus challenges coding challenges, achievements, and leaderboards">
+      <div class="card-header">
+        <span class="cmd-badge">/flow-nexus/challenges</span>
+        <button class="copy-btn" onclick="copyCmd('/flow-nexus/challenges', this)">Copy</button>
+      </div>
+      <div class="card-category">flow-nexus</div>
+      <div class="card-title">Flow Nexus Challenges</div>
+      <div class="card-desc">Coding challenges, achievements, and leaderboards</div>
+    </div>
+     
+    <div class="command-card" data-category="flow-nexus" data-search="/flow-nexus/login-registration flow nexus authentication flow nexus authentication and user management">
+      <div class="card-header">
+        <span class="cmd-badge">/flow-nexus/login-registration</span>
+        <button class="copy-btn" onclick="copyCmd('/flow-nexus/login-registration', this)">Copy</button>
+      </div>
+      <div class="card-category">flow-nexus</div>
+      <div class="card-title">Flow Nexus Authentication</div>
+      <div class="card-desc">Flow Nexus authentication and user management</div>
+    </div>
+     
+    <div class="command-card" data-category="flow-nexus" data-search="/flow-nexus/neural-network flow nexus neural networks train and deploy neural networks in distributed sandboxes">
+      <div class="card-header">
+        <span class="cmd-badge">/flow-nexus/neural-network</span>
+        <button class="copy-btn" onclick="copyCmd('/flow-nexus/neural-network', this)">Copy</button>
+      </div>
+      <div class="card-category">flow-nexus</div>
+      <div class="card-title">Flow Nexus Neural Networks</div>
+      <div class="card-desc">Train and deploy neural networks in distributed sandboxes</div>
+    </div>
+     
+    <div class="command-card" data-category="flow-nexus" data-search="/flow-nexus/payments flow nexus payments credit management, billing, and payment configuration">
+      <div class="card-header">
+        <span class="cmd-badge">/flow-nexus/payments</span>
+        <button class="copy-btn" onclick="copyCmd('/flow-nexus/payments', this)">Copy</button>
+      </div>
+      <div class="card-category">flow-nexus</div>
+      <div class="card-title">Flow Nexus Payments</div>
+      <div class="card-desc">Credit management, billing, and payment configuration</div>
+    </div>
+     
+    <div class="command-card" data-category="flow-nexus" data-search="/flow-nexus/sandbox flow nexus sandboxes e2b sandbox management for isolated code execution">
+      <div class="card-header">
+        <span class="cmd-badge">/flow-nexus/sandbox</span>
+        <button class="copy-btn" onclick="copyCmd('/flow-nexus/sandbox', this)">Copy</button>
+      </div>
+      <div class="card-category">flow-nexus</div>
+      <div class="card-title">Flow Nexus Sandboxes</div>
+      <div class="card-desc">E2B sandbox management for isolated code execution</div>
+    </div>
+     
+    <div class="command-card" data-category="flow-nexus" data-search="/flow-nexus/swarm flow nexus swarms ai swarm deployment and coordination in cloud">
+      <div class="card-header">
+        <span class="cmd-badge">/flow-nexus/swarm</span>
+        <button class="copy-btn" onclick="copyCmd('/flow-nexus/swarm', this)">Copy</button>
+      </div>
+      <div class="card-category">flow-nexus</div>
+      <div class="card-title">Flow Nexus Swarms</div>
+      <div class="card-desc">AI swarm deployment and coordination in cloud</div>
+    </div>
+     
+    <div class="command-card" data-category="flow-nexus" data-search="/flow-nexus/user-tools flow nexus user tools user management, storage, and system utilities">
+      <div class="card-header">
+        <span class="cmd-badge">/flow-nexus/user-tools</span>
+        <button class="copy-btn" onclick="copyCmd('/flow-nexus/user-tools', this)">Copy</button>
+      </div>
+      <div class="card-category">flow-nexus</div>
+      <div class="card-title">Flow Nexus User Tools</div>
+      <div class="card-desc">User management, storage, and system utilities</div>
+    </div>
+     
+    <div class="command-card" data-category="flow-nexus" data-search="/flow-nexus/workflow flow nexus workflows event-driven workflow automation with message queues">
+      <div class="card-header">
+        <span class="cmd-badge">/flow-nexus/workflow</span>
+        <button class="copy-btn" onclick="copyCmd('/flow-nexus/workflow', this)">Copy</button>
+      </div>
+      <div class="card-category">flow-nexus</div>
+      <div class="card-title">Flow Nexus Workflows</div>
+      <div class="card-desc">Event-driven workflow automation with message queues</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/readme github commands commands for github operations in claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/README</span>
+        <button class="copy-btn" onclick="copyCmd('/github/README', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">Github Commands</div>
+      <div class="card-desc">Commands for github operations in Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/code-review-swarm code review swarm - automated code review with ai agents deploy specialized ai agents to perform comprehensive, intelligent code reviews that go beyond traditional static analysis.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/code-review-swarm</span>
+        <button class="copy-btn" onclick="copyCmd('/github/code-review-swarm', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">Code Review Swarm - Automated Code Review with AI Agents</div>
+      <div class="card-desc">Deploy specialized AI agents to perform comprehensive, intelligent code reviews that go beyond traditional static analysis.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/code-review code-review automated code review with swarm intelligence.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/code-review</span>
+        <button class="copy-btn" onclick="copyCmd('/github/code-review', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">code-review</div>
+      <div class="card-desc">Automated code review with swarm intelligence.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/github-modes github integration modes this document describes all github integration modes available in claude-flow with ruv-swarm coordination. each mode is optimized for specific github workflows and includes batch tool integration for maximum efficiency.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/github-modes</span>
+        <button class="copy-btn" onclick="copyCmd('/github/github-modes', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">GitHub Integration Modes</div>
+      <div class="card-desc">This document describes all GitHub integration modes available in Claude-Flow with ruv-swarm coordination. Each mode is optimized for specific GitHub workflows and includes batch tool integration for maximum efficiency.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/github-swarm github swarm create a specialized swarm for github repository management.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/github-swarm</span>
+        <button class="copy-btn" onclick="copyCmd('/github/github-swarm', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">github swarm</div>
+      <div class="card-desc">Create a specialized swarm for GitHub repository management.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/issue-tracker github issue tracker intelligent issue management and project coordination with ruv-swarm integration for automated tracking, progress monitoring, and team coordination.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/issue-tracker</span>
+        <button class="copy-btn" onclick="copyCmd('/github/issue-tracker', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">GitHub Issue Tracker</div>
+      <div class="card-desc">Intelligent issue management and project coordination with ruv-swarm integration for automated tracking, progress monitoring, and team coordination.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/issue-triage issue-triage intelligent issue classification and triage.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/issue-triage</span>
+        <button class="copy-btn" onclick="copyCmd('/github/issue-triage', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">issue-triage</div>
+      <div class="card-desc">Intelligent issue classification and triage.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/multi-repo-swarm multi-repo swarm - cross-repository swarm orchestration coordinate ai swarms across multiple repositories, enabling organization-wide automation and intelligent cross-project collaboration.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/multi-repo-swarm</span>
+        <button class="copy-btn" onclick="copyCmd('/github/multi-repo-swarm', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">Multi-Repo Swarm - Cross-Repository Swarm Orchestration</div>
+      <div class="card-desc">Coordinate AI swarms across multiple repositories, enabling organization-wide automation and intelligent cross-project collaboration.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/pr-enhance pr-enhance ai-powered pull request enhancements.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/pr-enhance</span>
+        <button class="copy-btn" onclick="copyCmd('/github/pr-enhance', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">pr-enhance</div>
+      <div class="card-desc">AI-powered pull request enhancements.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/pr-manager github pr manager comprehensive pull request management with ruv-swarm coordination for automated reviews, testing, and merge workflows.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/pr-manager</span>
+        <button class="copy-btn" onclick="copyCmd('/github/pr-manager', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">GitHub PR Manager</div>
+      <div class="card-desc">Comprehensive pull request management with ruv-swarm coordination for automated reviews, testing, and merge workflows.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/project-board-sync project board sync - github projects integration synchronize ai swarms with github projects for visual task management, progress tracking, and team coordination.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/project-board-sync</span>
+        <button class="copy-btn" onclick="copyCmd('/github/project-board-sync', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">Project Board Sync - GitHub Projects Integration</div>
+      <div class="card-desc">Synchronize AI swarms with GitHub Projects for visual task management, progress tracking, and team coordination.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/release-manager github release manager automated release coordination and deployment with ruv-swarm orchestration for seamless version management, testing, and deployment across multiple packages.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/release-manager</span>
+        <button class="copy-btn" onclick="copyCmd('/github/release-manager', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">GitHub Release Manager</div>
+      <div class="card-desc">Automated release coordination and deployment with ruv-swarm orchestration for seamless version management, testing, and deployment across multiple packages.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/release-swarm release swarm - intelligent release automation orchestrate complex software releases using ai swarms that handle everything from changelog generation to multi-platform deployment.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/release-swarm</span>
+        <button class="copy-btn" onclick="copyCmd('/github/release-swarm', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">Release Swarm - Intelligent Release Automation</div>
+      <div class="card-desc">Orchestrate complex software releases using AI swarms that handle everything from changelog generation to multi-platform deployment.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/repo-analyze repo-analyze deep analysis of github repository with ai insights.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/repo-analyze</span>
+        <button class="copy-btn" onclick="copyCmd('/github/repo-analyze', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">repo-analyze</div>
+      <div class="card-desc">Deep analysis of GitHub repository with AI insights.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/repo-architect github repository architect &quot;standardized template for claude code projects with ruv-swarm integration&quot;,">
+      <div class="card-header">
+        <span class="cmd-badge">/github/repo-architect</span>
+        <button class="copy-btn" onclick="copyCmd('/github/repo-architect', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">GitHub Repository Architect</div>
+      <div class="card-desc">&quot;Standardized template for Claude Code projects with ruv-swarm integration&quot;,</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/swarm-issue swarm issue - issue-based swarm coordination create a task for ai swarm processing">
+      <div class="card-header">
+        <span class="cmd-badge">/github/swarm-issue</span>
+        <button class="copy-btn" onclick="copyCmd('/github/swarm-issue', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">Swarm Issue - Issue-Based Swarm Coordination</div>
+      <div class="card-desc">Create a task for AI swarm processing</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/swarm-pr swarm pr - managing swarms through pull requests create and manage ai swarms directly from github pull requests, enabling seamless integration with your development workflow.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/swarm-pr</span>
+        <button class="copy-btn" onclick="copyCmd('/github/swarm-pr', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">Swarm PR - Managing Swarms through Pull Requests</div>
+      <div class="card-desc">Create and manage AI swarms directly from GitHub Pull Requests, enabling seamless integration with your development workflow.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/sync-coordinator github sync coordinator multi-package synchronization and version alignment with ruv-swarm coordination for seamless integration between claude-code-flow and ruv-swarm packages.">
+      <div class="card-header">
+        <span class="cmd-badge">/github/sync-coordinator</span>
+        <button class="copy-btn" onclick="copyCmd('/github/sync-coordinator', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">GitHub Sync Coordinator</div>
+      <div class="card-desc">Multi-package synchronization and version alignment with ruv-swarm coordination for seamless integration between claude-code-flow and ruv-swarm packages.</div>
+    </div>
+     
+    <div class="command-card" data-category="github" data-search="/github/workflow-automation workflow automation - github actions integration &#x27;custom swarm-powered action&#x27;">
+      <div class="card-header">
+        <span class="cmd-badge">/github/workflow-automation</span>
+        <button class="copy-btn" onclick="copyCmd('/github/workflow-automation', this)">Copy</button>
+      </div>
+      <div class="card-category">github</div>
+      <div class="card-title">Workflow Automation - GitHub Actions Integration</div>
+      <div class="card-desc">&#x27;Custom swarm-powered action&#x27;</div>
+    </div>
+     
+    <div class="command-card" data-category="hive-mind" data-search="/hive-mind/readme hive-mind commands commands for hive-mind operations in claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/hive-mind/README</span>
+        <button class="copy-btn" onclick="copyCmd('/hive-mind/README', this)">Copy</button>
+      </div>
+      <div class="card-category">hive-mind</div>
+      <div class="card-title">Hive-mind Commands</div>
+      <div class="card-desc">Commands for hive-mind operations in Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="hive-mind" data-search="/hive-mind/hive-mind-consensus hive-mind-consensus command documentation for hive-mind-consensus in category hive-mind.">
+      <div class="card-header">
+        <span class="cmd-badge">/hive-mind/hive-mind-consensus</span>
+        <button class="copy-btn" onclick="copyCmd('/hive-mind/hive-mind-consensus', this)">Copy</button>
+      </div>
+      <div class="card-category">hive-mind</div>
+      <div class="card-title">hive-mind-consensus</div>
+      <div class="card-desc">Command documentation for hive-mind-consensus in category hive-mind.</div>
+    </div>
+     
+    <div class="command-card" data-category="hive-mind" data-search="/hive-mind/hive-mind-init hive-mind-init initialize the hive mind collective intelligence system.">
+      <div class="card-header">
+        <span class="cmd-badge">/hive-mind/hive-mind-init</span>
+        <button class="copy-btn" onclick="copyCmd('/hive-mind/hive-mind-init', this)">Copy</button>
+      </div>
+      <div class="card-category">hive-mind</div>
+      <div class="card-title">hive-mind-init</div>
+      <div class="card-desc">Initialize the Hive Mind collective intelligence system.</div>
+    </div>
+     
+    <div class="command-card" data-category="hive-mind" data-search="/hive-mind/hive-mind-memory hive-mind-memory command documentation for hive-mind-memory in category hive-mind.">
+      <div class="card-header">
+        <span class="cmd-badge">/hive-mind/hive-mind-memory</span>
+        <button class="copy-btn" onclick="copyCmd('/hive-mind/hive-mind-memory', this)">Copy</button>
+      </div>
+      <div class="card-category">hive-mind</div>
+      <div class="card-title">hive-mind-memory</div>
+      <div class="card-desc">Command documentation for hive-mind-memory in category hive-mind.</div>
+    </div>
+     
+    <div class="command-card" data-category="hive-mind" data-search="/hive-mind/hive-mind-metrics hive-mind-metrics command documentation for hive-mind-metrics in category hive-mind.">
+      <div class="card-header">
+        <span class="cmd-badge">/hive-mind/hive-mind-metrics</span>
+        <button class="copy-btn" onclick="copyCmd('/hive-mind/hive-mind-metrics', this)">Copy</button>
+      </div>
+      <div class="card-category">hive-mind</div>
+      <div class="card-title">hive-mind-metrics</div>
+      <div class="card-desc">Command documentation for hive-mind-metrics in category hive-mind.</div>
+    </div>
+     
+    <div class="command-card" data-category="hive-mind" data-search="/hive-mind/hive-mind-resume hive-mind-resume command documentation for hive-mind-resume in category hive-mind.">
+      <div class="card-header">
+        <span class="cmd-badge">/hive-mind/hive-mind-resume</span>
+        <button class="copy-btn" onclick="copyCmd('/hive-mind/hive-mind-resume', this)">Copy</button>
+      </div>
+      <div class="card-category">hive-mind</div>
+      <div class="card-title">hive-mind-resume</div>
+      <div class="card-desc">Command documentation for hive-mind-resume in category hive-mind.</div>
+    </div>
+     
+    <div class="command-card" data-category="hive-mind" data-search="/hive-mind/hive-mind-sessions hive-mind-sessions command documentation for hive-mind-sessions in category hive-mind.">
+      <div class="card-header">
+        <span class="cmd-badge">/hive-mind/hive-mind-sessions</span>
+        <button class="copy-btn" onclick="copyCmd('/hive-mind/hive-mind-sessions', this)">Copy</button>
+      </div>
+      <div class="card-category">hive-mind</div>
+      <div class="card-title">hive-mind-sessions</div>
+      <div class="card-desc">Command documentation for hive-mind-sessions in category hive-mind.</div>
+    </div>
+     
+    <div class="command-card" data-category="hive-mind" data-search="/hive-mind/hive-mind-spawn hive-mind-spawn spawn a hive mind swarm with queen-led coordination.">
+      <div class="card-header">
+        <span class="cmd-badge">/hive-mind/hive-mind-spawn</span>
+        <button class="copy-btn" onclick="copyCmd('/hive-mind/hive-mind-spawn', this)">Copy</button>
+      </div>
+      <div class="card-category">hive-mind</div>
+      <div class="card-title">hive-mind-spawn</div>
+      <div class="card-desc">Spawn a Hive Mind swarm with queen-led coordination.</div>
+    </div>
+     
+    <div class="command-card" data-category="hive-mind" data-search="/hive-mind/hive-mind-status hive-mind-status command documentation for hive-mind-status in category hive-mind.">
+      <div class="card-header">
+        <span class="cmd-badge">/hive-mind/hive-mind-status</span>
+        <button class="copy-btn" onclick="copyCmd('/hive-mind/hive-mind-status', this)">Copy</button>
+      </div>
+      <div class="card-category">hive-mind</div>
+      <div class="card-title">hive-mind-status</div>
+      <div class="card-desc">Command documentation for hive-mind-status in category hive-mind.</div>
+    </div>
+     
+    <div class="command-card" data-category="hive-mind" data-search="/hive-mind/hive-mind-stop hive-mind-stop command documentation for hive-mind-stop in category hive-mind.">
+      <div class="card-header">
+        <span class="cmd-badge">/hive-mind/hive-mind-stop</span>
+        <button class="copy-btn" onclick="copyCmd('/hive-mind/hive-mind-stop', this)">Copy</button>
+      </div>
+      <div class="card-category">hive-mind</div>
+      <div class="card-title">hive-mind-stop</div>
+      <div class="card-desc">Command documentation for hive-mind-stop in category hive-mind.</div>
+    </div>
+     
+    <div class="command-card" data-category="hive-mind" data-search="/hive-mind/hive-mind-wizard hive-mind-wizard command documentation for hive-mind-wizard in category hive-mind.">
+      <div class="card-header">
+        <span class="cmd-badge">/hive-mind/hive-mind-wizard</span>
+        <button class="copy-btn" onclick="copyCmd('/hive-mind/hive-mind-wizard', this)">Copy</button>
+      </div>
+      <div class="card-category">hive-mind</div>
+      <div class="card-title">hive-mind-wizard</div>
+      <div class="card-desc">Command documentation for hive-mind-wizard in category hive-mind.</div>
+    </div>
+     
+    <div class="command-card" data-category="hive-mind" data-search="/hive-mind/hive-mind hive-mind hive mind collective intelligence system for advanced swarm coordination.">
+      <div class="card-header">
+        <span class="cmd-badge">/hive-mind/hive-mind</span>
+        <button class="copy-btn" onclick="copyCmd('/hive-mind/hive-mind', this)">Copy</button>
+      </div>
+      <div class="card-category">hive-mind</div>
+      <div class="card-title">hive-mind</div>
+      <div class="card-desc">Hive Mind collective intelligence system for advanced swarm coordination.</div>
+    </div>
+     
+    <div class="command-card" data-category="hooks" data-search="/hooks/readme hooks commands commands for hooks operations in claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/hooks/README</span>
+        <button class="copy-btn" onclick="copyCmd('/hooks/README', this)">Copy</button>
+      </div>
+      <div class="card-category">hooks</div>
+      <div class="card-title">Hooks Commands</div>
+      <div class="card-desc">Commands for hooks operations in Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="hooks" data-search="/hooks/overview claude code hooks for claude-flow automatically coordinate, format, and learn from claude code operations using hooks.">
+      <div class="card-header">
+        <span class="cmd-badge">/hooks/overview</span>
+        <button class="copy-btn" onclick="copyCmd('/hooks/overview', this)">Copy</button>
+      </div>
+      <div class="card-category">hooks</div>
+      <div class="card-title">Claude Code Hooks for claude-flow</div>
+      <div class="card-desc">Automatically coordinate, format, and learn from Claude Code operations using hooks.</div>
+    </div>
+     
+    <div class="command-card" data-category="hooks" data-search="/hooks/post-edit hook post-edit execute post-edit processing including formatting, validation, and memory updates.">
+      <div class="card-header">
+        <span class="cmd-badge">/hooks/post-edit</span>
+        <button class="copy-btn" onclick="copyCmd('/hooks/post-edit', this)">Copy</button>
+      </div>
+      <div class="card-category">hooks</div>
+      <div class="card-title">hook post-edit</div>
+      <div class="card-desc">Execute post-edit processing including formatting, validation, and memory updates.</div>
+    </div>
+     
+    <div class="command-card" data-category="hooks" data-search="/hooks/post-task hook post-task execute post-task cleanup, performance analysis, and memory storage.">
+      <div class="card-header">
+        <span class="cmd-badge">/hooks/post-task</span>
+        <button class="copy-btn" onclick="copyCmd('/hooks/post-task', this)">Copy</button>
+      </div>
+      <div class="card-category">hooks</div>
+      <div class="card-title">hook post-task</div>
+      <div class="card-desc">Execute post-task cleanup, performance analysis, and memory storage.</div>
+    </div>
+     
+    <div class="command-card" data-category="hooks" data-search="/hooks/pre-edit hook pre-edit execute pre-edit validations and agent assignment before file modifications.">
+      <div class="card-header">
+        <span class="cmd-badge">/hooks/pre-edit</span>
+        <button class="copy-btn" onclick="copyCmd('/hooks/pre-edit', this)">Copy</button>
+      </div>
+      <div class="card-category">hooks</div>
+      <div class="card-title">hook pre-edit</div>
+      <div class="card-desc">Execute pre-edit validations and agent assignment before file modifications.</div>
+    </div>
+     
+    <div class="command-card" data-category="hooks" data-search="/hooks/pre-task hook pre-task execute pre-task preparations and context loading.">
+      <div class="card-header">
+        <span class="cmd-badge">/hooks/pre-task</span>
+        <button class="copy-btn" onclick="copyCmd('/hooks/pre-task', this)">Copy</button>
+      </div>
+      <div class="card-category">hooks</div>
+      <div class="card-title">hook pre-task</div>
+      <div class="card-desc">Execute pre-task preparations and context loading.</div>
+    </div>
+     
+    <div class="command-card" data-category="hooks" data-search="/hooks/session-end hook session-end cleanup and persist session state before ending work.">
+      <div class="card-header">
+        <span class="cmd-badge">/hooks/session-end</span>
+        <button class="copy-btn" onclick="copyCmd('/hooks/session-end', this)">Copy</button>
+      </div>
+      <div class="card-category">hooks</div>
+      <div class="card-title">hook session-end</div>
+      <div class="card-desc">Cleanup and persist session state before ending work.</div>
+    </div>
+     
+    <div class="command-card" data-category="hooks" data-search="/hooks/setup setting up ruv-swarm hooks ```bash">
+      <div class="card-header">
+        <span class="cmd-badge">/hooks/setup</span>
+        <button class="copy-btn" onclick="copyCmd('/hooks/setup', this)">Copy</button>
+      </div>
+      <div class="card-category">hooks</div>
+      <div class="card-title">Setting Up ruv-swarm Hooks</div>
+      <div class="card-desc">```bash</div>
+    </div>
+     
+    <div class="command-card" data-category="memory" data-search="/memory/readme memory commands commands for memory operations in claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/memory/README</span>
+        <button class="copy-btn" onclick="copyCmd('/memory/README', this)">Copy</button>
+      </div>
+      <div class="card-category">memory</div>
+      <div class="card-title">Memory Commands</div>
+      <div class="card-desc">Commands for memory operations in Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="memory" data-search="/memory/memory-neural neural pattern training **this tool coordinates claude code&#x27;s actions. it does not write code or create content.**">
+      <div class="card-header">
+        <span class="cmd-badge">/memory/memory-neural</span>
+        <button class="copy-btn" onclick="copyCmd('/memory/memory-neural', this)">Copy</button>
+      </div>
+      <div class="card-category">memory</div>
+      <div class="card-title">Neural Pattern Training</div>
+      <div class="card-desc">**This tool coordinates Claude Code&#x27;s actions. It does NOT write code or create content.**</div>
+    </div>
+     
+    <div class="command-card" data-category="memory" data-search="/memory/memory-persist memory-persist persist memory across sessions.">
+      <div class="card-header">
+        <span class="cmd-badge">/memory/memory-persist</span>
+        <button class="copy-btn" onclick="copyCmd('/memory/memory-persist', this)">Copy</button>
+      </div>
+      <div class="card-category">memory</div>
+      <div class="card-title">memory-persist</div>
+      <div class="card-desc">Persist memory across sessions.</div>
+    </div>
+     
+    <div class="command-card" data-category="memory" data-search="/memory/memory-search memory-search search through stored memory.">
+      <div class="card-header">
+        <span class="cmd-badge">/memory/memory-search</span>
+        <button class="copy-btn" onclick="copyCmd('/memory/memory-search', this)">Copy</button>
+      </div>
+      <div class="card-category">memory</div>
+      <div class="card-title">memory-search</div>
+      <div class="card-desc">Search through stored memory.</div>
+    </div>
+     
+    <div class="command-card" data-category="memory" data-search="/memory/memory-usage memory-usage manage persistent memory storage.">
+      <div class="card-header">
+        <span class="cmd-badge">/memory/memory-usage</span>
+        <button class="copy-btn" onclick="copyCmd('/memory/memory-usage', this)">Copy</button>
+      </div>
+      <div class="card-category">memory</div>
+      <div class="card-title">memory-usage</div>
+      <div class="card-desc">Manage persistent memory storage.</div>
+    </div>
+     
+    <div class="command-card" data-category="memory" data-search="/memory/neural neural pattern training **this tool coordinates claude code&#x27;s actions. it does not write code or create content.**">
+      <div class="card-header">
+        <span class="cmd-badge">/memory/neural</span>
+        <button class="copy-btn" onclick="copyCmd('/memory/neural', this)">Copy</button>
+      </div>
+      <div class="card-category">memory</div>
+      <div class="card-title">Neural Pattern Training</div>
+      <div class="card-desc">**This tool coordinates Claude Code&#x27;s actions. It does NOT write code or create content.**</div>
+    </div>
+     
+    <div class="command-card" data-category="monitoring" data-search="/monitoring/readme monitoring commands commands for monitoring operations in claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/monitoring/README</span>
+        <button class="copy-btn" onclick="copyCmd('/monitoring/README', this)">Copy</button>
+      </div>
+      <div class="card-category">monitoring</div>
+      <div class="card-title">Monitoring Commands</div>
+      <div class="card-desc">Commands for monitoring operations in Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="monitoring" data-search="/monitoring/agent-metrics agent-metrics view agent performance metrics.">
+      <div class="card-header">
+        <span class="cmd-badge">/monitoring/agent-metrics</span>
+        <button class="copy-btn" onclick="copyCmd('/monitoring/agent-metrics', this)">Copy</button>
+      </div>
+      <div class="card-category">monitoring</div>
+      <div class="card-title">agent-metrics</div>
+      <div class="card-desc">View agent performance metrics.</div>
+    </div>
+     
+    <div class="command-card" data-category="monitoring" data-search="/monitoring/agents list active patterns **this tool coordinates claude code&#x27;s actions. it does not write code or create content.**">
+      <div class="card-header">
+        <span class="cmd-badge">/monitoring/agents</span>
+        <button class="copy-btn" onclick="copyCmd('/monitoring/agents', this)">Copy</button>
+      </div>
+      <div class="card-category">monitoring</div>
+      <div class="card-title">List Active Patterns</div>
+      <div class="card-desc">**This tool coordinates Claude Code&#x27;s actions. It does NOT write code or create content.**</div>
+    </div>
+     
+    <div class="command-card" data-category="monitoring" data-search="/monitoring/real-time-view real-time-view real-time view of swarm activity.">
+      <div class="card-header">
+        <span class="cmd-badge">/monitoring/real-time-view</span>
+        <button class="copy-btn" onclick="copyCmd('/monitoring/real-time-view', this)">Copy</button>
+      </div>
+      <div class="card-category">monitoring</div>
+      <div class="card-title">real-time-view</div>
+      <div class="card-desc">Real-time view of swarm activity.</div>
+    </div>
+     
+    <div class="command-card" data-category="monitoring" data-search="/monitoring/status check coordination status **this tool coordinates claude code&#x27;s actions. it does not write code or create content.**">
+      <div class="card-header">
+        <span class="cmd-badge">/monitoring/status</span>
+        <button class="copy-btn" onclick="copyCmd('/monitoring/status', this)">Copy</button>
+      </div>
+      <div class="card-category">monitoring</div>
+      <div class="card-title">Check Coordination Status</div>
+      <div class="card-desc">**This tool coordinates Claude Code&#x27;s actions. It does NOT write code or create content.**</div>
+    </div>
+     
+    <div class="command-card" data-category="monitoring" data-search="/monitoring/swarm-monitor swarm-monitor real-time swarm monitoring.">
+      <div class="card-header">
+        <span class="cmd-badge">/monitoring/swarm-monitor</span>
+        <button class="copy-btn" onclick="copyCmd('/monitoring/swarm-monitor', this)">Copy</button>
+      </div>
+      <div class="card-category">monitoring</div>
+      <div class="card-title">swarm-monitor</div>
+      <div class="card-desc">Real-time swarm monitoring.</div>
+    </div>
+     
+    <div class="command-card" data-category="optimization" data-search="/optimization/readme optimization commands commands for optimization operations in claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/optimization/README</span>
+        <button class="copy-btn" onclick="copyCmd('/optimization/README', this)">Copy</button>
+      </div>
+      <div class="card-category">optimization</div>
+      <div class="card-title">Optimization Commands</div>
+      <div class="card-desc">Commands for optimization operations in Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="optimization" data-search="/optimization/auto-topology automatic topology selection automatically select the optimal swarm topology based on task complexity analysis.">
+      <div class="card-header">
+        <span class="cmd-badge">/optimization/auto-topology</span>
+        <button class="copy-btn" onclick="copyCmd('/optimization/auto-topology', this)">Copy</button>
+      </div>
+      <div class="card-category">optimization</div>
+      <div class="card-title">Automatic Topology Selection</div>
+      <div class="card-desc">Automatically select the optimal swarm topology based on task complexity analysis.</div>
+    </div>
+     
+    <div class="command-card" data-category="optimization" data-search="/optimization/cache-manage cache-manage manage operation cache for performance.">
+      <div class="card-header">
+        <span class="cmd-badge">/optimization/cache-manage</span>
+        <button class="copy-btn" onclick="copyCmd('/optimization/cache-manage', this)">Copy</button>
+      </div>
+      <div class="card-category">optimization</div>
+      <div class="card-title">cache-manage</div>
+      <div class="card-desc">Manage operation cache for performance.</div>
+    </div>
+     
+    <div class="command-card" data-category="optimization" data-search="/optimization/parallel-execute parallel-execute execute tasks in parallel for maximum efficiency.">
+      <div class="card-header">
+        <span class="cmd-badge">/optimization/parallel-execute</span>
+        <button class="copy-btn" onclick="copyCmd('/optimization/parallel-execute', this)">Copy</button>
+      </div>
+      <div class="card-category">optimization</div>
+      <div class="card-title">parallel-execute</div>
+      <div class="card-desc">Execute tasks in parallel for maximum efficiency.</div>
+    </div>
+     
+    <div class="command-card" data-category="optimization" data-search="/optimization/parallel-execution parallel task execution execute independent subtasks in parallel for maximum efficiency.">
+      <div class="card-header">
+        <span class="cmd-badge">/optimization/parallel-execution</span>
+        <button class="copy-btn" onclick="copyCmd('/optimization/parallel-execution', this)">Copy</button>
+      </div>
+      <div class="card-category">optimization</div>
+      <div class="card-title">Parallel Task Execution</div>
+      <div class="card-desc">Execute independent subtasks in parallel for maximum efficiency.</div>
+    </div>
+     
+    <div class="command-card" data-category="optimization" data-search="/optimization/topology-optimize topology-optimize optimize swarm topology for current workload.">
+      <div class="card-header">
+        <span class="cmd-badge">/optimization/topology-optimize</span>
+        <button class="copy-btn" onclick="copyCmd('/optimization/topology-optimize', this)">Copy</button>
+      </div>
+      <div class="card-category">optimization</div>
+      <div class="card-title">topology-optimize</div>
+      <div class="card-desc">Optimize swarm topology for current workload.</div>
+    </div>
+     
+    <div class="command-card" data-category="pair" data-search="/pair/readme 👥 pair programming command collaborative development with real-time verification and ai assistance.">
+      <div class="card-header">
+        <span class="cmd-badge">/pair/README</span>
+        <button class="copy-btn" onclick="copyCmd('/pair/README', this)">Copy</button>
+      </div>
+      <div class="card-category">pair</div>
+      <div class="card-title">👥 Pair Programming Command</div>
+      <div class="card-desc">Collaborative development with real-time verification and AI assistance.</div>
+    </div>
+     
+    <div class="command-card" data-category="pair" data-search="/pair/commands pair programming commands reference complete reference for all pair programming session commands.">
+      <div class="card-header">
+        <span class="cmd-badge">/pair/commands</span>
+        <button class="copy-btn" onclick="copyCmd('/pair/commands', this)">Copy</button>
+      </div>
+      <div class="card-category">pair</div>
+      <div class="card-title">Pair Programming Commands Reference</div>
+      <div class="card-desc">Complete reference for all pair programming session commands.</div>
+    </div>
+     
+    <div class="command-card" data-category="pair" data-search="/pair/config pair programming configuration complete configuration guide for pair programming sessions.">
+      <div class="card-header">
+        <span class="cmd-badge">/pair/config</span>
+        <button class="copy-btn" onclick="copyCmd('/pair/config', this)">Copy</button>
+      </div>
+      <div class="card-category">pair</div>
+      <div class="card-title">Pair Programming Configuration</div>
+      <div class="card-desc">Complete configuration guide for pair programming sessions.</div>
+    </div>
+     
+    <div class="command-card" data-category="pair" data-search="/pair/examples pair programming examples ai explains jwt concepts and best practices">
+      <div class="card-header">
+        <span class="cmd-badge">/pair/examples</span>
+        <button class="copy-btn" onclick="copyCmd('/pair/examples', this)">Copy</button>
+      </div>
+      <div class="card-category">pair</div>
+      <div class="card-title">Pair Programming Examples</div>
+      <div class="card-desc">AI explains JWT concepts and best practices</div>
+    </div>
+     
+    <div class="command-card" data-category="pair" data-search="/pair/modes pair programming modes detailed guide to pair programming modes and their optimal use cases.">
+      <div class="card-header">
+        <span class="cmd-badge">/pair/modes</span>
+        <button class="copy-btn" onclick="copyCmd('/pair/modes', this)">Copy</button>
+      </div>
+      <div class="card-category">pair</div>
+      <div class="card-title">Pair Programming Modes</div>
+      <div class="card-desc">Detailed guide to pair programming modes and their optimal use cases.</div>
+    </div>
+     
+    <div class="command-card" data-category="pair" data-search="/pair/session pair programming session management complete guide to managing pair programming sessions.">
+      <div class="card-header">
+        <span class="cmd-badge">/pair/session</span>
+        <button class="copy-btn" onclick="copyCmd('/pair/session', this)">Copy</button>
+      </div>
+      <div class="card-category">pair</div>
+      <div class="card-title">Pair Programming Session Management</div>
+      <div class="card-desc">Complete guide to managing pair programming sessions.</div>
+    </div>
+     
+    <div class="command-card" data-category="pair" data-search="/pair/start pair --start start a new pair programming session with ai assistance.">
+      <div class="card-header">
+        <span class="cmd-badge">/pair/start</span>
+        <button class="copy-btn" onclick="copyCmd('/pair/start', this)">Copy</button>
+      </div>
+      <div class="card-category">pair</div>
+      <div class="card-title">pair --start</div>
+      <div class="card-desc">Start a new pair programming session with AI assistance.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/analyzer sparc analyzer mode deep code and data analysis with batch processing capabilities.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/analyzer</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/analyzer', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Analyzer Mode</div>
+      <div class="card-desc">Deep code and data analysis with batch processing capabilities.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/architect sparc architect mode system design with memory-based coordination for scalable architectures.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/architect</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/architect', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Architect Mode</div>
+      <div class="card-desc">System design with Memory-based coordination for scalable architectures.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/ask ❓ask ❓ask - you are a task-formulation guide that helps users navigate, ask, and delegate tasks to the correc...">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/ask</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/ask', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">❓Ask</div>
+      <div class="card-desc">❓Ask - You are a task-formulation guide that helps users navigate, ask, and delegate tasks to the correc...</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/batch-executor sparc batch executor mode parallel task execution specialist using batch operations.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/batch-executor</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/batch-executor', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Batch Executor Mode</div>
+      <div class="card-desc">Parallel task execution specialist using batch operations.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/code 🧠 auto-coder 🧠 auto-coder - you write clean, efficient, modular code based on pseudocode and architecture. you use configurat...">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/code</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/code', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">🧠 Auto-Coder</div>
+      <div class="card-desc">🧠 Auto-Coder - You write clean, efficient, modular code based on pseudocode and architecture. You use configurat...</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/coder sparc coder mode autonomous code generation with batch file operations.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/coder</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/coder', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Coder Mode</div>
+      <div class="card-desc">Autonomous code generation with batch file operations.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/debug 🪲 debugger 🪲 debugger - you troubleshoot runtime bugs, logic errors, or integration failures by tracing, inspecting, and ...">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/debug</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/debug', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">🪲 Debugger</div>
+      <div class="card-desc">🪲 Debugger - You troubleshoot runtime bugs, logic errors, or integration failures by tracing, inspecting, and ...</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/debugger sparc debugger mode systematic debugging with todowrite and memory integration.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/debugger</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/debugger', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Debugger Mode</div>
+      <div class="card-desc">Systematic debugging with TodoWrite and Memory integration.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/designer sparc designer mode ui/ux design with memory coordination for consistent experiences.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/designer</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/designer', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Designer Mode</div>
+      <div class="card-desc">UI/UX design with Memory coordination for consistent experiences.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/devops 🚀 devops 🚀 devops - you are the devops automation and infrastructure specialist responsible for deploying, managing, ...">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/devops</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/devops', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">🚀 DevOps</div>
+      <div class="card-desc">🚀 DevOps - You are the DevOps automation and infrastructure specialist responsible for deploying, managing, ...</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/docs-writer 📚 documentation writer 📚 documentation writer - you write concise, clear, and modular markdown documentation that explains usage, integration, se...">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/docs-writer</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/docs-writer', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">📚 Documentation Writer</div>
+      <div class="card-desc">📚 Documentation Writer - You write concise, clear, and modular Markdown documentation that explains usage, integration, se...</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/documenter sparc documenter mode documentation with batch file operations for comprehensive docs.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/documenter</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/documenter', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Documenter Mode</div>
+      <div class="card-desc">Documentation with batch file operations for comprehensive docs.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/innovator sparc innovator mode creative problem solving with websearch and memory integration.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/innovator</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/innovator', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Innovator Mode</div>
+      <div class="card-desc">Creative problem solving with WebSearch and Memory integration.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/integration 🔗 system integrator 🔗 system integrator - you merge the outputs of all modes into a working, tested, production-ready system. you ensure co...">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/integration</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/integration', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">🔗 System Integrator</div>
+      <div class="card-desc">🔗 System Integrator - You merge the outputs of all modes into a working, tested, production-ready system. You ensure co...</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/mcp ♾️ mcp integration ♾️ mcp integration - you are the mcp (management control panel) integration specialist responsible for connecting to a...">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/mcp</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/mcp', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">♾️ MCP Integration</div>
+      <div class="card-desc">♾️ MCP Integration - You are the MCP (Management Control Panel) integration specialist responsible for connecting to a...</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/memory-manager sparc memory manager mode knowledge management with memory tools for persistent insights.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/memory-manager</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/memory-manager', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Memory Manager Mode</div>
+      <div class="card-desc">Knowledge management with Memory tools for persistent insights.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/optimizer sparc optimizer mode performance optimization with systematic analysis and improvements.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/optimizer</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/optimizer', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Optimizer Mode</div>
+      <div class="card-desc">Performance optimization with systematic analysis and improvements.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/orchestrator sparc orchestrator mode multi-agent task orchestration with todowrite/todoread/task/memory using mcp tools.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/orchestrator</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/orchestrator', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Orchestrator Mode</div>
+      <div class="card-desc">Multi-agent task orchestration with TodoWrite/TodoRead/Task/Memory using MCP tools.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/post-deployment-monitoring-mode 📈 deployment monitor 📈 deployment monitor - you observe the system post-launch, collecting performance, logs, and user feedback. you flag reg...">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/post-deployment-monitoring-mode</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/post-deployment-monitoring-mode', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">📈 Deployment Monitor</div>
+      <div class="card-desc">📈 Deployment Monitor - You observe the system post-launch, collecting performance, logs, and user feedback. You flag reg...</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/refinement-optimization-mode 🧹 optimizer 🧹 optimizer - you refactor, modularize, and improve system performance. you enforce file size limits, dependenc...">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/refinement-optimization-mode</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/refinement-optimization-mode', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">🧹 Optimizer</div>
+      <div class="card-desc">🧹 Optimizer - You refactor, modularize, and improve system performance. You enforce file size limits, dependenc...</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/researcher sparc researcher mode deep research with parallel websearch/webfetch and memory coordination.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/researcher</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/researcher', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Researcher Mode</div>
+      <div class="card-desc">Deep research with parallel WebSearch/WebFetch and Memory coordination.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/reviewer sparc reviewer mode code review using batch file analysis for comprehensive reviews.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/reviewer</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/reviewer', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Reviewer Mode</div>
+      <div class="card-desc">Code review using batch file analysis for comprehensive reviews.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/security-review 🛡️ security reviewer 🛡️ security reviewer - you perform static and dynamic audits to ensure secure code practices. you flag secrets, poor mod...">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/security-review</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/security-review', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">🛡️ Security Reviewer</div>
+      <div class="card-desc">🛡️ Security Reviewer - You perform static and dynamic audits to ensure secure code practices. You flag secrets, poor mod...</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/sparc-modes sparc modes overview sparc (specification, planning, architecture, review, code) is a comprehensive development methodology with 17 specialized modes, all integrated with mcp tools for enhanced coordination and execution.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/sparc-modes</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/sparc-modes', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Modes Overview</div>
+      <div class="card-desc">SPARC (Specification, Planning, Architecture, Review, Code) is a comprehensive development methodology with 17 specialized modes, all integrated with MCP tools for enhanced coordination and execution.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/sparc ⚡️ sparc orchestrator ⚡️ sparc orchestrator - you are sparc, the orchestrator of complex workflows. you break down large objectives into delega...">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/sparc</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/sparc', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">⚡️ SPARC Orchestrator</div>
+      <div class="card-desc">⚡️ SPARC Orchestrator - You are SPARC, the orchestrator of complex workflows. You break down large objectives into delega...</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/spec-pseudocode 📋 specification writer 📋 specification writer - you capture full project context—functional requirements, edge cases, constraints—and translate t...">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/spec-pseudocode</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/spec-pseudocode', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">📋 Specification Writer</div>
+      <div class="card-desc">📋 Specification Writer - You capture full project context—functional requirements, edge cases, constraints—and translate t...</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/supabase-admin 🔐 supabase admin 🔐 supabase admin - you are the supabase database, authentication, and storage specialist. you design and implement d...">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/supabase-admin</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/supabase-admin', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">🔐 Supabase Admin</div>
+      <div class="card-desc">🔐 Supabase Admin - You are the Supabase database, authentication, and storage specialist. You design and implement d...</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/swarm-coordinator sparc swarm coordinator mode specialized swarm management with batch coordination capabilities.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/swarm-coordinator</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/swarm-coordinator', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Swarm Coordinator Mode</div>
+      <div class="card-desc">Specialized swarm management with batch coordination capabilities.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/tdd sparc tdd mode test-driven development with todowrite planning and comprehensive testing.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/tdd</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/tdd', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC TDD Mode</div>
+      <div class="card-desc">Test-driven development with TodoWrite planning and comprehensive testing.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/tester sparc tester mode comprehensive testing with parallel execution capabilities.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/tester</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/tester', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Tester Mode</div>
+      <div class="card-desc">Comprehensive testing with parallel execution capabilities.</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/tutorial 📘 sparc tutorial 📘 sparc tutorial - you are the sparc onboarding and education assistant. your job is to guide users through the full...">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/tutorial</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/tutorial', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">📘 SPARC Tutorial</div>
+      <div class="card-desc">📘 SPARC Tutorial - You are the SPARC onboarding and education assistant. Your job is to guide users through the full...</div>
+    </div>
+     
+    <div class="command-card" data-category="sparc" data-search="/sparc/workflow-manager sparc workflow manager mode process automation with todowrite planning and task execution.">
+      <div class="card-header">
+        <span class="cmd-badge">/sparc/workflow-manager</span>
+        <button class="copy-btn" onclick="copyCmd('/sparc/workflow-manager', this)">Copy</button>
+      </div>
+      <div class="card-category">sparc</div>
+      <div class="card-title">SPARC Workflow Manager Mode</div>
+      <div class="card-desc">Process automation with TodoWrite planning and Task execution.</div>
+    </div>
+     
+    <div class="command-card" data-category="stream-chain" data-search="/stream-chain/pipeline stream-chain pipeline execute predefined pipelines for common development workflows.">
+      <div class="card-header">
+        <span class="cmd-badge">/stream-chain/pipeline</span>
+        <button class="copy-btn" onclick="copyCmd('/stream-chain/pipeline', this)">Copy</button>
+      </div>
+      <div class="card-category">stream-chain</div>
+      <div class="card-title">stream-chain pipeline</div>
+      <div class="card-desc">Execute predefined pipelines for common development workflows.</div>
+    </div>
+     
+    <div class="command-card" data-category="stream-chain" data-search="/stream-chain/run stream-chain run execute a custom stream chain with your own prompts.">
+      <div class="card-header">
+        <span class="cmd-badge">/stream-chain/run</span>
+        <button class="copy-btn" onclick="copyCmd('/stream-chain/run', this)">Copy</button>
+      </div>
+      <div class="card-category">stream-chain</div>
+      <div class="card-title">stream-chain run</div>
+      <div class="card-desc">Execute a custom stream chain with your own prompts.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/readme swarm commands commands for swarm operations in claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/README</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/README', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">Swarm Commands</div>
+      <div class="card-desc">Commands for swarm operations in Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/analysis analysis swarm strategy comprehensive analysis through distributed agent coordination.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/analysis</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/analysis', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">Analysis Swarm Strategy</div>
+      <div class="card-desc">Comprehensive analysis through distributed agent coordination.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/development development swarm strategy coordinated development through specialized agent teams.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/development</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/development', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">Development Swarm Strategy</div>
+      <div class="card-desc">Coordinated development through specialized agent teams.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/examples examples swarm strategy ```javascript">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/examples</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/examples', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">Examples Swarm Strategy</div>
+      <div class="card-desc">```javascript</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/maintenance maintenance swarm strategy system maintenance and updates through coordinated agents.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/maintenance</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/maintenance', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">Maintenance Swarm Strategy</div>
+      <div class="card-desc">System maintenance and updates through coordinated agents.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/optimization optimization swarm strategy performance optimization through specialized analysis.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/optimization</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/optimization', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">Optimization Swarm Strategy</div>
+      <div class="card-desc">Performance optimization through specialized analysis.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/research research swarm strategy deep research through parallel information gathering.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/research</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/research', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">Research Swarm Strategy</div>
+      <div class="card-desc">Deep research through parallel information gathering.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/swarm-analysis swarm-analysis command documentation for swarm-analysis in category swarm.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/swarm-analysis</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/swarm-analysis', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">swarm-analysis</div>
+      <div class="card-desc">Command documentation for swarm-analysis in category swarm.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/swarm-background swarm-background command documentation for swarm-background in category swarm.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/swarm-background</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/swarm-background', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">swarm-background</div>
+      <div class="card-desc">Command documentation for swarm-background in category swarm.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/swarm-init swarm-init initialize a new swarm with specified topology.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/swarm-init</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/swarm-init', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">swarm-init</div>
+      <div class="card-desc">Initialize a new swarm with specified topology.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/swarm-modes swarm-modes command documentation for swarm-modes in category swarm.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/swarm-modes</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/swarm-modes', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">swarm-modes</div>
+      <div class="card-desc">Command documentation for swarm-modes in category swarm.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/swarm-monitor swarm-monitor command documentation for swarm-monitor in category swarm.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/swarm-monitor</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/swarm-monitor', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">swarm-monitor</div>
+      <div class="card-desc">Command documentation for swarm-monitor in category swarm.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/swarm-orchestrate /swarm-orchestrate main swarm orchestration command for claude flow v3.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/swarm-orchestrate</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/swarm-orchestrate', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">/swarm-orchestrate</div>
+      <div class="card-desc">Main swarm orchestration command for Claude Flow V3.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/swarm-spawn swarm-spawn spawn agents in the swarm.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/swarm-spawn</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/swarm-spawn', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">swarm-spawn</div>
+      <div class="card-desc">Spawn agents in the swarm.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/swarm-status swarm-status command documentation for swarm-status in category swarm.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/swarm-status</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/swarm-status', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">swarm-status</div>
+      <div class="card-desc">Command documentation for swarm-status in category swarm.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/swarm-strategies swarm-strategies command documentation for swarm-strategies in category swarm.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/swarm-strategies</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/swarm-strategies', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">swarm-strategies</div>
+      <div class="card-desc">Command documentation for swarm-strategies in category swarm.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/swarm swarm main swarm orchestration command for claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/swarm</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/swarm', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">swarm</div>
+      <div class="card-desc">Main swarm orchestration command for Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="swarm" data-search="/swarm/testing testing swarm strategy comprehensive testing through distributed execution.">
+      <div class="card-header">
+        <span class="cmd-badge">/swarm/testing</span>
+        <button class="copy-btn" onclick="copyCmd('/swarm/testing', this)">Copy</button>
+      </div>
+      <div class="card-category">swarm</div>
+      <div class="card-title">Testing Swarm Strategy</div>
+      <div class="card-desc">Comprehensive testing through distributed execution.</div>
+    </div>
+     
+    <div class="command-card" data-category="training" data-search="/training/readme training commands commands for training operations in claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/training/README</span>
+        <button class="copy-btn" onclick="copyCmd('/training/README', this)">Copy</button>
+      </div>
+      <div class="card-category">training</div>
+      <div class="card-title">Training Commands</div>
+      <div class="card-desc">Commands for training operations in Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="training" data-search="/training/model-update model-update update neural models with new data.">
+      <div class="card-header">
+        <span class="cmd-badge">/training/model-update</span>
+        <button class="copy-btn" onclick="copyCmd('/training/model-update', this)">Copy</button>
+      </div>
+      <div class="card-category">training</div>
+      <div class="card-title">model-update</div>
+      <div class="card-desc">Update neural models with new data.</div>
+    </div>
+     
+    <div class="command-card" data-category="training" data-search="/training/neural-patterns neural pattern training continuously improve coordination through neural network learning.">
+      <div class="card-header">
+        <span class="cmd-badge">/training/neural-patterns</span>
+        <button class="copy-btn" onclick="copyCmd('/training/neural-patterns', this)">Copy</button>
+      </div>
+      <div class="card-category">training</div>
+      <div class="card-title">Neural Pattern Training</div>
+      <div class="card-desc">Continuously improve coordination through neural network learning.</div>
+    </div>
+     
+    <div class="command-card" data-category="training" data-search="/training/neural-train neural-train train neural patterns from operations.">
+      <div class="card-header">
+        <span class="cmd-badge">/training/neural-train</span>
+        <button class="copy-btn" onclick="copyCmd('/training/neural-train', this)">Copy</button>
+      </div>
+      <div class="card-category">training</div>
+      <div class="card-title">neural-train</div>
+      <div class="card-desc">Train neural patterns from operations.</div>
+    </div>
+     
+    <div class="command-card" data-category="training" data-search="/training/pattern-learn pattern-learn learn patterns from successful operations.">
+      <div class="card-header">
+        <span class="cmd-badge">/training/pattern-learn</span>
+        <button class="copy-btn" onclick="copyCmd('/training/pattern-learn', this)">Copy</button>
+      </div>
+      <div class="card-category">training</div>
+      <div class="card-title">pattern-learn</div>
+      <div class="card-desc">Learn patterns from successful operations.</div>
+    </div>
+     
+    <div class="command-card" data-category="training" data-search="/training/specialization agent specialization training train agents to become experts in specific domains for better performance.">
+      <div class="card-header">
+        <span class="cmd-badge">/training/specialization</span>
+        <button class="copy-btn" onclick="copyCmd('/training/specialization', this)">Copy</button>
+      </div>
+      <div class="card-category">training</div>
+      <div class="card-title">Agent Specialization Training</div>
+      <div class="card-desc">Train agents to become experts in specific domains for better performance.</div>
+    </div>
+     
+    <div class="command-card" data-category="truth" data-search="/truth/start 📊 truth command view truth scores and reliability metrics for your codebase and agent tasks.">
+      <div class="card-header">
+        <span class="cmd-badge">/truth/start</span>
+        <button class="copy-btn" onclick="copyCmd('/truth/start', this)">Copy</button>
+      </div>
+      <div class="card-category">truth</div>
+      <div class="card-title">📊 Truth Command</div>
+      <div class="card-desc">View truth scores and reliability metrics for your codebase and agent tasks.</div>
+    </div>
+     
+    <div class="command-card" data-category="verify" data-search="/verify/check verify check run verification checks on code, tasks, or agent outputs.">
+      <div class="card-header">
+        <span class="cmd-badge">/verify/check</span>
+        <button class="copy-btn" onclick="copyCmd('/verify/check', this)">Copy</button>
+      </div>
+      <div class="card-category">verify</div>
+      <div class="card-title">verify check</div>
+      <div class="card-desc">Run verification checks on code, tasks, or agent outputs.</div>
+    </div>
+     
+    <div class="command-card" data-category="verify" data-search="/verify/start 🔍 verification commands truth verification system for ensuring code quality and correctness with a 0.95 accuracy threshold.">
+      <div class="card-header">
+        <span class="cmd-badge">/verify/start</span>
+        <button class="copy-btn" onclick="copyCmd('/verify/start', this)">Copy</button>
+      </div>
+      <div class="card-category">verify</div>
+      <div class="card-title">🔍 Verification Commands</div>
+      <div class="card-desc">Truth verification system for ensuring code quality and correctness with a 0.95 accuracy threshold.</div>
+    </div>
+     
+    <div class="command-card" data-category="workflows" data-search="/workflows/readme workflows commands commands for workflows operations in claude flow.">
+      <div class="card-header">
+        <span class="cmd-badge">/workflows/README</span>
+        <button class="copy-btn" onclick="copyCmd('/workflows/README', this)">Copy</button>
+      </div>
+      <div class="card-category">workflows</div>
+      <div class="card-title">Workflows Commands</div>
+      <div class="card-desc">Commands for workflows operations in Claude Flow.</div>
+    </div>
+     
+    <div class="command-card" data-category="workflows" data-search="/workflows/development development workflow coordination structure claude code&#x27;s approach to complex development tasks for maximum efficiency.">
+      <div class="card-header">
+        <span class="cmd-badge">/workflows/development</span>
+        <button class="copy-btn" onclick="copyCmd('/workflows/development', this)">Copy</button>
+      </div>
+      <div class="card-category">workflows</div>
+      <div class="card-title">Development Workflow Coordination</div>
+      <div class="card-desc">Structure Claude Code&#x27;s approach to complex development tasks for maximum efficiency.</div>
+    </div>
+     
+    <div class="command-card" data-category="workflows" data-search="/workflows/research research workflow coordination coordinate claude code&#x27;s research activities for comprehensive, systematic exploration.">
+      <div class="card-header">
+        <span class="cmd-badge">/workflows/research</span>
+        <button class="copy-btn" onclick="copyCmd('/workflows/research', this)">Copy</button>
+      </div>
+      <div class="card-category">workflows</div>
+      <div class="card-title">Research Workflow Coordination</div>
+      <div class="card-desc">Coordinate Claude Code&#x27;s research activities for comprehensive, systematic exploration.</div>
+    </div>
+     
+    <div class="command-card" data-category="workflows" data-search="/workflows/workflow-create workflow-create create reusable workflow templates.">
+      <div class="card-header">
+        <span class="cmd-badge">/workflows/workflow-create</span>
+        <button class="copy-btn" onclick="copyCmd('/workflows/workflow-create', this)">Copy</button>
+      </div>
+      <div class="card-category">workflows</div>
+      <div class="card-title">workflow-create</div>
+      <div class="card-desc">Create reusable workflow templates.</div>
+    </div>
+     
+    <div class="command-card" data-category="workflows" data-search="/workflows/workflow-execute workflow-execute execute saved workflows.">
+      <div class="card-header">
+        <span class="cmd-badge">/workflows/workflow-execute</span>
+        <button class="copy-btn" onclick="copyCmd('/workflows/workflow-execute', this)">Copy</button>
+      </div>
+      <div class="card-category">workflows</div>
+      <div class="card-title">workflow-execute</div>
+      <div class="card-desc">Execute saved workflows.</div>
+    </div>
+     
+    <div class="command-card" data-category="workflows" data-search="/workflows/workflow-export workflow-export export workflows for sharing.">
+      <div class="card-header">
+        <span class="cmd-badge">/workflows/workflow-export</span>
+        <button class="copy-btn" onclick="copyCmd('/workflows/workflow-export', this)">Copy</button>
+      </div>
+      <div class="card-category">workflows</div>
+      <div class="card-title">workflow-export</div>
+      <div class="card-desc">Export workflows for sharing.</div>
+    </div>
+    
+      <div class="empty-state" id="empty">No matching commands found.</div>
+    </div>
+  </div>
+
+  <script>
+    let activeCategory = 'all';
+
+    function filterCategory(cat, btn) {
+      activeCategory = cat;
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterCommands();
+    }
+
+    function filterCommands() {
+      const query = document.getElementById('search').value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.command-card');
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+        const cat = card.getAttribute('data-category');
+        const text = card.getAttribute('data-search');
+        const matchesCat = (activeCategory === 'all' || cat === activeCategory);
+        const matchesQuery = (!query || text.includes(query));
+
+        if (matchesCat && matchesQuery) {
+          card.style.display = 'flex';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      document.getElementById('empty').style.display = (visibleCount === 0) ? 'block' : 'none';
+    }
+
+    function copyCmd(cmd, btn) {
+      navigator.clipboard.writeText(cmd).then(() => {
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.style.color = '#3fb950';
+        btn.style.borderColor = '#3fb950';
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.style.color = '';
+          btn.style.borderColor = '';
+        }, 1500);
+      });
+    }
+  </script>
+</body>
+</html>

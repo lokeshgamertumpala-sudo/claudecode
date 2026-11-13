@@ -1,0 +1,169 @@
+{
+  "enableWorkflows": true,
+  "modelPicker": {
+    "options": [
+      {
+        "model": "claude-sonnet-5",
+        "label": "NVIDIA Nemotron Ultra 550B MoE",
+        "description": "550B Flagship Reasoning Giant, Sub-Second Latency",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "mistralai/mistral-large-4-1t-a52b",
+        "label": "Mistral Large 4",
+        "description": "1.05T Frontier MoE, 52B Active, ~0.4s Latency (RECOMMENDED DEFAULT)",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "stepfun-ai/step-5-preview",
+        "label": "Step 5 Preview",
+        "description": "600B MoE, 1M Context Window, Advanced Multimodal Reasoning",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "minimaxai/minimax-m3.1-flash",
+        "label": "MiniMax M3.1 Flash",
+        "description": "428B MoE, Ultra-Fast Agentic & Code Specialist",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "deepseek-ai/deepseek-v4.1-flash",
+        "label": "DeepSeek V4.1 Flash",
+        "description": "High-speed reasoning & massive context coding powerhouse",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "moonshotai/kimi-k3.1-pro",
+        "label": "Kimi 3.1 Pro (2.8T MoE)",
+        "description": "3T-class 2.8T MoE, 104B Active, 1M Context Window - Flagship Agentic Core (NVIDIA Nemotron Ultra Engine)",
+        "behavesAs": "sonnet"
+      }
+    ]
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "WebSearch",
+      "WebFetch",
+      "Bash(npx @claude-flow*)",
+      "Bash(npx claude-flow*)",
+      "mcp__claude-flow__*"
+    ]
+  },
+  "model": "claude-sonnet-5",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"var a='.claude/helpers/hook-handler.cjs pre-bash'.split(' '),e=process.env,fs=require('fs'),p=require('path'),f;f=p.join(e.CLAUDE_PROJECT_DIR?e.CLAUDE_PROJECT_DIR:'.',a[0]);if(!fs.existsSync(f))f=p.join((e.USERPROFILE?e.USERPROFILE:e.HOME?e.HOME:'.'),a[0]);var r=require('child_process').spawnSync(process.execPath,[f].concat(a.slice(1)),{stdio:'inherit'});process.exit(r.status===null?1:r.status)\"",
+            "timeout": 5000,
+            "onFailure": "block"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"var a='.claude/helpers/hook-handler.cjs post-edit'.split(' '),e=process.env,fs=require('fs'),p=require('path'),f;f=p.join(e.CLAUDE_PROJECT_DIR?e.CLAUDE_PROJECT_DIR:'.',a[0]);if(!fs.existsSync(f))f=p.join((e.USERPROFILE?e.USERPROFILE:e.HOME?e.HOME:'.'),a[0]);var r=require('child_process').spawnSync(process.execPath,[f].concat(a.slice(1)),{stdio:'inherit'});process.exit(r.status===null?1:r.status)\"",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"var a='.claude/helpers/hook-handler.cjs route'.split(' '),e=process.env,fs=require('fs'),p=require('path'),f;f=p.join(e.CLAUDE_PROJECT_DIR?e.CLAUDE_PROJECT_DIR:'.',a[0]);if(!fs.existsSync(f))f=p.join((e.USERPROFILE?e.USERPROFILE:e.HOME?e.HOME:'.'),a[0]);var r=require('child_process').spawnSync(process.execPath,[f].concat(a.slice(1)),{stdio:'inherit'});process.exit(r.status===null?1:r.status)\"",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"var a='.claude/helpers/hook-handler.cjs session-restore'.split(' '),e=process.env,fs=require('fs'),p=require('path'),f;f=p.join(e.CLAUDE_PROJECT_DIR?e.CLAUDE_PROJECT_DIR:'.',a[0]);if(!fs.existsSync(f))f=p.join((e.USERPROFILE?e.USERPROFILE:e.HOME?e.HOME:'.'),a[0]);var r=require('child_process').spawnSync(process.execPath,[f].concat(a.slice(1)),{stdio:'inherit'});process.exit(r.status===null?1:r.status)\"",
+            "timeout": 15000
+          },
+          {
+            "type": "command",
+            "command": "node -e \"var a='.claude/helpers/auto-memory-hook.mjs import'.split(' '),e=process.env,fs=require('fs'),p=require('path'),f;f=p.join(e.CLAUDE_PROJECT_DIR?e.CLAUDE_PROJECT_DIR:'.',a[0]);if(!fs.existsSync(f))f=p.join((e.USERPROFILE?e.USERPROFILE:e.HOME?e.HOME:'.'),a[0]);var r=require('child_process').spawnSync(process.execPath,[f].concat(a.slice(1)),{stdio:'inherit'});process.exit(r.status===null?1:r.status)\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"var a='.claude/helpers/hook-handler.cjs session-end'.split(' '),e=process.env,fs=require('fs'),p=require('path'),f;f=p.join(e.CLAUDE_PROJECT_DIR?e.CLAUDE_PROJECT_DIR:'.',a[0]);if(!fs.existsSync(f))f=p.join((e.USERPROFILE?e.USERPROFILE:e.HOME?e.HOME:'.'),a[0]);var r=require('child_process').spawnSync(process.execPath,[f].concat(a.slice(1)),{stdio:'inherit'});process.exit(r.status===null?1:r.status)\"",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"var a='.claude/helpers/auto-memory-hook.mjs sync'.split(' '),e=process.env,fs=require('fs'),p=require('path'),f;f=p.join(e.CLAUDE_PROJECT_DIR?e.CLAUDE_PROJECT_DIR:'.',a[0]);if(!fs.existsSync(f))f=p.join((e.USERPROFILE?e.USERPROFILE:e.HOME?e.HOME:'.'),a[0]);var r=require('child_process').spawnSync(process.execPath,[f].concat(a.slice(1)),{stdio:'inherit'});process.exit(r.status===null?1:r.status)\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "manual",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"var a='.claude/helpers/hook-handler.cjs session-end'.split(' '),e=process.env,fs=require('fs'),p=require('path'),f;f=p.join(e.CLAUDE_PROJECT_DIR?e.CLAUDE_PROJECT_DIR:'.',a[0]);if(!fs.existsSync(f))f=p.join((e.USERPROFILE?e.USERPROFILE:e.HOME?e.HOME:'.'),a[0]);var r=require('child_process').spawnSync(process.execPath,[f].concat(a.slice(1)),{stdio:'inherit'});process.exit(r.status===null?1:r.status)\"",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"var a='.claude/helpers/hook-handler.cjs session-end'.split(' '),e=process.env,fs=require('fs'),p=require('path'),f;f=p.join(e.CLAUDE_PROJECT_DIR?e.CLAUDE_PROJECT_DIR:'.',a[0]);if(!fs.existsSync(f))f=p.join((e.USERPROFILE?e.USERPROFILE:e.HOME?e.HOME:'.'),a[0]);var r=require('child_process').spawnSync(process.execPath,[f].concat(a.slice(1)),{stdio:'inherit'});process.exit(r.status===null?1:r.status)\"",
+            "timeout": 6000
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"var a='.claude/helpers/hook-handler.cjs post-task'.split(' '),e=process.env,fs=require('fs'),p=require('path'),f;f=p.join(e.CLAUDE_PROJECT_DIR?e.CLAUDE_PROJECT_DIR:'.',a[0]);if(!fs.existsSync(f))f=p.join((e.USERPROFILE?e.USERPROFILE:e.HOME?e.HOME:'.'),a[0]);var r=require('child_process').spawnSync(process.execPath,[f].concat(a.slice(1)),{stdio:'inherit'});process.exit(r.status===null?1:r.status)\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "CLAUDE_FLOW_V3_ENABLED": "true",
+    "CLAUDE_FLOW_HOOKS_ENABLED": "true"
+  }
+}

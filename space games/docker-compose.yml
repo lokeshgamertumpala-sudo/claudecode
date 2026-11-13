@@ -1,0 +1,32 @@
+services:
+  orbitforge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orbitforge-ai
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET:-development-secret-change-me}
+      - CORS_ORIGIN=${CORS_ORIGIN:-}
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - const http=require('http');const req=http.get({host:'localhost',port:process.env.PORT||3001,path:'/api/v1/health',timeout:8000},res=>{process.exit(res.statusCode===200?0:1)});req.on('error',()=>process.exit(1));req.end()
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - orbitforge-net
+
+networks:
+  orbitforge-net:
+    driver: bridge

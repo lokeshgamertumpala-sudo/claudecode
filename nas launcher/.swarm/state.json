@@ -1,0 +1,10 @@
+{
+  "id": "swarm-1794483791108-uecwxs",
+  "topology": "hierarchical",
+  "maxAgents": 15,
+  "strategy": "development",
+  "v3Mode": false,
+  "permissions": null,
+  "initializedAt": "2026-11-12T11:43:11.108Z",
+  "status": "ready"
+}

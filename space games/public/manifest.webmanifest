@@ -1,0 +1,20 @@
+{
+  "name": "ORBITFORGE AI",
+  "short_name": "ORBITFORGE",
+  "description": "AI-Assisted Space Mission Design & Engineering Simulation Platform",
+  "start_url": "./dashboard",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0f1a",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["productivity", "engineering", "science"]
+}

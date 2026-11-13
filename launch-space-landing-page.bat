@@ -1,0 +1,3 @@
+@echo off
+echo Opening AETHERIA Space Landing Page in your default browser...
+start "" "%~dp0space-landing-page\index.html"

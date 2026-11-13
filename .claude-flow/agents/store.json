@@ -1,0 +1,304 @@
+{
+  "agents": {
+    "agent-1794480104864-0biina": {
+      "agentId": "agent-1794480104864-0biina",
+      "agentType": "coordinator",
+      "name": "master-orchestrator",
+      "status": "busy",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T10:41:44.864Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default",
+      "currentTask": "task-1794480501025-14k9yt"
+    },
+    "agent-1794480139500-xjqakv": {
+      "agentId": "agent-1794480139500-xjqakv",
+      "agentType": "architect",
+      "name": "principal-architect",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T10:42:19.500Z",
+      "model": "opus",
+      "modelRoutedBy": "default"
+    },
+    "agent-1794480141841-83ljjl": {
+      "agentId": "agent-1794480141841-83ljjl",
+      "agentType": "researcher",
+      "name": "research-specialist",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T10:42:21.841Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default"
+    },
+    "agent-1794480144142-mscgv9": {
+      "agentId": "agent-1794480144142-mscgv9",
+      "agentType": "coder",
+      "name": "senior-backend-engineer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T10:42:24.142Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default",
+      "currentTask": null
+    },
+    "agent-1794480146482-xvj8ii": {
+      "agentId": "agent-1794480146482-xvj8ii",
+      "agentType": "coder",
+      "name": "senior-frontend-engineer",
+      "status": "busy",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T10:42:26.482Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default",
+      "currentTask": "task-1794482738804-cgb0lt"
+    },
+    "agent-1794480154720-bkb9ol": {
+      "agentId": "agent-1794480154720-bkb9ol",
+      "agentType": "reviewer",
+      "name": "ui-ux-design-director",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T10:42:34.720Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default"
+    },
+    "agent-1794480157549-bjzitk": {
+      "agentId": "agent-1794480157549-bjzitk",
+      "agentType": "tester",
+      "name": "debugging-specialist",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T10:42:37.549Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default"
+    },
+    "agent-1794480159838-k1lai0": {
+      "agentId": "agent-1794480159838-k1lai0",
+      "agentType": "security-auditor",
+      "name": "qa-security-reviewer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T10:42:39.838Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default"
+    },
+    "agent-1794483806742-klx9cg": {
+      "agentId": "agent-1794483806742-klx9cg",
+      "agentType": "architect",
+      "name": "architect-1794483804",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T11:43:26.742Z",
+      "model": "opus",
+      "modelRoutedBy": "default"
+    },
+    "agent-1794483812824-ykzi7x": {
+      "agentId": "agent-1794483812824-ykzi7x",
+      "agentType": "researcher",
+      "name": "researcher-1794483810",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T11:43:32.824Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default"
+    },
+    "agent-1794483834783-oahyb3": {
+      "agentId": "agent-1794483834783-oahyb3",
+      "agentType": "architect",
+      "name": "architect-1794483832",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T11:43:54.783Z",
+      "model": "opus",
+      "modelRoutedBy": "default",
+      "currentTask": null
+    },
+    "agent-1794483837027-g4vm3c": {
+      "agentId": "agent-1794483837027-g4vm3c",
+      "agentType": "researcher",
+      "name": "researcher-1794483834",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T11:43:57.027Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default",
+      "currentTask": null
+    },
+    "agent-1794483864733-o00bjv": {
+      "agentId": "agent-1794483864733-o00bjv",
+      "agentType": "coordinator",
+      "name": "orchestrator-1794483862",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T11:44:24.733Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default",
+      "currentTask": null
+    },
+    "agent-1794483867217-goo7kj": {
+      "agentId": "agent-1794483867217-goo7kj",
+      "agentType": "coder",
+      "name": "backend-1794483864",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T11:44:27.217Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default",
+      "currentTask": null
+    },
+    "agent-1794483869422-pbdo1j": {
+      "agentId": "agent-1794483869422-pbdo1j",
+      "agentType": "coder",
+      "name": "frontend-1794483867",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T11:44:29.422Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default",
+      "currentTask": null
+    },
+    "agent-1794483871654-wbbng8": {
+      "agentId": "agent-1794483871654-wbbng8",
+      "agentType": "reviewer",
+      "name": "ux-1794483869",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T11:44:31.654Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default",
+      "currentTask": null
+    },
+    "agent-1794483873899-oa3dum": {
+      "agentId": "agent-1794483873899-oa3dum",
+      "agentType": "tester",
+      "name": "debugger-1794483871",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T11:44:33.899Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default",
+      "currentTask": null
+    },
+    "agent-1794483876116-9hru0y": {
+      "agentId": "agent-1794483876116-9hru0y",
+      "agentType": "security-auditor",
+      "name": "qa-1794483874",
+      "status": "busy",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "provider": "anthropic",
+        "timeout": 300,
+        "autoTools": true
+      },
+      "createdAt": "2026-11-12T11:44:36.116Z",
+      "model": "sonnet",
+      "modelRoutedBy": "default",
+      "currentTask": "task-1794483797414-ctl61z"
+    }
+  },
+  "version": "3.0.0"
+}

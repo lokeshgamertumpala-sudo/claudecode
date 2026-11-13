@@ -1,0 +1,1407 @@
+{
+  "general": [
+    {
+      "cmd": "/analyze",
+      "file": "analyze.md",
+      "title": "\ud83d\udd0d Codebase Analyzer (/analyze)",
+      "desc": "Static code analytics, dependency topologies, circular import detection, and security scanning",
+      "category": "general"
+    },
+    {
+      "cmd": "/apex",
+      "file": "apex.md",
+      "title": "\ud83d\udee1\ufe0f Apex Coder (/apex)",
+      "desc": "Activate Apex Coder - The Premier Autonomous Coding Intelligence Suite for Claude Code",
+      "category": "general"
+    },
+    {
+      "cmd": "/boost",
+      "file": "boost.md",
+      "title": "\ud83d\ude80 TURBO BOOST ACTIVATED (Sub-Second Latency & 1-Shot 60FPS Remotion Protocol)",
+      "desc": "Turbocharge motion graphics & Remotion 60fps rendering for maximum speed and 1-shot accuracy",
+      "category": "general"
+    },
+    {
+      "cmd": "/claude-flow-help",
+      "file": "claude-flow-help.md",
+      "title": "Claude-Flow Commands",
+      "desc": "Show Claude-Flow commands and usage",
+      "category": "general"
+    },
+    {
+      "cmd": "/claude-flow-memory",
+      "file": "claude-flow-memory.md",
+      "title": "\ud83e\udde0 Claude-Flow Memory System",
+      "desc": "Interact with Claude-Flow memory system",
+      "category": "general"
+    },
+    {
+      "cmd": "/claude-flow-swarm",
+      "file": "claude-flow-swarm.md",
+      "title": "\ud83d\udc1d Claude-Flow Swarm Coordination",
+      "desc": "Coordinate multi-agent swarms for complex tasks",
+      "category": "general"
+    },
+    {
+      "cmd": "/clean",
+      "file": "clean.md",
+      "title": "\ud83e\uddf9 Workspace Cleanup Protocol (/clean)",
+      "desc": "Clean temporary files, build caches, test artifacts, and orphaned logs",
+      "category": "general"
+    },
+    {
+      "cmd": "/code-craft",
+      "file": "code-craft.md",
+      "title": "\ud83d\udee0\ufe0f Code Craftsman (/code-craft)",
+      "desc": "Autonomous code craftsman for module generation, architectural refactoring, and zero-error syntax repair",
+      "category": "general"
+    },
+    {
+      "cmd": "/coder",
+      "file": "coder.md",
+      "title": "\ud83d\udee1\ufe0f Coder (/coder)",
+      "desc": "Run the Apex Coder verification and synthesis suite",
+      "category": "general"
+    },
+    {
+      "cmd": "/company",
+      "file": "company.md",
+      "title": "\ud83c\udfe2 Execution Steps:",
+      "desc": "1. Run the local company intelligence tool:",
+      "category": "general"
+    },
+    {
+      "cmd": "/fan",
+      "file": "fan.md",
+      "title": "/fan agent - Fan Out Specialized Agents",
+      "desc": "Fan out specialized agents to a task using Ruflo swarm",
+      "category": "general"
+    },
+    {
+      "cmd": "/git-sync",
+      "file": "git-sync.md",
+      "title": "\ud83d\udd04 1-Click Git Synchronization Protocol (/git-sync)",
+      "desc": "1-click git pull, status check, atomic commit, and push to origin/main",
+      "category": "general"
+    },
+    {
+      "cmd": "/grill-me",
+      "file": "grill-me.md",
+      "title": "\ud83c\udfaf Interactive Architectural Interview Protocol (/grill-me)",
+      "desc": "1-by-1 Interactive Interview walking down each branch of the design tree to stress-test requirements",
+      "category": "general"
+    },
+    {
+      "cmd": "/model",
+      "file": "model.md",
+      "title": "\ud83e\udd16 Frontier Model Switcher (/model)",
+      "desc": "Switch active model across all 5 NVIDIA NIM frontier models or list available engines",
+      "category": "general"
+    },
+    {
+      "cmd": "/plan",
+      "file": "plan.md",
+      "title": "\ud83d\udcd0 Strict Zero-Edit Planning Protocol",
+      "desc": "Strict Zero-Edit Planning - inspect codebase, build architectural design, and require explicit user approval before touching code",
+      "category": "general"
+    },
+    {
+      "cmd": "/review",
+      "file": "review.md",
+      "title": "\ud83d\udd75\ufe0f Autonomous Code Review Protocol (/review)",
+      "desc": "Automated code review on git diff for bugs, memory leaks, missing types, and security vulnerabilities",
+      "category": "general"
+    },
+    {
+      "cmd": "/sparc",
+      "file": "sparc.md",
+      "title": "\u26a1\ufe0f SPARC Development Methodology",
+      "desc": "Execute SPARC methodology workflows with Claude-Flow",
+      "category": "general"
+    },
+    {
+      "cmd": "/test",
+      "file": "test.md",
+      "title": "\ud83e\uddea Autonomous Multi-Language Test Runner (/test)",
+      "desc": "Autonomous multi-language test runner for Node, Python, and Remotion with zero manual intervention",
+      "category": "general"
+    },
+    {
+      "cmd": "/verify-all",
+      "file": "verify-all.md",
+      "title": "verify-all",
+      "desc": "Run universal multi-language integrity check across all project files",
+      "category": "general"
+    },
+    {
+      "cmd": "/verify",
+      "file": "verify.md",
+      "title": "verify",
+      "desc": "Execute specialized workflow",
+      "category": "general"
+    },
+    {
+      "cmd": "/workflow",
+      "file": "workflow.md",
+      "title": "\u26a1 Workflow Automator (/workflow)",
+      "desc": "Multi-step pipeline execution, dual-workspace release synchronization, and slash command validation",
+      "category": "general"
+    }
+  ],
+  "agents": [
+    {
+      "cmd": "/agents/README",
+      "file": "README.md",
+      "title": "Agents Commands",
+      "desc": "Commands for agents operations in Claude Flow.",
+      "category": "agents"
+    },
+    {
+      "cmd": "/agents/agent-capabilities",
+      "file": "agent-capabilities.md",
+      "title": "agent-capabilities",
+      "desc": "Matrix of agent capabilities and their specializations.",
+      "category": "agents"
+    },
+    {
+      "cmd": "/agents/agent-coordination",
+      "file": "agent-coordination.md",
+      "title": "agent-coordination",
+      "desc": "Coordination patterns for multi-agent collaboration.",
+      "category": "agents"
+    },
+    {
+      "cmd": "/agents/agent-spawning",
+      "file": "agent-spawning.md",
+      "title": "agent-spawning",
+      "desc": "Guide to spawning agents with Claude Code's Task tool.",
+      "category": "agents"
+    },
+    {
+      "cmd": "/agents/agent-types",
+      "file": "agent-types.md",
+      "title": "agent-types",
+      "desc": "Complete guide to all 54 available agent types in Claude Flow.",
+      "category": "agents"
+    },
+    {
+      "cmd": "/agents/health",
+      "file": "health.md",
+      "title": "Agent Health Command",
+      "desc": "Show agent health and metrics",
+      "category": "agents"
+    },
+    {
+      "cmd": "/agents/list",
+      "file": "list.md",
+      "title": "Agent List Command",
+      "desc": "List all active agents",
+      "category": "agents"
+    },
+    {
+      "cmd": "/agents/logs",
+      "file": "logs.md",
+      "title": "Agent Logs Command",
+      "desc": "Show agent activity logs",
+      "category": "agents"
+    },
+    {
+      "cmd": "/agents/metrics",
+      "file": "metrics.md",
+      "title": "Agent Metrics Command",
+      "desc": "Show agent performance metrics",
+      "category": "agents"
+    },
+    {
+      "cmd": "/agents/pool",
+      "file": "pool.md",
+      "title": "Agent Pool Command",
+      "desc": "Manage agent pool for scaling",
+      "category": "agents"
+    },
+    {
+      "cmd": "/agents/spawn",
+      "file": "spawn.md",
+      "title": "Agent Spawn Command",
+      "desc": "Spawn a new agent with V3 capabilities",
+      "category": "agents"
+    },
+    {
+      "cmd": "/agents/status",
+      "file": "status.md",
+      "title": "Agent Status Command",
+      "desc": "Show detailed status of an agent",
+      "category": "agents"
+    },
+    {
+      "cmd": "/agents/stop",
+      "file": "stop.md",
+      "title": "Agent Stop Command",
+      "desc": "Stop a running agent",
+      "category": "agents"
+    }
+  ],
+  "analysis": [
+    {
+      "cmd": "/analysis/COMMAND_COMPLIANCE_REPORT",
+      "file": "COMMAND_COMPLIANCE_REPORT.md",
+      "title": "Analysis Commands Compliance Report",
+      "desc": "Reviewed all command files in `.claude/commands/analysis/` directory to ensure proper usage of:",
+      "category": "analysis"
+    },
+    {
+      "cmd": "/analysis/README",
+      "file": "README.md",
+      "title": "Analysis Commands",
+      "desc": "Commands for analysis operations in Claude Flow.",
+      "category": "analysis"
+    },
+    {
+      "cmd": "/analysis/bottleneck-detect",
+      "file": "bottleneck-detect.md",
+      "title": "bottleneck detect",
+      "desc": "Analyze performance bottlenecks in swarm operations and suggest optimizations.",
+      "category": "analysis"
+    },
+    {
+      "cmd": "/analysis/performance-bottlenecks",
+      "file": "performance-bottlenecks.md",
+      "title": "Performance Bottleneck Analysis",
+      "desc": "Identify and resolve performance bottlenecks in your development workflow.",
+      "category": "analysis"
+    },
+    {
+      "cmd": "/analysis/performance-report",
+      "file": "performance-report.md",
+      "title": "performance-report",
+      "desc": "Generate comprehensive performance reports for swarm operations.",
+      "category": "analysis"
+    },
+    {
+      "cmd": "/analysis/token-efficiency",
+      "file": "token-efficiency.md",
+      "title": "Token Usage Optimization",
+      "desc": "Reduce token consumption while maintaining quality through intelligent coordination.",
+      "category": "analysis"
+    },
+    {
+      "cmd": "/analysis/token-usage",
+      "file": "token-usage.md",
+      "title": "token-usage",
+      "desc": "Analyze token usage patterns and optimize for efficiency.",
+      "category": "analysis"
+    }
+  ],
+  "automation": [
+    {
+      "cmd": "/automation/README",
+      "file": "README.md",
+      "title": "Automation Commands",
+      "desc": "Commands for automation operations in Claude Flow.",
+      "category": "automation"
+    },
+    {
+      "cmd": "/automation/auto-agent",
+      "file": "auto-agent.md",
+      "title": "auto agent",
+      "desc": "Automatically spawn and manage agents based on task requirements.",
+      "category": "automation"
+    },
+    {
+      "cmd": "/automation/self-healing",
+      "file": "self-healing.md",
+      "title": "Self-Healing Workflows",
+      "desc": "Automatically detect and recover from errors without interrupting your flow.",
+      "category": "automation"
+    },
+    {
+      "cmd": "/automation/session-memory",
+      "file": "session-memory.md",
+      "title": "Cross-Session Memory",
+      "desc": "Maintain context and learnings across Claude Code sessions for continuous improvement.",
+      "category": "automation"
+    },
+    {
+      "cmd": "/automation/smart-agents",
+      "file": "smart-agents.md",
+      "title": "Smart Agent Auto-Spawning",
+      "desc": "Automatically spawn the right agents at the right time without manual intervention.",
+      "category": "automation"
+    },
+    {
+      "cmd": "/automation/smart-spawn",
+      "file": "smart-spawn.md",
+      "title": "smart-spawn",
+      "desc": "Intelligently spawn agents based on workload analysis.",
+      "category": "automation"
+    },
+    {
+      "cmd": "/automation/workflow-select",
+      "file": "workflow-select.md",
+      "title": "workflow-select",
+      "desc": "Automatically select optimal workflow based on task type.",
+      "category": "automation"
+    }
+  ],
+  "coordination": [
+    {
+      "cmd": "/coordination/README",
+      "file": "README.md",
+      "title": "Coordination Commands",
+      "desc": "Commands for coordination operations in Claude Flow.",
+      "category": "coordination"
+    },
+    {
+      "cmd": "/coordination/agent-spawn",
+      "file": "agent-spawn.md",
+      "title": "agent-spawn",
+      "desc": "Spawn a new agent in the current swarm.",
+      "category": "coordination"
+    },
+    {
+      "cmd": "/coordination/init",
+      "file": "init.md",
+      "title": "Initialize Coordination Framework",
+      "desc": "**This tool coordinates Claude Code's actions. It does NOT write code or create content.**",
+      "category": "coordination"
+    },
+    {
+      "cmd": "/coordination/orchestrate",
+      "file": "orchestrate.md",
+      "title": "Coordinate Task Execution",
+      "desc": "**This tool coordinates Claude Code's actions. It does NOT write code or create content.**",
+      "category": "coordination"
+    },
+    {
+      "cmd": "/coordination/spawn",
+      "file": "spawn.md",
+      "title": "Create Cognitive Patterns",
+      "desc": "**This tool coordinates Claude Code's actions. It does NOT write code or create content.**",
+      "category": "coordination"
+    },
+    {
+      "cmd": "/coordination/swarm-init",
+      "file": "swarm-init.md",
+      "title": "swarm init",
+      "desc": "Initialize a Claude Flow swarm with specified topology and configuration.",
+      "category": "coordination"
+    },
+    {
+      "cmd": "/coordination/task-orchestrate",
+      "file": "task-orchestrate.md",
+      "title": "task-orchestrate",
+      "desc": "Orchestrate complex tasks across the swarm.",
+      "category": "coordination"
+    }
+  ],
+  "flow-nexus": [
+    {
+      "cmd": "/flow-nexus/app-store",
+      "file": "app-store.md",
+      "title": "Flow Nexus App Store",
+      "desc": "Browse, publish, and deploy applications",
+      "category": "flow-nexus"
+    },
+    {
+      "cmd": "/flow-nexus/challenges",
+      "file": "challenges.md",
+      "title": "Flow Nexus Challenges",
+      "desc": "Coding challenges, achievements, and leaderboards",
+      "category": "flow-nexus"
+    },
+    {
+      "cmd": "/flow-nexus/login-registration",
+      "file": "login-registration.md",
+      "title": "Flow Nexus Authentication",
+      "desc": "Flow Nexus authentication and user management",
+      "category": "flow-nexus"
+    },
+    {
+      "cmd": "/flow-nexus/neural-network",
+      "file": "neural-network.md",
+      "title": "Flow Nexus Neural Networks",
+      "desc": "Train and deploy neural networks in distributed sandboxes",
+      "category": "flow-nexus"
+    },
+    {
+      "cmd": "/flow-nexus/payments",
+      "file": "payments.md",
+      "title": "Flow Nexus Payments",
+      "desc": "Credit management, billing, and payment configuration",
+      "category": "flow-nexus"
+    },
+    {
+      "cmd": "/flow-nexus/sandbox",
+      "file": "sandbox.md",
+      "title": "Flow Nexus Sandboxes",
+      "desc": "E2B sandbox management for isolated code execution",
+      "category": "flow-nexus"
+    },
+    {
+      "cmd": "/flow-nexus/swarm",
+      "file": "swarm.md",
+      "title": "Flow Nexus Swarms",
+      "desc": "AI swarm deployment and coordination in cloud",
+      "category": "flow-nexus"
+    },
+    {
+      "cmd": "/flow-nexus/user-tools",
+      "file": "user-tools.md",
+      "title": "Flow Nexus User Tools",
+      "desc": "User management, storage, and system utilities",
+      "category": "flow-nexus"
+    },
+    {
+      "cmd": "/flow-nexus/workflow",
+      "file": "workflow.md",
+      "title": "Flow Nexus Workflows",
+      "desc": "Event-driven workflow automation with message queues",
+      "category": "flow-nexus"
+    }
+  ],
+  "github": [
+    {
+      "cmd": "/github/README",
+      "file": "README.md",
+      "title": "Github Commands",
+      "desc": "Commands for github operations in Claude Flow.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/code-review-swarm",
+      "file": "code-review-swarm.md",
+      "title": "Code Review Swarm - Automated Code Review with AI Agents",
+      "desc": "Deploy specialized AI agents to perform comprehensive, intelligent code reviews that go beyond traditional static analysis.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/code-review",
+      "file": "code-review.md",
+      "title": "code-review",
+      "desc": "Automated code review with swarm intelligence.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/github-modes",
+      "file": "github-modes.md",
+      "title": "GitHub Integration Modes",
+      "desc": "This document describes all GitHub integration modes available in Claude-Flow with ruv-swarm coordination. Each mode is optimized for specific GitHub workflows and includes batch tool integration for maximum efficiency.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/github-swarm",
+      "file": "github-swarm.md",
+      "title": "github swarm",
+      "desc": "Create a specialized swarm for GitHub repository management.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/issue-tracker",
+      "file": "issue-tracker.md",
+      "title": "GitHub Issue Tracker",
+      "desc": "Intelligent issue management and project coordination with ruv-swarm integration for automated tracking, progress monitoring, and team coordination.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/issue-triage",
+      "file": "issue-triage.md",
+      "title": "issue-triage",
+      "desc": "Intelligent issue classification and triage.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/multi-repo-swarm",
+      "file": "multi-repo-swarm.md",
+      "title": "Multi-Repo Swarm - Cross-Repository Swarm Orchestration",
+      "desc": "Coordinate AI swarms across multiple repositories, enabling organization-wide automation and intelligent cross-project collaboration.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/pr-enhance",
+      "file": "pr-enhance.md",
+      "title": "pr-enhance",
+      "desc": "AI-powered pull request enhancements.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/pr-manager",
+      "file": "pr-manager.md",
+      "title": "GitHub PR Manager",
+      "desc": "Comprehensive pull request management with ruv-swarm coordination for automated reviews, testing, and merge workflows.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/project-board-sync",
+      "file": "project-board-sync.md",
+      "title": "Project Board Sync - GitHub Projects Integration",
+      "desc": "Synchronize AI swarms with GitHub Projects for visual task management, progress tracking, and team coordination.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/release-manager",
+      "file": "release-manager.md",
+      "title": "GitHub Release Manager",
+      "desc": "Automated release coordination and deployment with ruv-swarm orchestration for seamless version management, testing, and deployment across multiple packages.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/release-swarm",
+      "file": "release-swarm.md",
+      "title": "Release Swarm - Intelligent Release Automation",
+      "desc": "Orchestrate complex software releases using AI swarms that handle everything from changelog generation to multi-platform deployment.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/repo-analyze",
+      "file": "repo-analyze.md",
+      "title": "repo-analyze",
+      "desc": "Deep analysis of GitHub repository with AI insights.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/repo-architect",
+      "file": "repo-architect.md",
+      "title": "GitHub Repository Architect",
+      "desc": "\"Standardized template for Claude Code projects with ruv-swarm integration\",",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/swarm-issue",
+      "file": "swarm-issue.md",
+      "title": "Swarm Issue - Issue-Based Swarm Coordination",
+      "desc": "Create a task for AI swarm processing",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/swarm-pr",
+      "file": "swarm-pr.md",
+      "title": "Swarm PR - Managing Swarms through Pull Requests",
+      "desc": "Create and manage AI swarms directly from GitHub Pull Requests, enabling seamless integration with your development workflow.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/sync-coordinator",
+      "file": "sync-coordinator.md",
+      "title": "GitHub Sync Coordinator",
+      "desc": "Multi-package synchronization and version alignment with ruv-swarm coordination for seamless integration between claude-code-flow and ruv-swarm packages.",
+      "category": "github"
+    },
+    {
+      "cmd": "/github/workflow-automation",
+      "file": "workflow-automation.md",
+      "title": "Workflow Automation - GitHub Actions Integration",
+      "desc": "'Custom swarm-powered action'",
+      "category": "github"
+    }
+  ],
+  "hive-mind": [
+    {
+      "cmd": "/hive-mind/README",
+      "file": "README.md",
+      "title": "Hive-mind Commands",
+      "desc": "Commands for hive-mind operations in Claude Flow.",
+      "category": "hive-mind"
+    },
+    {
+      "cmd": "/hive-mind/hive-mind-consensus",
+      "file": "hive-mind-consensus.md",
+      "title": "hive-mind-consensus",
+      "desc": "Command documentation for hive-mind-consensus in category hive-mind.",
+      "category": "hive-mind"
+    },
+    {
+      "cmd": "/hive-mind/hive-mind-init",
+      "file": "hive-mind-init.md",
+      "title": "hive-mind-init",
+      "desc": "Initialize the Hive Mind collective intelligence system.",
+      "category": "hive-mind"
+    },
+    {
+      "cmd": "/hive-mind/hive-mind-memory",
+      "file": "hive-mind-memory.md",
+      "title": "hive-mind-memory",
+      "desc": "Command documentation for hive-mind-memory in category hive-mind.",
+      "category": "hive-mind"
+    },
+    {
+      "cmd": "/hive-mind/hive-mind-metrics",
+      "file": "hive-mind-metrics.md",
+      "title": "hive-mind-metrics",
+      "desc": "Command documentation for hive-mind-metrics in category hive-mind.",
+      "category": "hive-mind"
+    },
+    {
+      "cmd": "/hive-mind/hive-mind-resume",
+      "file": "hive-mind-resume.md",
+      "title": "hive-mind-resume",
+      "desc": "Command documentation for hive-mind-resume in category hive-mind.",
+      "category": "hive-mind"
+    },
+    {
+      "cmd": "/hive-mind/hive-mind-sessions",
+      "file": "hive-mind-sessions.md",
+      "title": "hive-mind-sessions",
+      "desc": "Command documentation for hive-mind-sessions in category hive-mind.",
+      "category": "hive-mind"
+    },
+    {
+      "cmd": "/hive-mind/hive-mind-spawn",
+      "file": "hive-mind-spawn.md",
+      "title": "hive-mind-spawn",
+      "desc": "Spawn a Hive Mind swarm with queen-led coordination.",
+      "category": "hive-mind"
+    },
+    {
+      "cmd": "/hive-mind/hive-mind-status",
+      "file": "hive-mind-status.md",
+      "title": "hive-mind-status",
+      "desc": "Command documentation for hive-mind-status in category hive-mind.",
+      "category": "hive-mind"
+    },
+    {
+      "cmd": "/hive-mind/hive-mind-stop",
+      "file": "hive-mind-stop.md",
+      "title": "hive-mind-stop",
+      "desc": "Command documentation for hive-mind-stop in category hive-mind.",
+      "category": "hive-mind"
+    },
+    {
+      "cmd": "/hive-mind/hive-mind-wizard",
+      "file": "hive-mind-wizard.md",
+      "title": "hive-mind-wizard",
+      "desc": "Command documentation for hive-mind-wizard in category hive-mind.",
+      "category": "hive-mind"
+    },
+    {
+      "cmd": "/hive-mind/hive-mind",
+      "file": "hive-mind.md",
+      "title": "hive-mind",
+      "desc": "Hive Mind collective intelligence system for advanced swarm coordination.",
+      "category": "hive-mind"
+    }
+  ],
+  "hooks": [
+    {
+      "cmd": "/hooks/README",
+      "file": "README.md",
+      "title": "Hooks Commands",
+      "desc": "Commands for hooks operations in Claude Flow.",
+      "category": "hooks"
+    },
+    {
+      "cmd": "/hooks/overview",
+      "file": "overview.md",
+      "title": "Claude Code Hooks for claude-flow",
+      "desc": "Automatically coordinate, format, and learn from Claude Code operations using hooks.",
+      "category": "hooks"
+    },
+    {
+      "cmd": "/hooks/post-edit",
+      "file": "post-edit.md",
+      "title": "hook post-edit",
+      "desc": "Execute post-edit processing including formatting, validation, and memory updates.",
+      "category": "hooks"
+    },
+    {
+      "cmd": "/hooks/post-task",
+      "file": "post-task.md",
+      "title": "hook post-task",
+      "desc": "Execute post-task cleanup, performance analysis, and memory storage.",
+      "category": "hooks"
+    },
+    {
+      "cmd": "/hooks/pre-edit",
+      "file": "pre-edit.md",
+      "title": "hook pre-edit",
+      "desc": "Execute pre-edit validations and agent assignment before file modifications.",
+      "category": "hooks"
+    },
+    {
+      "cmd": "/hooks/pre-task",
+      "file": "pre-task.md",
+      "title": "hook pre-task",
+      "desc": "Execute pre-task preparations and context loading.",
+      "category": "hooks"
+    },
+    {
+      "cmd": "/hooks/session-end",
+      "file": "session-end.md",
+      "title": "hook session-end",
+      "desc": "Cleanup and persist session state before ending work.",
+      "category": "hooks"
+    },
+    {
+      "cmd": "/hooks/setup",
+      "file": "setup.md",
+      "title": "Setting Up ruv-swarm Hooks",
+      "desc": "```bash",
+      "category": "hooks"
+    }
+  ],
+  "memory": [
+    {
+      "cmd": "/memory/README",
+      "file": "README.md",
+      "title": "Memory Commands",
+      "desc": "Commands for memory operations in Claude Flow.",
+      "category": "memory"
+    },
+    {
+      "cmd": "/memory/memory-neural",
+      "file": "memory-neural.md",
+      "title": "Neural Pattern Training",
+      "desc": "**This tool coordinates Claude Code's actions. It does NOT write code or create content.**",
+      "category": "memory"
+    },
+    {
+      "cmd": "/memory/memory-persist",
+      "file": "memory-persist.md",
+      "title": "memory-persist",
+      "desc": "Persist memory across sessions.",
+      "category": "memory"
+    },
+    {
+      "cmd": "/memory/memory-search",
+      "file": "memory-search.md",
+      "title": "memory-search",
+      "desc": "Search through stored memory.",
+      "category": "memory"
+    },
+    {
+      "cmd": "/memory/memory-usage",
+      "file": "memory-usage.md",
+      "title": "memory-usage",
+      "desc": "Manage persistent memory storage.",
+      "category": "memory"
+    },
+    {
+      "cmd": "/memory/neural",
+      "file": "neural.md",
+      "title": "Neural Pattern Training",
+      "desc": "**This tool coordinates Claude Code's actions. It does NOT write code or create content.**",
+      "category": "memory"
+    }
+  ],
+  "monitoring": [
+    {
+      "cmd": "/monitoring/README",
+      "file": "README.md",
+      "title": "Monitoring Commands",
+      "desc": "Commands for monitoring operations in Claude Flow.",
+      "category": "monitoring"
+    },
+    {
+      "cmd": "/monitoring/agent-metrics",
+      "file": "agent-metrics.md",
+      "title": "agent-metrics",
+      "desc": "View agent performance metrics.",
+      "category": "monitoring"
+    },
+    {
+      "cmd": "/monitoring/agents",
+      "file": "agents.md",
+      "title": "List Active Patterns",
+      "desc": "**This tool coordinates Claude Code's actions. It does NOT write code or create content.**",
+      "category": "monitoring"
+    },
+    {
+      "cmd": "/monitoring/real-time-view",
+      "file": "real-time-view.md",
+      "title": "real-time-view",
+      "desc": "Real-time view of swarm activity.",
+      "category": "monitoring"
+    },
+    {
+      "cmd": "/monitoring/status",
+      "file": "status.md",
+      "title": "Check Coordination Status",
+      "desc": "**This tool coordinates Claude Code's actions. It does NOT write code or create content.**",
+      "category": "monitoring"
+    },
+    {
+      "cmd": "/monitoring/swarm-monitor",
+      "file": "swarm-monitor.md",
+      "title": "swarm-monitor",
+      "desc": "Real-time swarm monitoring.",
+      "category": "monitoring"
+    }
+  ],
+  "optimization": [
+    {
+      "cmd": "/optimization/README",
+      "file": "README.md",
+      "title": "Optimization Commands",
+      "desc": "Commands for optimization operations in Claude Flow.",
+      "category": "optimization"
+    },
+    {
+      "cmd": "/optimization/auto-topology",
+      "file": "auto-topology.md",
+      "title": "Automatic Topology Selection",
+      "desc": "Automatically select the optimal swarm topology based on task complexity analysis.",
+      "category": "optimization"
+    },
+    {
+      "cmd": "/optimization/cache-manage",
+      "file": "cache-manage.md",
+      "title": "cache-manage",
+      "desc": "Manage operation cache for performance.",
+      "category": "optimization"
+    },
+    {
+      "cmd": "/optimization/parallel-execute",
+      "file": "parallel-execute.md",
+      "title": "parallel-execute",
+      "desc": "Execute tasks in parallel for maximum efficiency.",
+      "category": "optimization"
+    },
+    {
+      "cmd": "/optimization/parallel-execution",
+      "file": "parallel-execution.md",
+      "title": "Parallel Task Execution",
+      "desc": "Execute independent subtasks in parallel for maximum efficiency.",
+      "category": "optimization"
+    },
+    {
+      "cmd": "/optimization/topology-optimize",
+      "file": "topology-optimize.md",
+      "title": "topology-optimize",
+      "desc": "Optimize swarm topology for current workload.",
+      "category": "optimization"
+    }
+  ],
+  "pair": [
+    {
+      "cmd": "/pair/README",
+      "file": "README.md",
+      "title": "\ud83d\udc65 Pair Programming Command",
+      "desc": "Collaborative development with real-time verification and AI assistance.",
+      "category": "pair"
+    },
+    {
+      "cmd": "/pair/commands",
+      "file": "commands.md",
+      "title": "Pair Programming Commands Reference",
+      "desc": "Complete reference for all pair programming session commands.",
+      "category": "pair"
+    },
+    {
+      "cmd": "/pair/config",
+      "file": "config.md",
+      "title": "Pair Programming Configuration",
+      "desc": "Complete configuration guide for pair programming sessions.",
+      "category": "pair"
+    },
+    {
+      "cmd": "/pair/examples",
+      "file": "examples.md",
+      "title": "Pair Programming Examples",
+      "desc": "AI explains JWT concepts and best practices",
+      "category": "pair"
+    },
+    {
+      "cmd": "/pair/modes",
+      "file": "modes.md",
+      "title": "Pair Programming Modes",
+      "desc": "Detailed guide to pair programming modes and their optimal use cases.",
+      "category": "pair"
+    },
+    {
+      "cmd": "/pair/session",
+      "file": "session.md",
+      "title": "Pair Programming Session Management",
+      "desc": "Complete guide to managing pair programming sessions.",
+      "category": "pair"
+    },
+    {
+      "cmd": "/pair/start",
+      "file": "start.md",
+      "title": "pair --start",
+      "desc": "Start a new pair programming session with AI assistance.",
+      "category": "pair"
+    }
+  ],
+  "sparc": [
+    {
+      "cmd": "/sparc/analyzer",
+      "file": "analyzer.md",
+      "title": "SPARC Analyzer Mode",
+      "desc": "Deep code and data analysis with batch processing capabilities.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/architect",
+      "file": "architect.md",
+      "title": "SPARC Architect Mode",
+      "desc": "System design with Memory-based coordination for scalable architectures.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/ask",
+      "file": "ask.md",
+      "title": "\u2753Ask",
+      "desc": "\u2753Ask - You are a task-formulation guide that helps users navigate, ask, and delegate tasks to the correc...",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/batch-executor",
+      "file": "batch-executor.md",
+      "title": "SPARC Batch Executor Mode",
+      "desc": "Parallel task execution specialist using batch operations.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/code",
+      "file": "code.md",
+      "title": "\ud83e\udde0 Auto-Coder",
+      "desc": "\ud83e\udde0 Auto-Coder - You write clean, efficient, modular code based on pseudocode and architecture. You use configurat...",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/coder",
+      "file": "coder.md",
+      "title": "SPARC Coder Mode",
+      "desc": "Autonomous code generation with batch file operations.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/debug",
+      "file": "debug.md",
+      "title": "\ud83e\udeb2 Debugger",
+      "desc": "\ud83e\udeb2 Debugger - You troubleshoot runtime bugs, logic errors, or integration failures by tracing, inspecting, and ...",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/debugger",
+      "file": "debugger.md",
+      "title": "SPARC Debugger Mode",
+      "desc": "Systematic debugging with TodoWrite and Memory integration.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/designer",
+      "file": "designer.md",
+      "title": "SPARC Designer Mode",
+      "desc": "UI/UX design with Memory coordination for consistent experiences.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/devops",
+      "file": "devops.md",
+      "title": "\ud83d\ude80 DevOps",
+      "desc": "\ud83d\ude80 DevOps - You are the DevOps automation and infrastructure specialist responsible for deploying, managing, ...",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/docs-writer",
+      "file": "docs-writer.md",
+      "title": "\ud83d\udcda Documentation Writer",
+      "desc": "\ud83d\udcda Documentation Writer - You write concise, clear, and modular Markdown documentation that explains usage, integration, se...",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/documenter",
+      "file": "documenter.md",
+      "title": "SPARC Documenter Mode",
+      "desc": "Documentation with batch file operations for comprehensive docs.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/innovator",
+      "file": "innovator.md",
+      "title": "SPARC Innovator Mode",
+      "desc": "Creative problem solving with WebSearch and Memory integration.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/integration",
+      "file": "integration.md",
+      "title": "\ud83d\udd17 System Integrator",
+      "desc": "\ud83d\udd17 System Integrator - You merge the outputs of all modes into a working, tested, production-ready system. You ensure co...",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/mcp",
+      "file": "mcp.md",
+      "title": "\u267e\ufe0f MCP Integration",
+      "desc": "\u267e\ufe0f MCP Integration - You are the MCP (Management Control Panel) integration specialist responsible for connecting to a...",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/memory-manager",
+      "file": "memory-manager.md",
+      "title": "SPARC Memory Manager Mode",
+      "desc": "Knowledge management with Memory tools for persistent insights.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/optimizer",
+      "file": "optimizer.md",
+      "title": "SPARC Optimizer Mode",
+      "desc": "Performance optimization with systematic analysis and improvements.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/orchestrator",
+      "file": "orchestrator.md",
+      "title": "SPARC Orchestrator Mode",
+      "desc": "Multi-agent task orchestration with TodoWrite/TodoRead/Task/Memory using MCP tools.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/post-deployment-monitoring-mode",
+      "file": "post-deployment-monitoring-mode.md",
+      "title": "\ud83d\udcc8 Deployment Monitor",
+      "desc": "\ud83d\udcc8 Deployment Monitor - You observe the system post-launch, collecting performance, logs, and user feedback. You flag reg...",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/refinement-optimization-mode",
+      "file": "refinement-optimization-mode.md",
+      "title": "\ud83e\uddf9 Optimizer",
+      "desc": "\ud83e\uddf9 Optimizer - You refactor, modularize, and improve system performance. You enforce file size limits, dependenc...",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/researcher",
+      "file": "researcher.md",
+      "title": "SPARC Researcher Mode",
+      "desc": "Deep research with parallel WebSearch/WebFetch and Memory coordination.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/reviewer",
+      "file": "reviewer.md",
+      "title": "SPARC Reviewer Mode",
+      "desc": "Code review using batch file analysis for comprehensive reviews.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/security-review",
+      "file": "security-review.md",
+      "title": "\ud83d\udee1\ufe0f Security Reviewer",
+      "desc": "\ud83d\udee1\ufe0f Security Reviewer - You perform static and dynamic audits to ensure secure code practices. You flag secrets, poor mod...",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/sparc-modes",
+      "file": "sparc-modes.md",
+      "title": "SPARC Modes Overview",
+      "desc": "SPARC (Specification, Planning, Architecture, Review, Code) is a comprehensive development methodology with 17 specialized modes, all integrated with MCP tools for enhanced coordination and execution.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/sparc",
+      "file": "sparc.md",
+      "title": "\u26a1\ufe0f SPARC Orchestrator",
+      "desc": "\u26a1\ufe0f SPARC Orchestrator - You are SPARC, the orchestrator of complex workflows. You break down large objectives into delega...",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/spec-pseudocode",
+      "file": "spec-pseudocode.md",
+      "title": "\ud83d\udccb Specification Writer",
+      "desc": "\ud83d\udccb Specification Writer - You capture full project context\u2014functional requirements, edge cases, constraints\u2014and translate t...",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/supabase-admin",
+      "file": "supabase-admin.md",
+      "title": "\ud83d\udd10 Supabase Admin",
+      "desc": "\ud83d\udd10 Supabase Admin - You are the Supabase database, authentication, and storage specialist. You design and implement d...",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/swarm-coordinator",
+      "file": "swarm-coordinator.md",
+      "title": "SPARC Swarm Coordinator Mode",
+      "desc": "Specialized swarm management with batch coordination capabilities.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/tdd",
+      "file": "tdd.md",
+      "title": "SPARC TDD Mode",
+      "desc": "Test-driven development with TodoWrite planning and comprehensive testing.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/tester",
+      "file": "tester.md",
+      "title": "SPARC Tester Mode",
+      "desc": "Comprehensive testing with parallel execution capabilities.",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/tutorial",
+      "file": "tutorial.md",
+      "title": "\ud83d\udcd8 SPARC Tutorial",
+      "desc": "\ud83d\udcd8 SPARC Tutorial - You are the SPARC onboarding and education assistant. Your job is to guide users through the full...",
+      "category": "sparc"
+    },
+    {
+      "cmd": "/sparc/workflow-manager",
+      "file": "workflow-manager.md",
+      "title": "SPARC Workflow Manager Mode",
+      "desc": "Process automation with TodoWrite planning and Task execution.",
+      "category": "sparc"
+    }
+  ],
+  "stream-chain": [
+    {
+      "cmd": "/stream-chain/pipeline",
+      "file": "pipeline.md",
+      "title": "stream-chain pipeline",
+      "desc": "Execute predefined pipelines for common development workflows.",
+      "category": "stream-chain"
+    },
+    {
+      "cmd": "/stream-chain/run",
+      "file": "run.md",
+      "title": "stream-chain run",
+      "desc": "Execute a custom stream chain with your own prompts.",
+      "category": "stream-chain"
+    }
+  ],
+  "swarm": [
+    {
+      "cmd": "/swarm/README",
+      "file": "README.md",
+      "title": "Swarm Commands",
+      "desc": "Commands for swarm operations in Claude Flow.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/analysis",
+      "file": "analysis.md",
+      "title": "Analysis Swarm Strategy",
+      "desc": "Comprehensive analysis through distributed agent coordination.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/development",
+      "file": "development.md",
+      "title": "Development Swarm Strategy",
+      "desc": "Coordinated development through specialized agent teams.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/examples",
+      "file": "examples.md",
+      "title": "Examples Swarm Strategy",
+      "desc": "```javascript",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/maintenance",
+      "file": "maintenance.md",
+      "title": "Maintenance Swarm Strategy",
+      "desc": "System maintenance and updates through coordinated agents.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/optimization",
+      "file": "optimization.md",
+      "title": "Optimization Swarm Strategy",
+      "desc": "Performance optimization through specialized analysis.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/research",
+      "file": "research.md",
+      "title": "Research Swarm Strategy",
+      "desc": "Deep research through parallel information gathering.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/swarm-analysis",
+      "file": "swarm-analysis.md",
+      "title": "swarm-analysis",
+      "desc": "Command documentation for swarm-analysis in category swarm.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/swarm-background",
+      "file": "swarm-background.md",
+      "title": "swarm-background",
+      "desc": "Command documentation for swarm-background in category swarm.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/swarm-init",
+      "file": "swarm-init.md",
+      "title": "swarm-init",
+      "desc": "Initialize a new swarm with specified topology.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/swarm-modes",
+      "file": "swarm-modes.md",
+      "title": "swarm-modes",
+      "desc": "Command documentation for swarm-modes in category swarm.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/swarm-monitor",
+      "file": "swarm-monitor.md",
+      "title": "swarm-monitor",
+      "desc": "Command documentation for swarm-monitor in category swarm.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/swarm-orchestrate",
+      "file": "swarm-orchestrate.md",
+      "title": "/swarm-orchestrate",
+      "desc": "Main swarm orchestration command for Claude Flow V3.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/swarm-spawn",
+      "file": "swarm-spawn.md",
+      "title": "swarm-spawn",
+      "desc": "Spawn agents in the swarm.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/swarm-status",
+      "file": "swarm-status.md",
+      "title": "swarm-status",
+      "desc": "Command documentation for swarm-status in category swarm.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/swarm-strategies",
+      "file": "swarm-strategies.md",
+      "title": "swarm-strategies",
+      "desc": "Command documentation for swarm-strategies in category swarm.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/swarm",
+      "file": "swarm.md",
+      "title": "swarm",
+      "desc": "Main swarm orchestration command for Claude Flow.",
+      "category": "swarm"
+    },
+    {
+      "cmd": "/swarm/testing",
+      "file": "testing.md",
+      "title": "Testing Swarm Strategy",
+      "desc": "Comprehensive testing through distributed execution.",
+      "category": "swarm"
+    }
+  ],
+  "training": [
+    {
+      "cmd": "/training/README",
+      "file": "README.md",
+      "title": "Training Commands",
+      "desc": "Commands for training operations in Claude Flow.",
+      "category": "training"
+    },
+    {
+      "cmd": "/training/model-update",
+      "file": "model-update.md",
+      "title": "model-update",
+      "desc": "Update neural models with new data.",
+      "category": "training"
+    },
+    {
+      "cmd": "/training/neural-patterns",
+      "file": "neural-patterns.md",
+      "title": "Neural Pattern Training",
+      "desc": "Continuously improve coordination through neural network learning.",
+      "category": "training"
+    },
+    {
+      "cmd": "/training/neural-train",
+      "file": "neural-train.md",
+      "title": "neural-train",
+      "desc": "Train neural patterns from operations.",
+      "category": "training"
+    },
+    {
+      "cmd": "/training/pattern-learn",
+      "file": "pattern-learn.md",
+      "title": "pattern-learn",
+      "desc": "Learn patterns from successful operations.",
+      "category": "training"
+    },
+    {
+      "cmd": "/training/specialization",
+      "file": "specialization.md",
+      "title": "Agent Specialization Training",
+      "desc": "Train agents to become experts in specific domains for better performance.",
+      "category": "training"
+    }
+  ],
+  "truth": [
+    {
+      "cmd": "/truth/start",
+      "file": "start.md",
+      "title": "\ud83d\udcca Truth Command",
+      "desc": "View truth scores and reliability metrics for your codebase and agent tasks.",
+      "category": "truth"
+    }
+  ],
+  "verify": [
+    {
+      "cmd": "/verify/check",
+      "file": "check.md",
+      "title": "verify check",
+      "desc": "Run verification checks on code, tasks, or agent outputs.",
+      "category": "verify"
+    },
+    {
+      "cmd": "/verify/start",
+      "file": "start.md",
+      "title": "\ud83d\udd0d Verification Commands",
+      "desc": "Truth verification system for ensuring code quality and correctness with a 0.95 accuracy threshold.",
+      "category": "verify"
+    }
+  ],
+  "workflows": [
+    {
+      "cmd": "/workflows/README",
+      "file": "README.md",
+      "title": "Workflows Commands",
+      "desc": "Commands for workflows operations in Claude Flow.",
+      "category": "workflows"
+    },
+    {
+      "cmd": "/workflows/development",
+      "file": "development.md",
+      "title": "Development Workflow Coordination",
+      "desc": "Structure Claude Code's approach to complex development tasks for maximum efficiency.",
+      "category": "workflows"
+    },
+    {
+      "cmd": "/workflows/research",
+      "file": "research.md",
+      "title": "Research Workflow Coordination",
+      "desc": "Coordinate Claude Code's research activities for comprehensive, systematic exploration.",
+      "category": "workflows"
+    },
+    {
+      "cmd": "/workflows/workflow-create",
+      "file": "workflow-create.md",
+      "title": "workflow-create",
+      "desc": "Create reusable workflow templates.",
+      "category": "workflows"
+    },
+    {
+      "cmd": "/workflows/workflow-execute",
+      "file": "workflow-execute.md",
+      "title": "workflow-execute",
+      "desc": "Execute saved workflows.",
+      "category": "workflows"
+    },
+    {
+      "cmd": "/workflows/workflow-export",
+      "file": "workflow-export.md",
+      "title": "workflow-export",
+      "desc": "Export workflows for sharing.",
+      "category": "workflows"
+    }
+  ]
+}

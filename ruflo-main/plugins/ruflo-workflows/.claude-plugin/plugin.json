@@ -1,0 +1,47 @@
+{
+  "name": "ruflo-workflows",
+  "description": "Persisted workflows, native orchestration and discovery of the optional managed cloud runtime.",
+  "version": "0.7.2",
+  "repository": "https://github.com/ruvnet/ruflo",
+  "author": {
+    "name": "ruvnet",
+    "url": "https://github.com/ruvnet"
+  },
+  "homepage": "https://github.com/ruvnet/ruflo",
+  "license": "MIT",
+  "keywords": [
+    "ruflo",
+    "workflows",
+    "automation",
+    "orchestration",
+    "templates",
+    "mcp",
+    "workflow-templates",
+    "pause-resume",
+    "lifecycle",
+    "native-workflow",
+    "agent-fanout",
+    "pipeline",
+    "parallel",
+    "gaia",
+    "benchmark",
+    "hal-leaderboard",
+    "evaluation",
+    "agent-benchmark",
+    "function-hooks",
+    "guard"
+  ],
+  "userConfig": {
+    "guard": {
+      "type": "string",
+      "title": "Secret guard",
+      "description": "Refuse workflow definitions and run records that hold a secret, and workflow deletes that name no single id.",
+      "required": false,
+      "default": "on",
+      "options": [
+        "on",
+        "off"
+      ]
+    }
+  }
+}

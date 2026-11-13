@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "installedAt": "2026-11-12T10:41:18.900Z",
+  "files": {
+    "C:\\Users\\NEW\\OneDrive\\Desktop\\claudecode\\.claude\\settings.json": {
+      "plugins": [
+        "ruflo-mods@ruflo",
+        "ruflo-swarm@ruflo",
+        "ruflo-console@ruflo"
+      ],
+      "marketplace": true,
+      "env": true,
+      "claudeInstalled": []
+    }
+  }
+}

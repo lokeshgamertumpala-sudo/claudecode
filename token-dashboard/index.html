@@ -1,0 +1,5307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code Token Telemetry — Terminal Dashboard</title>
+  <style>
+    :root {
+      --bg-canvas: #0d1117;
+      --bg-panel: #161b22;
+      --bg-panel-hover: #21262d;
+      --border-subtle: #30363d;
+      --border-focus: #58a6ff;
+      --claude-orange: #d97736;
+      --claude-light: #e27d60;
+      --claude-dark: #b85d24;
+      --text-primary: #f0f6fc;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --terminal-green: #3fb950;
+      --terminal-cyan: #38bdf8;
+      --terminal-amber: #f59e0b;
+      --terminal-purple: #a855f7;
+      --terminal-red: #f85149;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, Menlo, Monaco, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 40px;
+      overflow-x: hidden;
+    }
+
+    .terminal-container {
+      width: 100%;
+      max-width: 1280px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 1px rgba(217, 119, 54, 0.2);
+      overflow: hidden;
+    }
+
+    /* Window Chrome Topbar */
+    .terminal-chrome {
+      background: #090d13;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      user-select: none;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .control-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot-close { background: #ff5f56; }
+    .dot-min { background: #ffbd2e; }
+    .dot-max { background: #27c93f; }
+
+    .window-title {
+      color: var(--text-secondary);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .window-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .terminal-btn {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .terminal-btn:hover {
+      background: var(--bg-panel-hover);
+      color: var(--text-primary);
+      border-color: var(--claude-orange);
+    }
+
+    /* Header Bar */
+    .header-bar {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: rgba(13, 17, 23, 0.5);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .claude-pixel-avatar {
+      width: 38px;
+      height: 38px;
+      image-rendering: pixelated;
+      shape-rendering: crispEdges;
+      filter: drop-shadow(0 0 8px rgba(217, 119, 54, 0.4));
+    }
+
+    .brand-title-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .claude-emblem {
+      color: var(--claude-orange);
+      font-weight: 800;
+      letter-spacing: -1px;
+      text-shadow: 0 0 10px rgba(217, 119, 54, 0.6);
+    }
+
+    .claude-emblem .bracket {
+      color: var(--text-secondary);
+    }
+
+    .claude-emblem .dots {
+      color: var(--claude-orange);
+      animation: pulse-dot 2.5s infinite ease-in-out;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; filter: drop-shadow(0 0 3px var(--claude-orange)); }
+      50% { opacity: 0.6; filter: drop-shadow(0 0 1px var(--claude-orange)); }
+    }
+
+    .brand-subtitle {
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .meta-badges {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .chip-model {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--terminal-cyan);
+    }
+
+    .chip-status {
+      transition: all 0.3s ease;
+    }
+
+    .chip-status.online {
+      background: rgba(63, 185, 80, 0.1);
+      border: 1px solid rgba(63, 185, 80, 0.4);
+      color: var(--terminal-green);
+    }
+
+    .chip-status.offline {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: var(--terminal-amber);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .chip-status.online .status-dot {
+      background: var(--terminal-green);
+      box-shadow: 0 0 8px var(--terminal-green);
+      animation: breathing-dot 2s infinite ease-in-out;
+    }
+
+    .chip-status.offline .status-dot {
+      background: var(--terminal-amber);
+    }
+
+    @keyframes breathing-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* Main Dashboard Content */
+    .dashboard-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* KPI Cards Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .kpi-card {
+      background: #0d1117;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .kpi-card:hover {
+      border-color: #484f58;
+      transform: translateY(-1px);
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--border-subtle);
+    }
+
+    .kpi-card.card-primary::before { background: var(--claude-orange); }
+    .kpi-card.card-green::before { background: var(--terminal-green); }
+    .kpi-card.card-cyan::before { background: var(--terminal-cyan); }
+    .kpi-card.card-amber::before { background: var(--terminal-amber); }
+    .kpi-card.card-purple::before { background: var(--terminal-purple); }
+
+    .kpi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .kpi-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .kpi-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+    }
+
+    .kpi-value-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .kpi-value {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+
+    .kpi-unit {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .kpi-subtext {
+      color: var(--text-muted);
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Stacked progress bar for active session */
+    .session-breakdown-bar {
+      height: 8px;
+      width: 100%;
+      background: #21262d;
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      margin-top: 4px;
+    }
+
+    .bar-seg {
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+
+    .seg-input { background: var(--terminal-cyan); }
+    .seg-output { background: var(--claude-orange); }
+    .seg-read { background: var(--terminal-green); }
+    .seg-create { background: var(--terminal-amber); }
+    .seg-think { background: var(--terminal-purple); }
+
+    .breakdown-legend {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      margin-top: 4px;
+      font-size: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text-secondary);
+    }
+
+    .legend-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Context capacity bar */
+    .capacity-container {
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    .capacity-track {
+      width: 100%;
+      height: 8px;
+      background: #21262d;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .capacity-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--terminal-green), var(--terminal-cyan));
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    /* Speed tachometer gauge */
+    .speed-meter-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .speed-svg-gauge {
+      width: 48px;
+      height: 48px;
+    }
+
+    .speed-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Heatmap Section */
+    .heatmap-section {
+      background: #0d1117;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-badge {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    .filter-ribbon {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid var(--terminal-cyan);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: var(--terminal-cyan);
+    }
+
+    .filter-ribbon.active {
+      display: inline-flex;
+    }
+
+    .clear-filter-btn {
+      background: transparent;
+      border: none;
+      color: var(--terminal-cyan);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: bold;
+      padding: 0 4px;
+    }
+
+    .clear-filter-btn:hover {
+      text-decoration: underline;
+    }
+
+    .heatmap-scroll-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .heatmap-svg {
+      width: 100%;
+      min-width: 760px;
+      height: auto;
+      display: block;
+    }
+
+    .heatmap-month-label {
+      font-size: 9px;
+      fill: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .heatmap-day-label {
+      font-size: 9px;
+      fill: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .heatmap-cell {
+      cursor: pointer;
+      transition: stroke 0.15s ease, transform 0.1s ease;
+      outline: none;
+    }
+
+    .heatmap-cell:hover {
+      stroke: #ffffff;
+      stroke-width: 1px;
+    }
+
+    .heatmap-cell.selected {
+      stroke: var(--terminal-cyan) !important;
+      stroke-width: 2px !important;
+    }
+
+    .level-0 { fill: #161b22; }
+    .level-1 { fill: #0e4429; }
+    .level-2 { fill: #006d32; }
+    .level-3 { fill: #26a641; }
+    .level-4 { fill: #39d353; }
+
+    .heatmap-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding-top: 4px;
+    }
+
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .legend-box {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    /* Floating Tooltip */
+    #heatmap-tooltip {
+      position: fixed;
+      background: #1c2128;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--text-primary);
+      font-size: 11px;
+      pointer-events: none;
+      z-index: 1000;
+      display: none;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+
+    #heatmap-tooltip strong {
+      color: var(--claude-orange);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Session Table Section */
+    .sessions-section {
+      background: #0d1117;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table.terminal-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 12px;
+    }
+
+    table.terminal-table th {
+      padding: 8px 12px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    table.terminal-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #1c2128;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    table.terminal-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .sess-id-cell {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      color: var(--terminal-cyan);
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 2px;
+      border-radius: 2px;
+    }
+
+    .copy-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .active-tag {
+      background: rgba(63, 185, 80, 0.15);
+      border: 1px solid var(--terminal-green);
+      color: var(--terminal-green);
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    /* Footer */
+    .terminal-footer {
+      padding: 14px 24px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: var(--text-muted);
+      font-size: 11px;
+      background: #090d13;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Pulse highlight on SSE live update */
+    .telemetry-pulse {
+      animation: flash-border 1s ease;
+    }
+
+    @keyframes flash-border {
+      0% { border-color: var(--claude-orange); box-shadow: 0 0 10px rgba(217, 119, 54, 0.5); }
+      100% { border-color: var(--border-subtle); box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="terminal-container" id="terminal-container">
+    
+    <!-- Top Terminal Chrome -->
+    <div class="terminal-chrome">
+      <div class="window-controls">
+        <span class="control-dot dot-close"></span>
+        <span class="control-dot dot-min"></span>
+        <span class="control-dot dot-max"></span>
+      </div>
+      <div class="window-title">
+        <span>claude-code:~/telemetry — v2.1.319 [bash]</span>
+      </div>
+      <div class="window-actions">
+        <button class="terminal-btn" id="refresh-btn" title="Refresh metrics">[↻ REFRESH]</button>
+        <button class="terminal-btn" id="export-json-btn" title="Export stats as JSON">[↓ EXPORT]</button>
+      </div>
+    </div>
+
+    <!-- Header Section -->
+    <div class="header-bar">
+      <div class="brand-section">
+        <!-- 16x16 Pixel Art Claude Face SVG -->
+        <svg class="claude-pixel-avatar" width="38" height="38" viewBox="0 0 16 16" shape-rendering="crispEdges">
+          <!-- Terra cotta head base -->
+          <rect x="3" y="2" width="10" height="12" fill="#d97736"></rect>
+          <rect x="2" y="4" width="12" height="8" fill="#d97736"></rect>
+          <rect x="4" y="1" width="8" height="2" fill="#e27d60"></rect>
+          <!-- Highlights -->
+          <rect x="3" y="3" width="2" height="2" fill="#ff9e64"></rect>
+          <rect x="11" y="3" width="2" height="2" fill="#ff9e64"></rect>
+          <!-- Pixel eyes :: -->
+          <rect x="5" y="6" width="2" height="2" fill="#0d1117"></rect>
+          <rect x="5" y="9" width="2" height="2" fill="#0d1117"></rect>
+          <rect x="9" y="6" width="2" height="2" fill="#0d1117"></rect>
+          <rect x="9" y="9" width="2" height="2" fill="#0d1117"></rect>
+          <!-- Cheeks blush -->
+          <rect x="3" y="8" width="1" height="2" fill="#b85d24"></rect>
+          <rect x="12" y="8" width="1" height="2" fill="#b85d24"></rect>
+        </svg>
+
+        <div class="brand-title-wrap">
+          <div class="brand-title">
+            <span class="claude-emblem"><span class="bracket">[</span><span class="dots">::</span><span class="bracket">]</span></span>
+            <span>CLAUDE CODE TOKEN TELEMETRY</span>
+          </div>
+          <div class="brand-subtitle">100% Authentic Transcripts Telemetry Engine & Activity Heatmap</div>
+        </div>
+      </div>
+
+      <div class="meta-badges">
+        <div class="chip chip-model" id="active-model-badge">[ MODEL: <span id="model-name-text">...</span> ]</div>
+        <div class="chip chip-status offline" id="status-badge">
+          <span class="status-dot"></span>
+          <span id="status-text">OFFLINE (SNAPSHOT)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="dashboard-body">
+
+      <!-- 6 KPI Telemetry Cards -->
+      <div class="kpi-grid">
+
+        <!-- 1. Total Tokens Lifetime -->
+        <div class="kpi-card card-primary">
+          <div class="kpi-header">
+            <span class="kpi-title">Total Tokens (Lifetime)</span>
+            <span class="kpi-badge">All Sessions</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpi-total-tokens">0</span>
+            <span class="kpi-unit">tok</span>
+          </div>
+          <div class="kpi-subtext" id="kpi-total-subtext">
+            <span>Deduplicated assistant turns</span>
+          </div>
+        </div>
+
+        <!-- 2. Today Tokens -->
+        <div class="kpi-card card-green">
+          <div class="kpi-header">
+            <span class="kpi-title">Today's Tokens</span>
+            <span class="kpi-badge" id="kpi-today-date">Today</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpi-today-tokens">0</span>
+            <span class="kpi-unit">tok</span>
+          </div>
+          <div class="kpi-subtext" id="kpi-today-subtext">
+            <span>Active daily throughput</span>
+          </div>
+        </div>
+
+        <!-- 3. Max Context Tokens -->
+        <div class="kpi-card card-cyan">
+          <div class="kpi-header">
+            <span class="kpi-title">Max Context Capacity</span>
+            <span class="kpi-badge" id="kpi-context-pct">0%</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpi-context-used">0</span>
+            <span class="kpi-unit">/ 200k</span>
+          </div>
+          <div class="capacity-container">
+            <div class="capacity-track">
+              <div class="capacity-fill" id="kpi-context-bar" style="width: 0%;"></div>
+            </div>
+          </div>
+          <div class="kpi-subtext" id="kpi-context-subtext">
+            <span>Context window utilization</span>
+          </div>
+        </div>
+
+        <!-- 4. Active Session Breakdown -->
+        <div class="kpi-card card-amber">
+          <div class="kpi-header">
+            <span class="kpi-title">Active Session Tokens</span>
+            <span class="kpi-badge" id="active-sess-project">Session</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpi-active-total">0</span>
+            <span class="kpi-unit">tok</span>
+          </div>
+          <div class="session-breakdown-bar">
+            <div class="bar-seg seg-input" id="bar-input" style="width: 60%;" title="Input Tokens"></div>
+            <div class="bar-seg seg-output" id="bar-output" style="width: 20%;" title="Output Tokens"></div>
+            <div class="bar-seg seg-read" id="bar-read" style="width: 10%;" title="Cache Read"></div>
+            <div class="bar-seg seg-create" id="bar-create" style="width: 5%;" title="Cache Create"></div>
+            <div class="bar-seg seg-think" id="bar-think" style="width: 5%;" title="Thinking"></div>
+          </div>
+          <div class="breakdown-legend">
+            <span class="legend-item"><span class="legend-dot" style="background: var(--terminal-cyan);"></span>In: <span id="leg-input">0</span></span>
+            <span class="legend-item"><span class="legend-dot" style="background: var(--claude-orange);"></span>Out: <span id="leg-output">0</span></span>
+            <span class="legend-item"><span class="legend-dot" style="background: var(--terminal-green);"></span>Cache: <span id="leg-read">0</span></span>
+            <span class="legend-item"><span class="legend-dot" style="background: var(--terminal-purple);"></span>Think: <span id="leg-think">0</span></span>
+          </div>
+        </div>
+
+        <!-- 5. Cost & Savings Equivalent -->
+        <div class="kpi-card card-purple">
+          <div class="kpi-header">
+            <span class="kpi-title">Cost & Savings Eq.</span>
+            <span class="kpi-badge">Anthropic Rates</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpi-cost-gross">$0.00</span>
+            <span class="kpi-unit">gross</span>
+          </div>
+          <div class="kpi-subtext" id="kpi-savings-text">
+            <span>Saved: <strong style="color: var(--terminal-green);" id="kpi-savings-amt">$0.00</strong> on prompt cache hits</span>
+          </div>
+          <div class="kpi-subtext" style="font-size: 10px; color: var(--text-muted);">
+            <span>Proxy Routing: 100% Local Inference via NVIDIA NIM</span>
+          </div>
+        </div>
+
+        <!-- 6. Generation Speed Gauge -->
+        <div class="kpi-card card-primary">
+          <div class="kpi-header">
+            <span class="kpi-title">Speed Gauge (TPS)</span>
+            <span class="kpi-badge">Throughput</span>
+          </div>
+          <div class="speed-meter-wrap">
+            <!-- Mini SVG gauge ring -->
+            <svg class="speed-svg-gauge" viewBox="0 0 36 36">
+              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#21262d" stroke-width="3" stroke-dasharray="75, 100"></path>
+              <path id="speed-gauge-arc" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--claude-orange)" stroke-width="3" stroke-dasharray="35, 100"></path>
+            </svg>
+            <div class="speed-details">
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="kpi-speed-tps">31.9</span>
+                <span class="kpi-unit">tok/s</span>
+              </div>
+              <div class="kpi-subtext">
+                <span>TTFT ~0.42s • MoE Active</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 52-Week Contribution Activity Heatmap -->
+      <div class="heatmap-section">
+        <div class="section-header">
+          <div class="section-title">
+            <span>52-WEEK CONTRIBUTION ACTIVITY HEATMAP</span>
+            <span class="section-badge" id="heatmap-range-badge">Nov 2025 – Nov 2026</span>
+          </div>
+          <div class="filter-ribbon" id="filter-ribbon">
+            <span id="filter-text">FILTER: 2026-11-06</span>
+            <button class="clear-filter-btn" id="clear-filter-btn">[✕ CLEAR]</button>
+          </div>
+        </div>
+
+        <div class="heatmap-scroll-wrapper">
+          <svg class="heatmap-svg" id="heatmap-svg" viewBox="0 0 740 125">
+            <!-- Populated dynamically -->
+          </svg>
+        </div>
+
+        <div class="heatmap-footer">
+          <div>Click any cell to filter sessions by date. Hover for turn & token split.</div>
+          <div class="heatmap-legend">
+            <span>Less</span>
+            <span class="legend-box level-0"></span>
+            <span class="legend-box level-1"></span>
+            <span class="legend-box level-2"></span>
+            <span class="legend-box level-3"></span>
+            <span class="legend-box level-4"></span>
+            <span>More</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Session Details Drill-Down Table -->
+      <div class="sessions-section">
+        <div class="section-header">
+          <div class="section-title">
+            <span>SESSION TRANSCRIPTS & RECENT RUNS</span>
+            <span class="section-badge" id="session-count-badge">(Showing 0 sessions)</span>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="terminal-table">
+            <thead>
+              <tr>
+                <th>Session ID</th>
+                <th>Project Workspace</th>
+                <th>Model</th>
+                <th>Turns</th>
+                <th>Input Tokens</th>
+                <th>Output Tokens</th>
+                <th>Total Tokens</th>
+                <th>Last Active (UTC)</th>
+              </tr>
+            </thead>
+            <tbody id="sessions-tbody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Terminal Footer Bar -->
+    <div class="terminal-footer">
+      <div class="footer-left">
+        <span>CLAUDE CODE TELEMETRY ENGINE</span>
+        <span>•</span>
+        <span>Port 4050</span>
+        <span>•</span>
+        <span id="last-updated-text">Updated: ...</span>
+      </div>
+      <div class="footer-right">
+        <span>Zero-Error Architecture Protocol</span>
+        <span>•</span>
+        <span>NVIDIA NIM Proxy</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Absolute Floating Heatmap Tooltip -->
+  <div id="heatmap-tooltip"></div>
+
+  <!-- Pre-baked Authentic Snapshot Data -->
+  <script id="token-data-snapshot" type="application/json">
+{
+  "status": "ok",
+  "updatedAt": "2026-11-06T18:10:55.531388+00:00",
+  "activeModel": "moonshotai/kimi-k3.1-pro",
+  "kpis": {
+    "totalTokens": 66843041,
+    "todayTokens": 26779798,
+    "maxContext": 200000,
+    "activeSession": {
+      "sessionId": "319d4741-5a1d-46d6-85cc-f94c48020421",
+      "project": "claudecode",
+      "inputTokens": 1156329,
+      "outputTokens": 56397,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 2150,
+      "totalTokens": 1212726,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b"
+    },
+    "costEstimate": {
+      "grossCost": 213.37,
+      "cacheSavings": 14.94
+    },
+    "speedTps": 31.9
+  },
+  "heatmap": {
+    "weeks": 52,
+    "startDate": "2025-11-09",
+    "endDate": "2026-11-07",
+    "days": {
+      "2025-11-09": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-10": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-11": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-12": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-13": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-14": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-15": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-16": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-17": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-18": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-19": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-20": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-21": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-22": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-23": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-24": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-25": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-26": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-27": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-28": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-29": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-11-30": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-01": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-02": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-03": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-04": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-05": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-06": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-07": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-08": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-09": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-10": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-11": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-12": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-13": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-14": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-15": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-16": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-17": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-18": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-19": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-20": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-21": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-22": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-23": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-24": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-25": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-26": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-27": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-28": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-29": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-30": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2025-12-31": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-01": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-02": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-03": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-04": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-05": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-06": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-07": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-08": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-09": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-10": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-11": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-12": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-13": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-14": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-15": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-16": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-17": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-18": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-19": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-20": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-21": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-22": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-23": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-24": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-25": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-26": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-27": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-28": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-29": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-30": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-01-31": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-01": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-02": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-03": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-04": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-05": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-06": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-07": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-08": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-09": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-10": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-11": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-12": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-13": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-14": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-15": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-16": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-17": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-18": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-19": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-20": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-21": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-22": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-23": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-24": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-25": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-26": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-27": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-02-28": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-01": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-02": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-03": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-04": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-05": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-06": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-07": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-08": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-09": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-10": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-11": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-12": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-13": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-14": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-15": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-16": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-17": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-18": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-19": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-20": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-21": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-22": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-23": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-24": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-25": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-26": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-27": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-28": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-29": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-30": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-03-31": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-01": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-02": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-03": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-04": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-05": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-06": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-07": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-08": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-09": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-10": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-11": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-12": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-13": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-14": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-15": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-16": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-17": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-18": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-19": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-20": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-21": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-22": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-23": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-24": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-25": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-26": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-27": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-28": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-29": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-04-30": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-01": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-02": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-03": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-04": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-05": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-06": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-07": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-08": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-09": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-10": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-11": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-12": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-13": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-14": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-15": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-16": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-17": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-18": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-19": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-20": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-21": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-22": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-23": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-24": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-25": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-26": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-27": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-28": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-29": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-30": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-05-31": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-01": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-02": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-03": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-04": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-05": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-06": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-07": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-08": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-09": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-10": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-11": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-12": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-13": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-14": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-15": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-16": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-17": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-18": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-19": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-20": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-21": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-22": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-23": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-24": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-25": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-26": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-27": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-28": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-29": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-06-30": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-01": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-02": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-03": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-04": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-05": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-06": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-07": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-08": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-09": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-10": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-11": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-12": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-13": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-14": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-15": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-16": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-17": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-18": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-19": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-20": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-21": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-22": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-23": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-24": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-25": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-26": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-27": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-28": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-29": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-30": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-07-31": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-01": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-02": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-03": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-04": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-05": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-06": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-07": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-08": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-09": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-10": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-11": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-12": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-13": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-14": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-15": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-16": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-17": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-18": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-19": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-20": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-21": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-22": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-23": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-24": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-25": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-26": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-27": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-28": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-29": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-30": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-08-31": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-01": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-02": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-03": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-04": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-05": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-06": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-07": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-08": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-09": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-10": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-11": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-12": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-13": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-14": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-15": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-16": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-17": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-18": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-19": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-20": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-21": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-22": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-23": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-24": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-25": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-26": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-27": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-28": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-29": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-09-30": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-01": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-02": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-03": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-04": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-05": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-06": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-07": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-08": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-09": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-10": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-11": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-12": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-13": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-14": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-15": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-16": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-17": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-18": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-19": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-20": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-21": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-22": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-23": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-24": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-25": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-26": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-27": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-28": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      },
+      "2026-10-29": {
+        "tokens": 1520333,
+        "turns": 47,
+        "promptTokens": 1484759,
+        "completionTokens": 35574,
+        "cacheReadTokens": 0,
+        "level": 2
+      },
+      "2026-10-30": {
+        "tokens": 5923862,
+        "turns": 146,
+        "promptTokens": 5858668,
+        "completionTokens": 65194,
+        "cacheReadTokens": 0,
+        "level": 3
+      },
+      "2026-10-31": {
+        "tokens": 1538078,
+        "turns": 99,
+        "promptTokens": 1518459,
+        "completionTokens": 19619,
+        "cacheReadTokens": 0,
+        "level": 2
+      },
+      "2026-11-01": {
+        "tokens": 1347025,
+        "turns": 74,
+        "promptTokens": 1326651,
+        "completionTokens": 20374,
+        "cacheReadTokens": 0,
+        "level": 2
+      },
+      "2026-11-02": {
+        "tokens": 743180,
+        "turns": 32,
+        "promptTokens": 737128,
+        "completionTokens": 6052,
+        "cacheReadTokens": 432576,
+        "level": 1
+      },
+      "2026-11-03": {
+        "tokens": 15605850,
+        "turns": 183,
+        "promptTokens": 15452402,
+        "completionTokens": 153448,
+        "cacheReadTokens": 0,
+        "level": 4
+      },
+      "2026-11-04": {
+        "tokens": 1439994,
+        "turns": 55,
+        "promptTokens": 1394272,
+        "completionTokens": 45722,
+        "cacheReadTokens": 927072,
+        "level": 2
+      },
+      "2026-11-05": {
+        "tokens": 11944921,
+        "turns": 330,
+        "promptTokens": 11552680,
+        "completionTokens": 392241,
+        "cacheReadTokens": 4172928,
+        "level": 4
+      },
+      "2026-11-06": {
+        "tokens": 26779798,
+        "turns": 390,
+        "promptTokens": 26447695,
+        "completionTokens": 332103,
+        "cacheReadTokens": 0,
+        "level": 4
+      },
+      "2026-11-07": {
+        "tokens": 0,
+        "turns": 0,
+        "promptTokens": 0,
+        "completionTokens": 0,
+        "cacheReadTokens": 0,
+        "level": 0
+      }
+    }
+  },
+  "sessions": [
+    {
+      "sessionId": "319d4741-5a1d-46d6-85cc-f94c48020421",
+      "project": "claudecode",
+      "lastModified": "2026-11-06T18:05:06.399344+00:00",
+      "totalTokens": 1212726,
+      "turns": 37,
+      "inputTokens": 1156329,
+      "outputTokens": 56397,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 2150,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-06"
+    },
+    {
+      "sessionId": "c4ae00bd-7e77-4291-88e8-b4b2502ac0fd",
+      "project": "claudecode",
+      "lastModified": "2026-11-06T17:15:24.757344+00:00",
+      "totalTokens": 1177,
+      "turns": 1,
+      "inputTokens": 1097,
+      "outputTokens": 80,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 58,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-06"
+    },
+    {
+      "sessionId": "7fbb2919-505b-4e37-b4a5-7ff7c7d6943a",
+      "project": "claudecode",
+      "lastModified": "2026-11-06T17:14:21.606711+00:00",
+      "totalTokens": 2349,
+      "turns": 2,
+      "inputTokens": 2276,
+      "outputTokens": 73,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 75,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-06"
+    },
+    {
+      "sessionId": "3f891b38-0ca1-4e23-b140-00e401dacbec",
+      "project": "claudecode",
+      "lastModified": "2026-11-06T17:13:27.141499+00:00",
+      "totalTokens": 20635,
+      "turns": 6,
+      "inputTokens": 17343,
+      "outputTokens": 3292,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 513,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-06"
+    },
+    {
+      "sessionId": "a884b1e8-52a1-41ac-a4d1-83e1fd224739",
+      "project": "claudecode",
+      "lastModified": "2026-11-06T17:10:52.587985+00:00",
+      "totalTokens": 2029,
+      "turns": 2,
+      "inputTokens": 1896,
+      "outputTokens": 133,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 173,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-06"
+    },
+    {
+      "sessionId": "7a8395a1-e442-4867-b278-7e68096ef830",
+      "project": "claudecode",
+      "lastModified": "2026-11-06T17:04:16.448653+00:00",
+      "totalTokens": 1103480,
+      "turns": 52,
+      "inputTokens": 1071889,
+      "outputTokens": 31591,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 4204,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-06"
+    },
+    {
+      "sessionId": "afcec284-0ac8-412a-915a-42122e75255f",
+      "project": "claudecode",
+      "lastModified": "2026-11-06T16:31:58.459286+00:00",
+      "totalTokens": 20671528,
+      "turns": 157,
+      "inputTokens": 20450650,
+      "outputTokens": 220878,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 22272,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-06"
+    },
+    {
+      "sessionId": "e5376d11-6850-4094-8c6e-4f6e79cde93a",
+      "project": "claudecode",
+      "lastModified": "2026-11-06T13:35:51.170234+00:00",
+      "totalTokens": 3765874,
+      "turns": 133,
+      "inputTokens": 3746215,
+      "outputTokens": 19659,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 16129,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-06"
+    },
+    {
+      "sessionId": "d70325d0-5fdb-40ec-9d97-1cc8c68d8604",
+      "project": "claudecode",
+      "lastModified": "2026-11-05T18:05:55.049047+00:00",
+      "totalTokens": 3749110,
+      "turns": 58,
+      "inputTokens": 3617791,
+      "outputTokens": 131319,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 2286,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-05"
+    },
+    {
+      "sessionId": "6f92c0f6-07a8-4cea-8862-9c45dbf1514d",
+      "project": "claudecode",
+      "lastModified": "2026-11-05T18:05:49.404158+00:00",
+      "totalTokens": 3447,
+      "turns": 3,
+      "inputTokens": 3373,
+      "outputTokens": 74,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 136,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-05"
+    },
+    {
+      "sessionId": "b9d93154-4b71-4f74-9564-854b72017503",
+      "project": "claudecode",
+      "lastModified": "2026-11-05T17:59:40.852604+00:00",
+      "totalTokens": 2032181,
+      "turns": 105,
+      "inputTokens": 2019462,
+      "outputTokens": 12719,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 10873,
+      "model": "stepfun-ai/step-5-preview",
+      "date": "2026-11-05"
+    },
+    {
+      "sessionId": "7061bde8-7308-46be-8045-4f5033c8c312",
+      "project": "claudecode",
+      "lastModified": "2026-11-05T16:51:02.935134+00:00",
+      "totalTokens": 166953,
+      "turns": 16,
+      "inputTokens": 132877,
+      "outputTokens": 34076,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 426,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-05"
+    },
+    {
+      "sessionId": "82c851fc-6e29-4063-bdbe-f33cd400f649",
+      "project": "claudecode",
+      "lastModified": "2026-11-05T16:36:52.620135+00:00",
+      "totalTokens": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 0,
+      "model": "unknown",
+      "date": "2026-11-05"
+    },
+    {
+      "sessionId": "f8321474-3673-4662-b414-f91d6b4468e6",
+      "project": "claudecode",
+      "lastModified": "2026-11-05T16:23:08.906365+00:00",
+      "totalTokens": 4395,
+      "turns": 3,
+      "inputTokens": 2402,
+      "outputTokens": 1993,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 205,
+      "model": "<synthetic>",
+      "date": "2026-11-05"
+    },
+    {
+      "sessionId": "a4a9b146-c123-48f5-bdcc-a548ef6508a8",
+      "project": "claudecode",
+      "lastModified": "2026-11-05T16:23:00.196085+00:00",
+      "totalTokens": 53932,
+      "turns": 5,
+      "inputTokens": 50306,
+      "outputTokens": 3626,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 1754,
+      "model": "mistralai/mistral-large-4-1t-a52b",
+      "date": "2026-11-05"
+    },
+    {
+      "sessionId": "c29a4916-19e7-4d1a-a4d1-2709aec24e9a",
+      "project": "claudecode",
+      "lastModified": "2026-11-05T16:22:55.871454+00:00",
+      "totalTokens": 1220984,
+      "turns": 43,
+      "inputTokens": 1127994,
+      "outputTokens": 49150,
+      "cacheReadTokens": 43840,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 2963,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-05"
+    },
+    {
+      "sessionId": "d4ea8e71-f65b-4e2d-b828-58a257fba7f7",
+      "project": "claudecode",
+      "lastModified": "2026-11-05T16:04:15.479096+00:00",
+      "totalTokens": 55747,
+      "turns": 2,
+      "inputTokens": 12018,
+      "outputTokens": 337,
+      "cacheReadTokens": 43392,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 13169,
+      "model": "mistralai/mistral-large-4-1t-a52b",
+      "date": "2026-11-05"
+    },
+    {
+      "sessionId": "3b38caae-7e86-4d4f-865f-762a74bc883a",
+      "project": "claudecode",
+      "lastModified": "2026-11-05T12:29:20.868000+00:00",
+      "totalTokens": 66544,
+      "turns": 3,
+      "inputTokens": 22247,
+      "outputTokens": 201,
+      "cacheReadTokens": 44096,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 1172,
+      "model": "mistralai/mistral-large-4-1t-a52b",
+      "date": "2026-11-05"
+    },
+    {
+      "sessionId": "586b6c32-d9ab-4a50-aec3-acd53e9ae816",
+      "project": "claudecode",
+      "lastModified": "2026-11-05T12:29:20.688000+00:00",
+      "totalTokens": 2342803,
+      "turns": 41,
+      "inputTokens": 178931,
+      "outputTokens": 72704,
+      "cacheReadTokens": 2091168,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 1709,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-05"
+    },
+    {
+      "sessionId": "db0d9f4e-cd93-4b10-b4a4-d7d12308d042",
+      "project": "claudecode",
+      "lastModified": "2026-11-05T02:27:13.554921+00:00",
+      "totalTokens": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 0,
+      "model": "unknown",
+      "date": "2026-11-05"
+    },
+    {
+      "sessionId": "5ed45cb7-f90f-4e1b-a86e-3d07ab6196a8",
+      "project": "claudecode",
+      "lastModified": "2026-11-05T02:25:09.682103+00:00",
+      "totalTokens": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 0,
+      "model": "unknown",
+      "date": "2026-11-05"
+    },
+    {
+      "sessionId": "0e35d162-1cdf-4ae8-872c-96433bed75ae",
+      "project": "claudecode",
+      "lastModified": "2026-11-05T02:22:24.423670+00:00",
+      "totalTokens": 2248825,
+      "turns": 51,
+      "inputTokens": 212351,
+      "outputTokens": 86042,
+      "cacheReadTokens": 1950432,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 2489,
+      "model": "claude-sonnet-5",
+      "date": "2026-11-05"
+    },
+    {
+      "sessionId": "2deb05dc-59f8-4d3f-84bf-fc46ca696524",
+      "project": "claudecode",
+      "lastModified": "2026-11-04T17:12:42.151508+00:00",
+      "totalTokens": 43567,
+      "turns": 1,
+      "inputTokens": 26,
+      "outputTokens": 277,
+      "cacheReadTokens": 43264,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 0,
+      "model": "claude-sonnet-5",
+      "date": "2026-11-04"
+    },
+    {
+      "sessionId": "d2bb3161-7e3c-42cc-ba13-b852abd03b22",
+      "project": "claudecode",
+      "lastModified": "2026-11-04T17:12:41.052957+00:00",
+      "totalTokens": 43534,
+      "turns": 1,
+      "inputTokens": 26,
+      "outputTokens": 244,
+      "cacheReadTokens": 43264,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 0,
+      "model": "claude-sonnet-5",
+      "date": "2026-11-04"
+    },
+    {
+      "sessionId": "86420c58-6c97-4213-b1e1-7b7a8a197567",
+      "project": "claudecode",
+      "lastModified": "2026-11-04T17:12:32.325398+00:00",
+      "totalTokens": 317528,
+      "turns": 21,
+      "inputTokens": 312104,
+      "outputTokens": 5424,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 21541,
+      "model": "mistralai/mistral-large-4-1t-a52b",
+      "date": "2026-11-04"
+    },
+    {
+      "sessionId": "e95d5726-6786-47e6-9c74-4e3be3c5c776",
+      "project": "claudecode",
+      "lastModified": "2026-11-04T17:11:48.602042+00:00",
+      "totalTokens": 11965,
+      "turns": 1,
+      "inputTokens": 11965,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 7721,
+      "model": "mistralai/mistral-large-4-1t-a52b",
+      "date": "2026-11-04"
+    },
+    {
+      "sessionId": "ffd8c068-9d79-40db-931a-c7bc12ef3e5a",
+      "project": "claudecode",
+      "lastModified": "2026-11-04T17:11:48.571795+00:00",
+      "totalTokens": 11967,
+      "turns": 1,
+      "inputTokens": 11967,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 6974,
+      "model": "mistralai/mistral-large-4-1t-a52b",
+      "date": "2026-11-04"
+    },
+    {
+      "sessionId": "3412e593-f65f-44c0-b485-16185a41ff8d",
+      "project": "claudecode",
+      "lastModified": "2026-11-04T15:50:56.497607+00:00",
+      "totalTokens": 930693,
+      "turns": 22,
+      "inputTokens": 52712,
+      "outputTokens": 37437,
+      "cacheReadTokens": 840544,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 15285,
+      "model": "mistralai/mistral-large-4-1t-a52b",
+      "date": "2026-11-04"
+    },
+    {
+      "sessionId": "5d3357b5-cb80-4bf7-856c-4d1476661757",
+      "project": "claudecode",
+      "lastModified": "2026-11-04T02:40:34.637088+00:00",
+      "totalTokens": 80740,
+      "turns": 8,
+      "inputTokens": 78400,
+      "outputTokens": 2340,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 2827,
+      "model": "mistralai/mistral-large-4-1t-a52b",
+      "date": "2026-11-04"
+    },
+    {
+      "sessionId": "3df13c72-b5f1-45d6-b084-d49b32648e2d",
+      "project": "claudecode",
+      "lastModified": "2026-11-04T02:23:25.082037+00:00",
+      "totalTokens": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 0,
+      "model": "unknown",
+      "date": "2026-11-04"
+    },
+    {
+      "sessionId": "9e915870-10fc-4ece-bfb0-6d878e83eefc",
+      "project": "claudecode",
+      "lastModified": "2026-11-04T02:21:28.957192+00:00",
+      "totalTokens": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 0,
+      "model": "unknown",
+      "date": "2026-11-04"
+    },
+    {
+      "sessionId": "87848b0b-1914-424d-b001-09eab4fec21b",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T17:54:44.390508+00:00",
+      "totalTokens": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 0,
+      "model": "unknown",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "b9b7129c-c2e6-43a9-a698-19fa42314685",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T17:38:09.146000+00:00",
+      "totalTokens": 24049,
+      "turns": 2,
+      "inputTokens": 23931,
+      "outputTokens": 118,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 359,
+      "model": "mistralai/mistral-large-4-1t-a52b",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "5ca57450-f257-4654-b82f-6f3bc0050e69",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T16:37:56.584868+00:00",
+      "totalTokens": 13179,
+      "turns": 1,
+      "inputTokens": 13129,
+      "outputTokens": 50,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 230,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "d414297d-fca2-41c1-bcff-aa71a477012f",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T16:31:01.891658+00:00",
+      "totalTokens": 13138,
+      "turns": 1,
+      "inputTokens": 13099,
+      "outputTokens": 39,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 80,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "6cb80ee5-1011-4626-94bf-52cf0fc5d243",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T16:30:59.440088+00:00",
+      "totalTokens": 13108,
+      "turns": 1,
+      "inputTokens": 13099,
+      "outputTokens": 9,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 79,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "1a4d4e94-b332-4761-8e01-f03f591160ba",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T15:51:48.940859+00:00",
+      "totalTokens": 13144,
+      "turns": 1,
+      "inputTokens": 13099,
+      "outputTokens": 45,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 64,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "4d5dedae-1baa-409e-9ba4-09834fa274e1",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T15:51:27.835541+00:00",
+      "totalTokens": 13144,
+      "turns": 1,
+      "inputTokens": 13106,
+      "outputTokens": 38,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 72,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "9161e49a-78c4-487c-b333-49c1a879379d",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T15:51:08.019080+00:00",
+      "totalTokens": 13135,
+      "turns": 1,
+      "inputTokens": 13097,
+      "outputTokens": 38,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 83,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "c900bfd7-5a44-4c6f-8043-c67f1a04870c",
+      "project": "CLAUDE CODE E",
+      "lastModified": "2026-11-03T13:59:30.599274+00:00",
+      "totalTokens": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 0,
+      "model": "unknown",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "be75e244-896b-41a3-920f-1834236e4f85",
+      "project": "CLAUDE CODE E",
+      "lastModified": "2026-11-03T13:59:05.048203+00:00",
+      "totalTokens": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 0,
+      "model": "unknown",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "c53141b0-3dca-4a9f-b64b-7a896f223d38",
+      "project": "CLAUDE CODE E",
+      "lastModified": "2026-11-03T13:57:35.873889+00:00",
+      "totalTokens": 11071,
+      "turns": 1,
+      "inputTokens": 11031,
+      "outputTokens": 40,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 121,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "15e20a9e-9ee8-496e-988b-6d120725f8b3",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T13:44:10.155227+00:00",
+      "totalTokens": 216159,
+      "turns": 18,
+      "inputTokens": 214247,
+      "outputTokens": 1912,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 1346,
+      "model": "<synthetic>",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "426f3bbb-4079-48d5-b989-b277b5c497f8",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T13:30:32.288157+00:00",
+      "totalTokens": 106923,
+      "turns": 7,
+      "inputTokens": 90417,
+      "outputTokens": 16506,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 668,
+      "model": "<synthetic>",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "b42568cf-fa6e-4312-a3ef-a31991f91756",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T13:12:09.087413+00:00",
+      "totalTokens": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 0,
+      "model": "unknown",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "a3eaae64-93ab-4ae8-bdad-ceef04986685",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T13:09:38.788506+00:00",
+      "totalTokens": 12718,
+      "turns": 1,
+      "inputTokens": 12709,
+      "outputTokens": 9,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 118,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "c7d9a394-85ee-46b1-8b7f-304bbfc105fd",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T13:09:11.303488+00:00",
+      "totalTokens": 12745,
+      "turns": 1,
+      "inputTokens": 12707,
+      "outputTokens": 38,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 377,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "ffcbb9a4-739d-4a44-b5f2-fc8bdb810ef7",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T13:09:10.764457+00:00",
+      "totalTokens": 12724,
+      "turns": 1,
+      "inputTokens": 12707,
+      "outputTokens": 17,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 303,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "fe4507d9-22af-4559-bb47-fd7a3f8f0c4a",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T13:08:08.690144+00:00",
+      "totalTokens": 12695,
+      "turns": 1,
+      "inputTokens": 12695,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 236,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "2c574de0-31d4-4ef6-ac60-11a3ee476d93",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T13:08:06.608675+00:00",
+      "totalTokens": 15105268,
+      "turns": 144,
+      "inputTokens": 14970688,
+      "outputTokens": 134580,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 9237,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "fd32f2aa-2097-4789-b981-032ba77e0ffd",
+      "project": "claudecode",
+      "lastModified": "2026-11-03T01:52:49.165760+00:00",
+      "totalTokens": 12650,
+      "turns": 1,
+      "inputTokens": 12641,
+      "outputTokens": 9,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 87,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "d9391f32-57b0-49f5-8c56-8f2b6fdf2869",
+      "project": "CLAUDE CODE E",
+      "lastModified": "2026-11-03T01:52:30.248285+00:00",
+      "totalTokens": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 0,
+      "model": "unknown",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "d899a4d9-6068-4679-86e2-e58c62396f53",
+      "project": "CLAUDE CODE E",
+      "lastModified": "2026-11-03T01:52:06.240259+00:00",
+      "totalTokens": 0,
+      "turns": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 0,
+      "model": "unknown",
+      "date": "2026-11-03"
+    },
+    {
+      "sessionId": "74790e2a-0f2b-423c-83c5-7481b8474324",
+      "project": "claudecode",
+      "lastModified": "2026-11-02T21:37:16.250403+00:00",
+      "totalTokens": 251288,
+      "turns": 15,
+      "inputTokens": 246421,
+      "outputTokens": 4867,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 873,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "date": "2026-11-02"
+    },
+    {
+      "sessionId": "fcceafd4-559a-48c2-a46d-355f4f695b58",
+      "project": "claudecode",
+      "lastModified": "2026-11-02T21:37:16.250403+00:00",
+      "totalTokens": 0,
+      "turns": 4,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 164,
+      "model": "<synthetic>",
+      "date": "2026-11-02"
+    },
+    {
+      "sessionId": "ed3313db-60a3-4d68-9850-b59d1e15a5ad",
+      "project": "claudecode",
+      "lastModified": "2026-11-02T21:37:09.254000+00:00",
+      "totalTokens": 0,
+      "turns": 2,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 84,
+      "model": "<synthetic>",
+      "date": "2026-11-02"
+    },
+    {
+      "sessionId": "4592ef13-2b1c-4bd5-99bd-d41b5c0e508f",
+      "project": "claudecode",
+      "lastModified": "2026-11-02T21:37:09.161000+00:00",
+      "totalTokens": 121352,
+      "turns": 2,
+      "inputTokens": 1336,
+      "outputTokens": 208,
+      "cacheReadTokens": 119808,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 187,
+      "model": "claude-3-7-sonnet-20250219",
+      "date": "2026-11-02"
+    },
+    {
+      "sessionId": "ec9fe250-8864-4f39-ba7f-6a7371dff619",
+      "project": "claudecode",
+      "lastModified": "2026-11-02T21:37:08.821000+00:00",
+      "totalTokens": 46410,
+      "turns": 1,
+      "inputTokens": 46304,
+      "outputTokens": 106,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 69,
+      "model": "claude-sonnet-5",
+      "date": "2026-11-02"
+    },
+    {
+      "sessionId": "383b6b0c-a98e-4724-b1e6-7aebe52728e1",
+      "project": "claudecode",
+      "lastModified": "2026-11-02T17:52:36.258663+00:00",
+      "totalTokens": 0,
+      "turns": 2,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 99,
+      "model": "<synthetic>",
+      "date": "2026-11-02"
+    },
+    {
+      "sessionId": "50d1a625-b03d-43fc-bb3a-a59730b8ef76",
+      "project": "claudecode",
+      "lastModified": "2026-11-02T17:18:21.741003+00:00",
+      "totalTokens": 46602,
+      "turns": 1,
+      "inputTokens": 2637,
+      "outputTokens": 125,
+      "cacheReadTokens": 43840,
+      "cacheCreateTokens": 0,
+      "thinkingTokens": 99,
+      "model": "claude-sonnet-5",
+      "date": "2026-11-02"
+    }
+  ],
+  "lifetime": {
+    "total_tokens": 66843041,
+    "input_tokens": 60240138,
+    "output_tokens": 1070327,
+    "cache_read_tokens": 5532576,
+    "cache_create_tokens": 0,
+    "thinking_tokens": 234327,
+    "total_turns": 2975,
+    "user_turns": 1619,
+    "assistant_turns": 1356,
+    "sessions_count": 128
+  },
+  "today": {
+    "tokens": 26779798,
+    "turns": 390,
+    "promptTokens": 26447695,
+    "completionTokens": 332103,
+    "cacheReadTokens": 0
+  }
+}
+  </script>
+
+  <!-- Dashboard Controller -->
+  <script>
+    (function () {
+      let currentStats = null;
+      let activeFilterDate = null;
+      let liveSource = null;
+      let pollTimer = null;
+
+      const isFileProtocol = window.location.protocol === 'file:' || window.location.hostname === '';
+
+      function getSnapshot() {
+        const el = document.getElementById('token-data-snapshot');
+        if (el && el.textContent.trim()) {
+          try {
+            return JSON.parse(el.textContent);
+          } catch (e) {
+            console.warn('Failed to parse token snapshot', e);
+          }
+        }
+        return null;
+      }
+
+      function formatNumber(num) {
+        if (num === null || num === undefined) return '0';
+        return Number(num).toLocaleString('en-US');
+      }
+
+      function formatCompact(num) {
+        if (!num) return '0';
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+        return String(num);
+      }
+
+      function renderDashboard(data) {
+        if (!data) return;
+        currentStats = data;
+
+        // Model badge
+        const activeModel = data.activeModel || 'moonshotai/kimi-k3.1-pro';
+        const modelEl = document.getElementById('model-name-text');
+        if (modelEl) {
+          modelEl.textContent = activeModel.toUpperCase();
+        }
+
+        // Updated time
+        const updatedEl = document.getElementById('last-updated-text');
+        if (updatedEl && data.updatedAt) {
+          updatedEl.textContent = 'Updated: ' + data.updatedAt.slice(0, 19).replace('T', ' ') + ' UTC';
+        }
+
+        // KPIs
+        const kpis = data.kpis || {};
+        const lifetime = data.lifetime || {};
+
+        const totalTokensEl = document.getElementById('kpi-total-tokens');
+        if (totalTokensEl) {
+          totalTokensEl.textContent = formatNumber(kpis.totalTokens || lifetime.total_tokens || 0);
+        }
+
+        const totalSubEl = document.getElementById('kpi-total-subtext');
+        if (totalSubEl) {
+          const turns = lifetime.assistant_turns || 0;
+          const sessCount = lifetime.sessions_count || (data.sessions ? data.sessions.length : 0);
+          totalSubEl.innerHTML = '<span>' + formatNumber(sessCount) + ' sessions • ' + formatNumber(turns) + ' turns • 100% deduplicated</span>';
+        }
+
+        const todayTokensEl = document.getElementById('kpi-today-tokens');
+        if (todayTokensEl) {
+          todayTokensEl.textContent = formatNumber(kpis.todayTokens || 0);
+        }
+
+        const todaySubEl = document.getElementById('kpi-today-subtext');
+        if (todaySubEl) {
+          const todayTurns = (data.today && data.today.turns) || 0;
+          todaySubEl.innerHTML = '<span>' + formatNumber(todayTurns) + ' turns today • throughput active</span>';
+        }
+
+        // Context card
+        const maxContext = kpis.maxContext || 200000;
+        const activeSess = kpis.activeSession || {};
+        const usedContext = activeSess.totalTokens || 0;
+        const pct = Math.min(100, Math.round((usedContext / maxContext) * 100));
+
+        const ctxUsedEl = document.getElementById('kpi-context-used');
+        if (ctxUsedEl) ctxUsedEl.textContent = formatCompact(usedContext);
+
+        const ctxPctEl = document.getElementById('kpi-context-pct');
+        if (ctxPctEl) ctxPctEl.textContent = pct + '%';
+
+        const ctxBarEl = document.getElementById('kpi-context-bar');
+        if (ctxBarEl) ctxBarEl.style.width = pct + '%';
+
+        const ctxSubEl = document.getElementById('kpi-context-subtext');
+        if (ctxSubEl) {
+          const rem = Math.max(0, maxContext - usedContext);
+          ctxSubEl.innerHTML = '<span>' + formatCompact(rem) + ' tokens headroom remaining</span>';
+        }
+
+        // Active session card
+        const actProjEl = document.getElementById('active-sess-project');
+        if (actProjEl) {
+          actProjEl.textContent = activeSess.project || 'Active';
+        }
+
+        const actTotEl = document.getElementById('kpi-active-total');
+        if (actTotEl) {
+          actTotEl.textContent = formatNumber(activeSess.totalTokens || 0);
+        }
+
+        // Breakdown bar
+        const inp = activeSess.inputTokens || 0;
+        const out = activeSess.outputTokens || 0;
+        const cread = activeSess.cacheReadTokens || 0;
+        const ccreate = activeSess.cacheCreateTokens || 0;
+        const think = activeSess.thinkingTokens || 0;
+        const denom = Math.max(1, inp + out + cread + ccreate + think);
+
+        const setWidth = (id, val) => {
+          const el = document.getElementById(id);
+          if (el) el.style.width = ((val / denom) * 100).toFixed(1) + '%';
+        };
+        setWidth('bar-input', inp);
+        setWidth('bar-output', out);
+        setWidth('bar-read', cread);
+        setWidth('bar-create', ccreate);
+        setWidth('bar-think', think);
+
+        const setText = (id, val) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = formatCompact(val);
+        };
+        setText('leg-input', inp);
+        setText('leg-output', out);
+        setText('leg-read', cread);
+        setText('leg-think', think);
+
+        // Cost & Savings
+        const costEst = kpis.costEstimate || {};
+        const costEl = document.getElementById('kpi-cost-gross');
+        if (costEl) costEl.textContent = '$' + Number(costEst.grossCost || 0).toFixed(2);
+
+        const savEl = document.getElementById('kpi-savings-amt');
+        if (savEl) savEl.textContent = '$' + Number(costEst.cacheSavings || 0).toFixed(2);
+
+        // Speed
+        const speedVal = kpis.speedTps || 31.9;
+        const speedEl = document.getElementById('kpi-speed-tps');
+        if (speedEl) speedEl.textContent = speedVal.toFixed(1);
+
+        const gaugeArc = document.getElementById('speed-gauge-arc');
+        if (gaugeArc) {
+          const gaugePct = Math.min(75, Math.round((speedVal / 120) * 75));
+          gaugeArc.setAttribute('stroke-dasharray', gaugePct + ', 100');
+        }
+
+        // Render Heatmap
+        renderHeatmap(data.heatmap);
+
+        // Render Sessions Table
+        renderSessionsTable(data.sessions);
+      }
+
+      function renderHeatmap(heatmapData) {
+        const svg = document.getElementById('heatmap-svg');
+        if (!svg) return;
+        while (svg.firstChild) {
+          svg.removeChild(svg.firstChild);
+        }
+
+        if (!heatmapData || !heatmapData.days) return;
+
+        const cellSize = 10;
+        const cellGap = 3;
+        const leftOffset = 34;
+        const topOffset = 20;
+
+        const rangeBadge = document.getElementById('heatmap-range-badge');
+        if (rangeBadge && heatmapData.startDate && heatmapData.endDate) {
+          rangeBadge.textContent = heatmapData.startDate + ' – ' + heatmapData.endDate;
+        }
+
+        const startDate = new Date(heatmapData.startDate + 'T00:00:00Z');
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        let lastRenderedMonth = -1;
+
+        // 1. Month labels
+        for (let w = 0; w < 52; w++) {
+          const weekDate = new Date(startDate.getTime() + w * 7 * 86400000);
+          const m = weekDate.getUTCMonth();
+          if (m !== lastRenderedMonth && weekDate.getUTCDate() <= 7) {
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', String(leftOffset + w * (cellSize + cellGap)));
+            text.setAttribute('y', String(topOffset - 6));
+            text.setAttribute('class', 'heatmap-month-label');
+            text.textContent = monthNames[m];
+            svg.appendChild(text);
+            lastRenderedMonth = m;
+          }
+        }
+
+        // 2. Day labels (Mon, Wed, Fri)
+        const dayLabels = [
+          { row: 1, text: 'Mon' },
+          { row: 3, text: 'Wed' },
+          { row: 5, text: 'Fri' }
+        ];
+        dayLabels.forEach(dl => {
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('x', '2');
+          text.setAttribute('y', String(topOffset + dl.row * (cellSize + cellGap) + 8));
+          text.setAttribute('class', 'heatmap-day-label');
+          text.textContent = dl.text;
+          svg.appendChild(text);
+        });
+
+        // 3. 52 cols x 7 rows cells
+        const tooltip = document.getElementById('heatmap-tooltip');
+
+        for (let w = 0; w < 52; w++) {
+          for (let d = 0; d < 7; d++) {
+            const cellDate = new Date(startDate.getTime() + (w * 7 + d) * 86400000);
+            const dateStr = cellDate.toISOString().slice(0, 10);
+            const dayMetrics = heatmapData.days[dateStr] || { tokens: 0, turns: 0, promptTokens: 0, completionTokens: 0, level: 0 };
+
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('x', String(leftOffset + w * (cellSize + cellGap)));
+            rect.setAttribute('y', String(topOffset + d * (cellSize + cellGap)));
+            rect.setAttribute('width', String(cellSize));
+            rect.setAttribute('height', String(cellSize));
+            rect.setAttribute('rx', '2');
+            rect.setAttribute('class', 'heatmap-cell level-' + (dayMetrics.level || 0) + (activeFilterDate === dateStr ? ' selected' : ''));
+            rect.dataset.date = dateStr;
+
+            // Hover tooltip
+            rect.addEventListener('mouseenter', (ev) => {
+              if (tooltip) {
+                tooltip.style.display = 'block';
+                tooltip.innerHTML = '<strong>' + dateStr + '</strong>' +
+                  'Tokens: ' + formatNumber(dayMetrics.tokens) + '<br>' +
+                  'Turns: ' + formatNumber(dayMetrics.turns) + '<br>' +
+                  'Prompt: ' + formatCompact(dayMetrics.promptTokens) + ' | Output: ' + formatCompact(dayMetrics.completionTokens);
+                positionTooltip(ev);
+              }
+            });
+
+            rect.addEventListener('mousemove', (ev) => {
+              positionTooltip(ev);
+            });
+
+            rect.addEventListener('mouseleave', () => {
+              if (tooltip) tooltip.style.display = 'none';
+            });
+
+            // Click drill-down
+            rect.addEventListener('click', () => {
+              if (activeFilterDate === dateStr) {
+                clearFilter();
+              } else {
+                setFilter(dateStr, dayMetrics);
+              }
+            });
+
+            svg.appendChild(rect);
+          }
+        }
+      }
+
+      function positionTooltip(ev) {
+        const tooltip = document.getElementById('heatmap-tooltip');
+        if (!tooltip) return;
+        const pad = 12;
+        let x = ev.clientX + pad;
+        let y = ev.clientY + pad;
+        if (x + 220 > window.innerWidth) {
+          x = ev.clientX - 220;
+        }
+        tooltip.style.left = x + 'px';
+        tooltip.style.top = y + 'px';
+      }
+
+      function setFilter(dateStr, metrics) {
+        activeFilterDate = dateStr;
+        const ribbon = document.getElementById('filter-ribbon');
+        const fText = document.getElementById('filter-text');
+        if (ribbon && fText) {
+          ribbon.classList.add('active');
+          fText.textContent = 'FILTER: ' + dateStr + ' (' + formatNumber(metrics.turns || 0) + ' turns, ' + formatNumber(metrics.tokens || 0) + ' tokens)';
+        }
+        // Highlight cell
+        document.querySelectorAll('.heatmap-cell').forEach(c => {
+          if (c.dataset.date === dateStr) {
+            c.classList.add('selected');
+          } else {
+            c.classList.remove('selected');
+          }
+        });
+        if (currentStats) {
+          renderSessionsTable(currentStats.sessions);
+        }
+      }
+
+      function clearFilter() {
+        activeFilterDate = null;
+        const ribbon = document.getElementById('filter-ribbon');
+        if (ribbon) ribbon.classList.remove('active');
+        document.querySelectorAll('.heatmap-cell').forEach(c => c.classList.remove('selected'));
+        if (currentStats) {
+          renderSessionsTable(currentStats.sessions);
+        }
+      }
+
+      function renderSessionsTable(sessions) {
+        const tbody = document.getElementById('sessions-tbody');
+        const countBadge = document.getElementById('session-count-badge');
+        if (!tbody) return;
+        while (tbody.firstChild) {
+          tbody.removeChild(tbody.firstChild);
+        }
+
+        if (!sessions || sessions.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px;">No session transcripts found.</td></tr>';
+          if (countBadge) countBadge.textContent = '(0 sessions)';
+          return;
+        }
+
+        let filtered = sessions;
+        if (activeFilterDate) {
+          filtered = sessions.filter(s => (s.date === activeFilterDate || (s.lastModified && s.lastModified.startsWith(activeFilterDate))));
+        }
+
+        if (countBadge) {
+          countBadge.textContent = '(' + (activeFilterDate ? 'Filtered ' : 'Showing ') + filtered.length + ' sessions)';
+        }
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px;">No sessions recorded on ' + activeFilterDate + '.</td></tr>';
+          return;
+        }
+
+        filtered.forEach((s, idx) => {
+          const tr = document.createElement('tr');
+          const shortId = s.sessionId.length > 12 ? s.sessionId.slice(0, 8) + '...' : s.sessionId;
+          const isActive = idx === 0 && !activeFilterDate;
+
+          const dateFormatted = s.lastModified ? s.lastModified.slice(0, 19).replace('T', ' ') : 'unknown';
+
+          tr.innerHTML =
+            '<td><div class="sess-id-cell">' +
+              '<span>' + shortId + '</span>' +
+              '<button class="copy-btn" data-id="' + s.sessionId + '" title="Copy session ID">📋</button>' +
+              (isActive ? '<span class="active-tag">ACTIVE</span>' : '') +
+            '</div></td>' +
+            '<td>' + (s.project || 'default') + '</td>' +
+            '<td style="color: var(--text-secondary);">' + (s.model || 'kimi-k3.1') + '</td>' +
+            '<td>' + formatNumber(s.turns) + '</td>' +
+            '<td style="color: var(--terminal-cyan);">' + formatCompact(s.inputTokens) + '</td>' +
+            '<td style="color: var(--claude-orange);">' + formatCompact(s.outputTokens) + '</td>' +
+            '<td style="font-weight: bold;">' + formatNumber(s.totalTokens) + '</td>' +
+            '<td style="color: var(--text-muted); font-size: 11px;">' + dateFormatted + '</td>';
+
+          tbody.appendChild(tr);
+        });
+
+        // Attach copy button handlers
+        tbody.querySelectorAll('.copy-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const sid = btn.dataset.id;
+            if (sid && navigator.clipboard) {
+              navigator.clipboard.writeText(sid).then(() => {
+                btn.textContent = '✓';
+                setTimeout(() => { btn.textContent = '📋'; }, 1500);
+              });
+            }
+          });
+        });
+      }
+
+      function flashTelemetry() {
+        const container = document.getElementById('terminal-container');
+        if (container) {
+          container.classList.remove('telemetry-pulse');
+          void container.offsetWidth; // re-trigger reflow
+          container.classList.add('telemetry-pulse');
+        }
+      }
+
+      // Initialize
+      function init() {
+        // Step 1: Render embedded snapshot immediately (0ms first paint)
+        const initialSnapshot = getSnapshot();
+        if (initialSnapshot) {
+          renderDashboard(initialSnapshot);
+        }
+
+        // Setup clear filter button
+        const clearBtn = document.getElementById('clear-filter-btn');
+        if (clearBtn) clearBtn.addEventListener('click', clearFilter);
+
+        // Setup refresh button
+        const refreshBtn = document.getElementById('refresh-btn');
+        if (refreshBtn) {
+          refreshBtn.addEventListener('click', () => {
+            if (!isFileProtocol) {
+              fetchStats();
+            } else {
+              flashTelemetry();
+            }
+          });
+        }
+
+        // Setup export button
+        const exportBtn = document.getElementById('export-json-btn');
+        if (exportBtn) {
+          exportBtn.addEventListener('click', () => {
+            if (!currentStats) return;
+            const blob = new Blob([JSON.stringify(currentStats, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'claude-telemetry-' + new Date().toISOString().slice(0, 10) + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+          });
+        }
+
+        // Step 2: Protocol check
+        const statusBadge = document.getElementById('status-badge');
+        const statusText = document.getElementById('status-text');
+
+        if (isFileProtocol) {
+          // OFFLINE SNAPSHOT MODE
+          if (statusBadge && statusText) {
+            statusBadge.className = 'chip chip-status offline';
+            statusText.textContent = 'OFFLINE (SNAPSHOT)';
+            statusBadge.title = 'Running directly via file://. Run launch.bat for live updates.';
+          }
+          return;
+        }
+
+        // Step 3: ONLINE SERVER MODE (port 4050)
+        if (statusBadge && statusText) {
+          statusBadge.className = 'chip chip-status online';
+          statusText.textContent = 'CONNECTING...';
+        }
+
+        // Fetch latest stats
+        fetchStats();
+
+        // Connect SSE stream
+        connectLiveStream();
+      }
+
+      function connectLiveStream() {
+        if (liveSource) liveSource.close();
+
+        try {
+          liveSource = new EventSource('./api/live');
+
+          liveSource.onopen = function () {
+            const statusBadge = document.getElementById('status-badge');
+            const statusText = document.getElementById('status-text');
+            if (statusBadge && statusText) {
+              statusBadge.className = 'chip chip-status online';
+              statusText.textContent = 'LIVE';
+              statusBadge.title = 'Port 4050 | Live SSE Connected';
+            }
+            if (pollTimer) {
+              clearInterval(pollTimer);
+              pollTimer = null;
+            }
+          };
+
+          liveSource.addEventListener('stats', function (ev) {
+            try {
+              const data = JSON.parse(ev.data);
+              renderDashboard(data);
+              flashTelemetry();
+            } catch (err) {
+              console.warn('SSE stats parse error', err);
+            }
+          });
+
+          liveSource.onerror = function () {
+            const statusBadge = document.getElementById('status-badge');
+            const statusText = document.getElementById('status-text');
+            if (statusBadge && statusText) {
+              statusBadge.className = 'chip chip-status offline';
+              statusText.textContent = 'RECONNECTING...';
+            }
+            liveSource.close();
+            liveSource = null;
+            if (!pollTimer) {
+              pollTimer = setInterval(fetchStats, 3000);
+            }
+          };
+        } catch (e) {
+          if (!pollTimer) {
+            pollTimer = setInterval(fetchStats, 3000);
+          }
+        }
+      }
+
+      async function fetchStats() {
+        try {
+          const res = await fetch('./api/stats', { cache: 'no-store' });
+          if (res.ok) {
+            const data = await res.json();
+            renderDashboard(data);
+            const statusBadge = document.getElementById('status-badge');
+            const statusText = document.getElementById('status-text');
+            if (statusBadge && statusText && !liveSource) {
+              statusBadge.className = 'chip chip-status online';
+              statusText.textContent = 'LIVE (POLL)';
+            }
+          }
+        } catch (e) {
+          // Server might be cycling
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>

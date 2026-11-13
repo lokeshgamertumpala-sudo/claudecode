@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AETHERIA // Deep Space Exploration & Orbital Frontiers</title>
+  <style>
+    /* ==========================================================================
+       DESIGN SYSTEM & CSS VARIABLES (ui-ux-pro-max standard)
+       ========================================================================== */
+    :root {
+      --bg-deep: #030712;
+      --bg-card: rgba(15, 23, 42, 0.75);
+      --bg-card-hover: rgba(30, 41, 59, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(56, 189, 248, 0.35);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-cyan: #38bdf8;
+      --accent-blue: #3b82f6;
+      --accent-violet: #818cf8;
+      --accent-amber: #f59e0b;
+      --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --shadow-glow: 0 0 35px rgba(56, 189, 248, 0.15);
+      --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+      background: radial-gradient(circle at 50% 0%, rgba(30, 58, 138, 0.22) 0%, rgba(3, 7, 18, 1) 75%);
+    }
+
+    /* Fullscreen Starfield Canvas */
+    #starfield {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* App Shell Container */
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ==========================================================================
+       NAVIGATION BAR
+       ========================================================================== */
+    header.navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(3, 7, 18, 0.65);
+      border-bottom: 1px solid var(--border-subtle);
+      transition: var(--transition);
+    }
+
+    .nav-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+    }
+
+    .brand-mark svg {
+      width: 18px;
+      height: 18px;
+      fill: #030712;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .nav-links a:hover {
+      color: var(--accent-cyan);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      color: #030712;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 30px rgba(56, 189, 248, 0.5);
+    }
+
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--border-accent);
+    }
+
+    /* ==========================================================================
+       HERO SECTION
+       ========================================================================== */
+    .hero-section {
+      padding: 100px 24px 80px;
+      max-width: 1280px;
+      margin: 0 auto;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .badge-capsule {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 9999px;
+      color: var(--accent-cyan);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      backdrop-filter: blur(8px);
+    }
+
+    .badge-pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+    }
+
+    .hero-title {
+      font-size: clamp(38px, 6vw, 76px);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+      max-width: 960px;
+      background: linear-gradient(180deg, #ffffff 40%, rgba(255, 255, 255, 0.65) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-lead {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--text-secondary);
+      max-width: 680px;
+      margin-bottom: 40px;
+      font-weight: 400;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 64px;
+    }
+
+    /* Live Telemetry Banner */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      width: 100%;
+      max-width: 1040px;
+    }
+
+    .telemetry-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      text-align: left;
+      backdrop-filter: blur(12px);
+      transition: var(--transition);
+    }
+
+    .telemetry-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .tel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .tel-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .tel-status {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .tel-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+    }
+
+    /* ==========================================================================
+       SECTION: SPACECRAFT FLEET (Tabs)
+       ========================================================================== */
+    .section-wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 80px 24px;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .section-eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 12px;
+    }
+
+    .section-desc {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Fleet Tabs */
+    .fleet-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
+
+    .fleet-tab-btn {
+      padding: 10px 24px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      border-radius: 9999px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .fleet-tab-btn.active, .fleet-tab-btn:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-cyan);
+      color: var(--text-primary);
+    }
+
+    .fleet-display-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    @media (max-width: 860px) {
+      .fleet-display-card {
+        grid-template-columns: 1fr;
+        padding: 32px;
+      }
+    }
+
+    .fleet-info h3 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+    }
+
+    .fleet-info p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    .spec-table {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .spec-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+    }
+
+    .spec-key {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .spec-val {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--text-primary);
+    }
+
+    .fleet-visual-box {
+      width: 100%;
+      height: 340px;
+      border-radius: var(--radius-md);
+      background: radial-gradient(circle at center, rgba(56, 189, 248, 0.15) 0%, rgba(15, 23, 42, 0.6) 80%);
+      border: 1px solid var(--border-accent);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ship-icon {
+      font-size: 96px;
+      animation: float 4s ease-in-out infinite;
+      filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.4));
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(2deg); }
+    }
+
+    /* ==========================================================================
+       SECTION: MISSION PHASES (Interactive Timeline)
+       ========================================================================== */
+    .timeline-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .timeline-step {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 28px 20px;
+      position: relative;
+      transition: var(--transition);
+    }
+
+    .timeline-step:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-4px);
+    }
+
+    .phase-num {
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--accent-cyan);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .phase-num::after {
+      content: "";
+      flex-grow: 1;
+      height: 1px;
+      background: rgba(56, 189, 248, 0.2);
+    }
+
+    .timeline-step h4 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .timeline-step p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ==========================================================================
+       MODAL: MISSION RESERVATION
+       ========================================================================== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(3, 7, 18, 0.85);
+      backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #0f172a;
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius-lg);
+      padding: 36px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .modal-close:hover { color: var(--text-primary); }
+
+    .modal-card h3 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .modal-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 14px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .form-input:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+    }
+
+    /* Footer */
+    footer.app-footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 40px 24px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+  <!-- Interactive Starfield Background -->
+  <canvas id="starfield"></canvas>
+
+  <div class="app-shell">
+    <!-- Navbar -->
+    <header class="navbar">
+      <div class="nav-container">
+        <a href="#" class="brand-logo">
+          <div class="brand-mark">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8 12 2"></polygon></svg>
+          </div>
+          <span class="brand-title">Aetheria</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="#telemetry">Telemetry</a></li>
+          <li><a href="#fleet">Fleet</a></li>
+          <li><a href="#phases">Mission Phases</a></li>
+        </ul>
+        <div class="nav-actions">
+          <button class="btn btn-primary" onclick="openReservationModal()">Book Orbital Flight</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <main class="hero-section">
+      <div class="badge-capsule">
+        <span class="badge-pulse"></span>
+        Orbital Flight Phase 4 • Deep Space Ready
+      </div>
+      <h1 class="hero-title">The Gateway to Interplanetary Frontiers</h1>
+      <p class="hero-lead">Autonomous deep-space transport architectures engineered for trans-lunar trajectories, deep survey missions, and permanent orbital habitats.</p>
+      
+      <div class="hero-buttons">
+        <button class="btn btn-primary" onclick="openReservationModal()">Initialize Flight Protocol</button>
+        <a href="#fleet" class="btn btn-outline">Explore Spacecraft Specs</a>
+      </div>
+
+      <!-- Real-Time Telemetry Dashboard -->
+      <section id="telemetry" class="telemetry-grid">
+        <div class="telemetry-card">
+          <div class="tel-header">
+            <span class="tel-label">Orbital Velocity</span>
+            <span class="tel-status">LIVE</span>
+          </div>
+          <div class="tel-value" id="velVal">27,580 km/h</div>
+        </div>
+        <div class="telemetry-card">
+          <div class="tel-header">
+            <span class="tel-label">Current Altitude</span>
+            <span class="tel-status">LEO</span>
+          </div>
+          <div class="tel-value" id="altVal">421.4 km</div>
+        </div>
+        <div class="telemetry-card">
+          <div class="tel-header">
+            <span class="tel-label">Cabin Pressure</span>
+            <span class="tel-status">NOMINAL</span>
+          </div>
+          <div class="tel-value" id="presVal">101.3 kPa</div>
+        </div>
+        <div class="telemetry-card">
+          <div class="tel-header">
+            <span class="tel-label">Trajectory Sync</span>
+            <span class="tel-status">99.98%</span>
+          </div>
+          <div class="tel-value" id="syncVal">OPTIMAL</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Spacecraft Fleet Section -->
+    <section id="fleet" class="section-wrap">
+      <div class="section-header">
+        <div class="section-eyebrow">Flight Architecture</div>
+        <h2 class="section-title">Engineered for the Deep Cosmos</h2>
+        <p class="section-desc">Next-generation ion propulsion, redundant life-support loops, and carbon-titanium composite airframes.</p>
+      </div>
+
+      <div class="fleet-tabs">
+        <button class="fleet-tab-btn active" onclick="switchFleetTab('orion')">Orion Deep-Voyager</button>
+        <button class="fleet-tab-btn" onclick="switchFleetTab('helios')">Helios Heavy Transporter</button>
+        <button class="fleet-tab-btn" onclick="switchFleetTab('nova')">Nova Deep-Probe</button>
+      </div>
+
+      <div class="fleet-display-card" id="fleetCard">
+        <div class="fleet-info">
+          <h3 id="shipName">Orion Deep-Voyager</h3>
+          <p id="shipDesc">Configured for manned long-range expeditions to the Moon and Mars orbital waypoints. Features artificial gravity centrifuge modules and autonomous radiation shielding.</p>
+          <div class="spec-table">
+            <div class="spec-item">
+              <div class="spec-key">Crew Capacity</div>
+              <div class="spec-val" id="specCrew">6 Specialists</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-key">Propulsion Core</div>
+              <div class="spec-val" id="specProp">Dual VASIMR Ion</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-key">Max Delta-V</div>
+              <div class="spec-val" id="specDelta">14.2 km/s</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-key">Payload Limit</div>
+              <div class="spec-val" id="specPayload">48,000 kg</div>
+            </div>
+          </div>
+          <button class="btn btn-outline" onclick="openReservationModal()">Configure Mission Payload</button>
+        </div>
+        <div class="fleet-visual-box">
+          <div class="ship-icon" id="shipEmoji">🚀</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mission Phases Timeline -->
+    <section id="phases" class="section-wrap">
+      <div class="section-header">
+        <div class="section-eyebrow">Flight Trajectory</div>
+        <h2 class="section-title">End-to-End Mission Architecture</h2>
+        <p class="section-desc">Deterministic orbital injection phases calculated with sub-second accuracy.</p>
+      </div>
+
+      <div class="timeline-container">
+        <div class="timeline-step">
+          <div class="phase-num">PHASE 01 // T+00:00</div>
+          <h4>Atmospheric Ascent & Max-Q</h4>
+          <p>Methane-liquid oxygen booster separation at Mach 7.4. Insertion into stable low Earth parking orbit.</p>
+        </div>
+        <div class="timeline-step">
+          <div class="phase-num">PHASE 02 // T+03:45</div>
+          <h4>Trans-Lunar Injection</h4>
+          <p>Autonomous burn sequence executing cryogenic burn to escape Earth velocity and enter lunar corridor.</p>
+        </div>
+        <div class="timeline-step">
+          <div class="phase-num">PHASE 03 // T+72:00</div>
+          <h4>Orbital Rendezvous</h4>
+          <p>Laser telemetry lidar docking with the Gateway Orbital Station. Automated fuel transfer and telemetry checkout.</p>
+        </div>
+        <div class="timeline-step">
+          <div class="phase-num">PHASE 04 // T+96:00</div>
+          <h4>Deep Space Transit</h4>
+          <p>Activation of long-range ion propulsion and continuous telemetry sync with ground control.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>© 2026 AETHERIA DEEP SPACE INITIATIVE // Zero-Error Spaceflight Architecture</p>
+    </footer>
+  </div>
+
+  <!-- Reservation Modal -->
+  <div class="modal-overlay" id="reserveModal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeReservationModal()">✕</button>
+      <h3>Reserve Orbital Flight</h3>
+      <p>Initiate pre-flight physical certification and mission telemetry allocation.</p>
+      <form onsubmit="handleReservation(event)">
+        <div class="form-group">
+          <label class="form-label">Full Name / Commander ID</label>
+          <input type="text" class="form-input" required placeholder="Commander Alex Vance">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Communication Frequency (Email)</label>
+          <input type="email" class="form-input" required placeholder="alex@aetheria.space">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Destination Orbit</label>
+          <select class="form-input" style="background: #1e293b;">
+            <option>Low Earth Orbital Station (420 km)</option>
+            <option>Lunar Gateway Waypoint (384,400 km)</option>
+            <option>Mars Lagrange-1 Transfer Window</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 12px;">Confirm Mission Booking</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Inline Logic & Interactive Starfield -->
+  <script>
+    // 1. Starfield Particle Simulation
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    const STAR_COUNT = 160;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    for (let i = 0; i < STAR_COUNT; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 1.8 + 0.5,
+        alpha: Math.random() * 0.8 + 0.2,
+        speed: Math.random() * 0.3 + 0.1
+      });
+    }
+
+    function renderStarfield() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let star of stars) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        star.y -= star.speed;
+        if (star.y < 0) {
+          star.y = canvas.height;
+          star.x = Math.random() * canvas.width;
+        }
+      }
+      requestAnimationFrame(renderStarfield);
+    }
+    renderStarfield();
+
+    // 2. Real-Time Telemetry Simulation
+    setInterval(() => {
+      const vel = (27580 + (Math.random() * 4 - 2)).toFixed(1);
+      const alt = (421.4 + (Math.random() * 0.4 - 0.2)).toFixed(2);
+      document.getElementById('velVal').innerText = `${vel} km/h`;
+      document.getElementById('altVal').innerText = `${alt} km`;
+    }, 1500);
+
+    // 3. Spacecraft Fleet Switcher
+    const fleetData = {
+      orion: {
+        name: "Orion Deep-Voyager",
+        desc: "Configured for manned long-range expeditions to the Moon and Mars orbital waypoints. Features artificial gravity centrifuge modules and autonomous radiation shielding.",
+        crew: "6 Specialists",
+        prop: "Dual VASIMR Ion",
+        delta: "14.2 km/s",
+        payload: "48,000 kg",
+        emoji: "🚀"
+      },
+      helios: {
+        name: "Helios Heavy Transporter",
+        desc: "Automated bulk cargo platform engineered for habitat construction, regolith excavation modules, and orbital station refueling across cislunar space.",
+        crew: "Autonomous",
+        prop: "Nuclear Thermal Core",
+        delta: "9.8 km/s",
+        payload: "125,000 kg",
+        emoji: "🛰️"
+      },
+      nova: {
+        name: "Nova Deep-Probe",
+        desc: "Ultra-high delta-V deep reconnaissance probe equipped with quantum magnetometers, sub-surface radar arrays, and optical deep-space communication transmitters.",
+        crew: "AI Sensor Core",
+        prop: "Direct Fusion Drive",
+        delta: "28.5 km/s",
+        payload: "8,500 kg",
+        emoji: "✨"
+      }
+    };
+
+    function switchFleetTab(key) {
+      document.querySelectorAll('.fleet-tab-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      const data = fleetData[key];
+      document.getElementById('shipName').innerText = data.name;
+      document.getElementById('shipDesc').innerText = data.desc;
+      document.getElementById('specCrew').innerText = data.crew;
+      document.getElementById('specProp').innerText = data.prop;
+      document.getElementById('specDelta').innerText = data.delta;
+      document.getElementById('specPayload').innerText = data.payload;
+      document.getElementById('shipEmoji').innerText = data.emoji;
+    }
+
+    // 4. Modal Handlers
+    function openReservationModal() {
+      document.getElementById('reserveModal').classList.add('active');
+    }
+    function closeReservationModal() {
+      document.getElementById('reserveModal').classList.remove('active');
+    }
+    function handleReservation(e) {
+      e.preventDefault();
+      alert("Telemetry slot reserved! Flight instructions have been dispatched to your terminal.");
+      closeReservationModal();
+    }
+  </script>
+</body>
+</html>

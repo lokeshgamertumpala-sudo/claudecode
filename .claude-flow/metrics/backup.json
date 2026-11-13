@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-11-12T10:51:32.762Z",
+  "backedUp": true,
+  "backups": [
+    {
+      "backedUp": true,
+      "path": "C:\\Users\\NEW\\OneDrive\\Desktop\\claudecode\\.swarm\\backups\\memory-2026-11-12T10-51-32-755Z.db",
+      "sizeBytes": 172032,
+      "rotatedAway": [],
+      "method": "native-online-backup",
+      "dbPath": "C:\\Users\\NEW\\OneDrive\\Desktop\\claudecode\\.swarm\\memory.db"
+    },
+    {
+      "backedUp": false,
+      "skipped": "no-db",
+      "dbPath": "C:\\Users\\NEW\\OneDrive\\Desktop\\claudecode\\.swarm\\agentdb-memory.db"
+    }
+  ],
+  "path": "C:\\Users\\NEW\\OneDrive\\Desktop\\claudecode\\.swarm\\backups\\memory-2026-11-12T10-51-32-755Z.db",
+  "sizeBytes": 172032,
+  "rotatedAway": 0,
+  "method": "native-online-backup"
+}

@@ -1,0 +1,79 @@
+{
+  "swarms": {
+    "swarm-1794480092751-ca7qh6": {
+      "swarmId": "swarm-1794480092751-ca7qh6",
+      "topology": "hierarchical",
+      "maxAgents": 8,
+      "status": "running",
+      "agents": [
+        "agent-1794480104864-0biina",
+        "agent-1794480139500-xjqakv",
+        "agent-1794480141841-83ljjl",
+        "agent-1794480144142-mscgv9",
+        "agent-1794480146482-xvj8ii",
+        "agent-1794480154720-bkb9ol",
+        "agent-1794480157549-bjzitk",
+        "agent-1794480159838-k1lai0"
+      ],
+      "tasks": [],
+      "config": {
+        "topology": "hierarchical",
+        "maxAgents": 8,
+        "strategy": "specialized",
+        "communicationProtocol": "message-bus",
+        "autoScaling": true,
+        "consensusMechanism": "majority"
+      },
+      "createdAt": "2026-11-12T10:41:32.751Z",
+      "updatedAt": "2026-11-12T10:41:32.751Z"
+    },
+    "swarm-1794483791108-uecwxs": {
+      "swarmId": "swarm-1794483791108-uecwxs",
+      "topology": "hierarchical",
+      "maxAgents": 15,
+      "status": "running",
+      "agents": [
+        "agent-1794483806742-klx9cg",
+        "agent-1794483812824-ykzi7x",
+        "agent-1794483834783-oahyb3",
+        "agent-1794483837027-g4vm3c",
+        "agent-1794483864733-o00bjv",
+        "agent-1794483867217-goo7kj",
+        "agent-1794483869422-pbdo1j",
+        "agent-1794483871654-wbbng8",
+        "agent-1794483873899-oa3dum",
+        "agent-1794483876116-9hru0y"
+      ],
+      "tasks": [],
+      "config": {
+        "topology": "hierarchical",
+        "maxAgents": 15,
+        "strategy": "specialized",
+        "communicationProtocol": "message-bus",
+        "autoScaling": true,
+        "consensusMechanism": "majority"
+      },
+      "createdAt": "2026-11-12T11:43:11.108Z",
+      "updatedAt": "2026-11-12T11:43:11.108Z"
+    },
+    "swarm-1794484469211-3174qq": {
+      "swarmId": "swarm-1794484469211-3174qq",
+      "topology": "hierarchical-mesh",
+      "maxAgents": 15,
+      "status": "running",
+      "agents": [],
+      "tasks": [],
+      "config": {
+        "topology": "hierarchical-mesh",
+        "maxAgents": 15,
+        "strategy": "specialized",
+        "communicationProtocol": "message-bus",
+        "autoScaling": true,
+        "consensusMechanism": "majority"
+      },
+      "createdAt": "2026-11-12T11:54:29.211Z",
+      "updatedAt": "2026-11-12T11:54:29.211Z"
+    }
+  },
+  "version": "3.0.0"
+}

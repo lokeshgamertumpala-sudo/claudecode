@@ -1,0 +1,161 @@
+# Verified NVIDIA NIM Model Registry
+# Generated from live API query on 2025-11-07
+
+providers:
+  nvidia:
+    base_url: "https://integrate.api.nvidia.com/v1"
+    auth_header: "Authorization: Bearer ${NVIDIA_API_KEY}"
+    models:
+      # MISTRAL - Fast Coding
+      mistral-large-4-1t-a52b:
+        id: "mistralai/mistral-large-4-1t-a52b"
+        role: "fast_coding"
+        aliases: ["mistral", "mistral-large"]
+        max_tokens: 8192
+        context_window: 128000
+        temperature_default: 0.3
+        capabilities: ["code_generation", "html", "css", "javascript", "threejs", "optimization"]
+
+      mistral-large-2-instruct:
+        id: "mistralai/mistral-large-2-instruct"
+        role: "fast_coding"
+        aliases: ["mistral-large-2"]
+        max_tokens: 8192
+        context_window: 128000
+        temperature_default: 0.3
+        capabilities: ["code_generation", "html", "css", "javascript", "threejs"]
+
+      codestral:
+        id: "mistralai/codestral-22b-instruct-v0.1"
+        role: "fast_coding"
+        aliases: ["codestral"]
+        max_tokens: 8192
+        context_window: 32768
+        temperature_default: 0.2
+        capabilities: ["code_generation", "code_completion", "refactoring"]
+
+      mistral-nemo:
+        id: "nv-mistralai/mistral-nemo-12b-instruct"
+        role: "fast_coding"
+        aliases: ["nemo"]
+        max_tokens: 8192
+        context_window: 128000
+        temperature_default: 0.3
+        capabilities: ["code_generation", "html", "css", "javascript"]
+
+      # CREATIVE REASONING - Using Mistral Large (reliable primary)
+      mistral-large-creative:
+        id: "mistralai/mistral-large-4-1t-a52b"
+        role: "creative_reasoning"
+        aliases: ["mistral-creative"]
+        max_tokens: 8192
+        context_window: 128000
+        temperature_default: 0.7
+        capabilities: ["creative_writing", "storyboarding", "animation_concepts", "visual_storytelling"]
+
+      # MINIMAX - Creative Reasoning (NVIDIA-hosted but slow/unreliable - fallback only)
+      minimax-m3.1-flash:
+        id: "minimaxai/minimax-m3.1-flash"
+        role: "creative_reasoning"
+        aliases: ["minimax", "m3.1-flash"]
+        max_tokens: 8192
+        context_window: 256000
+        temperature_default: 0.7
+        capabilities: ["creative_writing", "storyboarding", "animation_concepts", "visual_storytelling"]
+
+      # STEP FLASH - Rapid Execution
+      step-5-preview:
+        id: "stepfun-ai/step-5-preview"
+        role: "rapid_execution"
+        aliases: ["step", "step-5", "step-flash"]
+        max_tokens: 8192
+        context_window: 200000
+        temperature_default: 0.4
+        capabilities: ["fast_iteration", "debugging", "code_modification", "quick_fixes"]
+
+      # NVIDIA FLAGSHIP - Advanced Reasoning
+      nemotron-3-ultra-550b:
+        id: "nvidia/nemotron-3-ultra-550b-a55b"
+        role: "advanced_reasoning"
+        aliases: ["nemotron-ultra", "nvidia-flagship", "nemotron-3-ultra"]
+        max_tokens: 8192
+        context_window: 128000
+        temperature_default: 0.3
+        capabilities: ["complex_reasoning", "architecture", "code_review", "system_analysis", "final_qc"]
+
+      nemotron-4-340b-instruct:
+        id: "nvidia/nemotron-4-340b-instruct"
+        role: "advanced_reasoning"
+        aliases: ["nemotron-4", "nemotron-340b"]
+        max_tokens: 8192
+        context_window: 128000
+        temperature_default: 0.3
+        capabilities: ["complex_reasoning", "architecture", "code_review", "system_analysis"]
+
+      llama-3.1-nemotron-ultra-253b:
+        id: "nvidia/llama-3.1-nemotron-ultra-253b-v1"
+        role: "advanced_reasoning"
+        aliases: ["nemotron-253b", "llama-nemotron-ultra"]
+        max_tokens: 8192
+        context_window: 128000
+        temperature_default: 0.3
+        capabilities: ["complex_reasoning", "architecture", "code_review"]
+
+  # External providers (require separate API keys)
+  minimax:
+    base_url: "https://api.minimax.chat/v1"
+    auth_header: "Authorization: Bearer ${MINIMAX_API_KEY}"
+    models:
+      minimax-m1:
+        id: "MiniMax-M1"
+        role: "creative_reasoning"
+        max_tokens: 8192
+        context_window: 128000
+        capabilities: ["creative_writing", "storyboarding"]
+
+  stepfun:
+    base_url: "https://api.stepfun.com/v1"
+    auth_header: "Authorization: Bearer ${STEPFUN_API_KEY}"
+    models:
+      step-2:
+        id: "step-2"
+        role: "rapid_execution"
+        max_tokens: 8192
+        context_window: 200000
+        capabilities: ["fast_iteration", "debugging"]
+
+routing:
+  default_roles:
+    fast_coding: "mistral-large-4-1t-a52b"
+    creative_reasoning: "minimax-m3.1-flash"
+    rapid_execution: "step-5-preview"
+    advanced_reasoning: "nemotron-3-ultra-550b"
+
+  task_keywords:
+    fast_coding: ["code", "function", "component", "html", "css", "javascript", "threejs", "optimize", "refactor", "bug", "fix", "implement"]
+    creative_reasoning: ["concept", "storyboard", "creative", "animation", "visual", "cinematic", "story", "design", "transition", "narrative"]
+    rapid_execution: ["quick", "fast", "modify", "change", "update", "tweak", "adjust", "small", "minor", "patch"]
+    advanced_reasoning: ["architecture", "system", "design", "review", "analyze", "complex", "difficult", "debug", "investigate", "plan", "strategy"]
+
+  fallback_chain:
+    fast_coding: ["mistral-large-4-1t-a52b", "mistral-large-2-instruct", "codestral", "mistral-nemo"]
+    creative_reasoning: ["mistral-large-4-1t-a52b"]
+    rapid_execution: ["step-5-preview", "mistral-large-4-1t-a52b"]
+    advanced_reasoning: ["nemotron-3-ultra-550b", "nemotron-4-340b-instruct", "llama-3.1-nemotron-ultra-253b"]
+
+reliability:
+  timeouts:
+    connect: 10
+    response: 60
+  retries:
+    max_attempts: 3
+    base_delay: 1.0
+    max_delay: 30.0
+    jitter: 0.3
+  circuit_breaker:
+    failure_threshold: 5
+    recovery_timeout: 60
+    half_open_requests: 3
+  rate_limit:
+    respect_retry_after: true
+    default_retry_after: 60

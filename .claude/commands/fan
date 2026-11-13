@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Parse arguments
+AGENT_TYPES=()
+TASK_DESC=""
+COUNT=1
+SWARM_ID=""
+WAIT=false
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --task)
+      TASK_DESC="$2"
+      shift 2
+      ;;
+    --count)
+      COUNT="$2"
+      shift 2
+      ;;
+    --swarm)
+      SWARM_ID="$2"
+      shift 2
+      ;;
+    --wait)
+      WAIT=true
+      shift
+      ;;
+    *)
+      AGENT_TYPES+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if [[ ${#AGENT_TYPES[@]} -eq 0 ]]; then
+  echo "Usage: /fan agent <type> [--task \"desc\"] [--count N] [--wait]"
+  echo "Types: orchestrator, architect, researcher, backend, frontend, ux, debugger, qa"
+  exit 1
+fi
+
+if [[ -z "$TASK_DESC" ]]; then
+  echo "Error: --task required"
+  exit 1
+fi
+
+# Map to Ruflo types (using pre-registered agents)
+declare -A TYPE_MAP=(
+  ["orchestrator"]="coordinator"
+  ["architect"]="architect"
+  ["researcher"]="researcher"
+  ["backend"]="coder"
+  ["frontend"]="coder"
+  ["ux"]="reviewer"
+  ["debugger"]="tester"
+  ["qa"]="security-auditor"
+)
+
+# Get swarm ID
+if [[ -z "$SWARM_ID" ]]; then
+  SWARM_ID=$(npx ruflo@latest swarm status 2>/dev/null | grep -E "^Swarm Status:" | sed -E 's/.*Swarm Status:[[:space:]]*//')
+fi
+
+# Create task
+TASK_ID=$(npx ruflo@latest task create --swarm "$SWARM_ID" --type implementation --description "$TASK_DESC" --priority high 2>/dev/null | grep -E "^\|[[:space:]]*ID" | sed -E 's/.*\|[[:space:]]*ID[[:space:]]*\|[[:space:]]*//' | sed -E 's/[[:space:]]*\|.*//')
+
+echo "✅ Task: $TASK_ID"
+
+# Pre-registered agent IDs (from swarm init)
+declare -A AGENT_IDS=(
+  ["coordinator"]="agent-1794480104864-0biina"
+  ["architect"]="agent-1794480139500-xjqakv"
+  ["researcher"]="agent-1794480141841-83ljjl"
+  ["coder-1"]="agent-1794480144142-mscgv9"
+  ["coder-2"]="agent-1794480146482-xvj8ii"
+  ["reviewer"]="agent-1794480154720-bkb9ol"
+  ["tester"]="agent-1794480157549-bjzitk"
+  ["security-auditor"]="agent-1794480159838-k1lai0"
+)
+
+# Assign agents
+for TYPE in "${AGENT_TYPES[@]}"; do
+  RUFLO_TYPE="${TYPE_MAP[$TYPE]}"
+  AGENT_ID=""
+
+  if [[ "$RUFLO_TYPE" == "coder" ]]; then
+    # Alternate between the two coders
+    if [[ -z "${CODER_IDX:-}" ]]; then CODER_IDX=1; fi
+    AGENT_ID="${AGENT_IDS["coder-$CODER_IDX"]}"
+    CODER_IDX=$(( (CODER_IDX % 2) + 1 ))
+  else
+    AGENT_ID="${AGENT_IDS[$RUFLO_TYPE]}"
+  fi
+
+  if [[ -n "$AGENT_ID" ]]; then
+    npx ruflo@latest task assign "$TASK_ID" --agent "$AGENT_ID" >/dev/null && echo "   ✅ $TYPE → $AGENT_ID" || echo "   ⚠️  $TYPE assignment issue"
+  fi
+done
+
+if [[ "$WAIT" == "true" ]]; then
+  echo "⏳ Waiting..."
+  while true; do
+    STATUS=$(npx ruflo@latest task status "$TASK_ID" 2>/dev/null | grep -E "^\|[[:space:]]*Status" | sed -E 's/.*\|[[:space:]]*Status[[:space:]]*\|[[:space:]]*//' | sed -E 's/[[:space:]]*\|.*//')
+    [[ "$STATUS" == "completed" ]] && { echo "✅ Done"; break; }
+    [[ "$STATUS" == "failed" ]] && { echo "❌ Failed"; exit 1; }
+    sleep 5
+  done
+else
+  echo "📊 Monitor: npx ruflo@latest task status $TASK_ID"
+fi

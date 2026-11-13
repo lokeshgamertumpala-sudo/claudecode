@@ -1,0 +1,94 @@
+{
+  "name": "@claude-flow/plugin-financial-risk",
+  "version": "3.0.0-alpha.4",
+  "description": "High-performance financial risk analysis plugin with portfolio risk scoring, anomaly detection, market regime classification, and compliance reporting using RuVector WASM packages.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./tools": {
+      "import": "./dist/mcp-tools.js",
+      "types": "./dist/mcp-tools.d.ts"
+    },
+    "./bridges/economy": {
+      "import": "./dist/bridges/economy-bridge.js",
+      "types": "./dist/bridges/economy-bridge.d.ts"
+    },
+    "./bridges/sparse": {
+      "import": "./dist/bridges/sparse-bridge.js",
+      "types": "./dist/bridges/sparse-bridge.d.ts"
+    },
+    "./bridges": {
+      "import": "./dist/bridges/index.js",
+      "types": "./dist/bridges/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types.js",
+      "types": "./dist/types.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "plugin.yaml",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "prepublishOnly": "npm run clean && npm run build && npm run typecheck"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "v3alpha"
+  },
+  "keywords": [
+    "ruflo",
+    "claude-flow",
+    "plugin",
+    "financial-risk",
+    "portfolio-risk",
+    "var",
+    "cvar",
+    "anomaly-detection",
+    "fraud-detection",
+    "aml",
+    "compliance",
+    "basel3",
+    "mifid2",
+    "mcp"
+  ],
+  "author": "rUv",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ruvnet/ruflo.git",
+    "directory": "v3/plugins/financial-risk"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/ruflo/issues"
+  },
+  "homepage": "https://ruv.io",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.0.0"
+  },
+  "optionalDependencies": {
+    "ruvector-gnn-wasm": "^0.1.0"
+  }
+}

@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /dashboard
+Allow: /mission-designer
+Allow: /engineering-sim
+Allow: /analytics
+Allow: /settings
+
+Disallow: /api/
+Disallow: /ai-copilot
+
+Sitemap: http://localhost:5173/sitemap.xml

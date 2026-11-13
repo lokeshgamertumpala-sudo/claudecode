@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore the cosmos - A minimal space exploration experience">
+    <title>STELLAR | Space Exploration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div class="cursor-glow" aria-hidden="true"></div>
+
+    <canvas id="starfield" aria-hidden="true"></canvas>
+
+    <header class="header" role="banner">
+        <nav class="nav container" aria-label="Main navigation">
+            <a href="#" class="logo" aria-label="Stellar Home">
+                <svg class="logo-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                    <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="1.5"/>
+                    <circle cx="16" cy="16" r="6" fill="currentColor"/>
+                    <path d="M16 2 L16 8 M16 24 L16 30 M2 16 L8 16 M24 16 L30 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <span class="logo-text">STELLAR</span>
+            </a>
+            <div class="nav-links" role="navigation">
+                <a href="#explore" class="nav-link">Explore</a>
+                <a href="#missions" class="nav-link">Missions</a>
+                <a href="#discoveries" class="nav-link">Discoveries</a>
+                <a href="#contact" class="nav-link cta-nav">Join Mission</a>
+            </div>
+            <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle navigation">
+                <span class="hamburger" aria-hidden="true"></span>
+            </button>
+        </nav>
+    </header>
+
+    <main role="main">
+        <section class="hero" id="home" aria-labelledby="hero-title">
+            <div class="hero-bg" aria-hidden="true">
+                <div class="orbital-ring"></div>
+                <div class="orbital-ring reverse"></div>
+                <div class="orbital-ring tilted"></div>
+                <div class="central-body"></div>
+            </div>
+            <div class="container hero-content">
+                <div class="hero-text">
+                    <p class="hero-badge" aria-hidden="true">
+                        <span class="badge-dot" aria-hidden="true"></span>
+                        Live Mission Control
+                    </p>
+                    <h1 id="hero-title" class="hero-title">
+                        Humanity's <br>
+                        <span class="gradient-text">Next Frontier</span>
+                    </h1>
+                    <p class="hero-description">
+                        Venture beyond the known. Real-time mission data,
+                        cosmic discoveries, and the future of space exploration
+                        at your fingertips.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="#missions" class="btn btn-primary">
+                            <span>Active Missions</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <a href="#discoveries" class="btn btn-secondary">
+                            <span>Latest Discoveries</span>
+                        </a>
+                    </div>
+                    <div class="hero-stats" role="list" aria-label="Mission statistics">
+                        <div class="stat" role="listitem">
+                            <span class="stat-value" data-count="47">0</span>
+                            <span class="stat-label">Active Missions</span>
+                        </div>
+                        <div class="stat" role="listitem">
+                            <span class="stat-value" data-count="12">0</span>
+                            <span class="stat-label">Orbital Stations</span>
+                        </div>
+                        <div class="stat" role="listitem">
+                            <span class="stat-value" data-count="2847">0</span>
+                            <span class="stat-label">Exoplanets Found</span>
+                        </div>
+                        <div class="stat" role="listitem">
+                            <span class="stat-value" data-count="156">0</span>
+                            <span class="stat-label">Astronauts in Orbit</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-visual" aria-hidden="true">
+                    <div class="planet-display">
+                        <div class="planet mars" data-planet="mars">
+                            <div class="planet-atmosphere"></div>
+                            <div class="planet-surface"></div>
+                        </div>
+                        <div class="planet-moons">
+                            <div class="moon phobos"></div>
+                            <div class="moon deimos"></div>
+                        </div>
+                        <div class="orbital-path"></div>
+                        <div class="orbital-path outer"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="scroll-indicator" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 5v14M19 12l-7 7-7-7"/>
+                </svg>
+            </div>
+        </section>
+
+        <section class="section explore" id="explore" aria-labelledby="explore-title">
+            <div class="container">
+                <header class="section-header">
+                    <span class="section-tag">Explore the Cosmos</span>
+                    <h2 id="explore-title" class="section-title">Where Next?</h2>
+                    <p class="section-description">Select a destination to begin your journey through real mission data</p>
+                </header>
+                <div class="destinations-grid" role="list" aria-label="Space destinations">
+                    <article class="destination-card" data-destination="mars" role="listitem">
+                        <div class="card-visual">
+                            <div class="planet-preview mars"></div>
+                            <div class="card-glow mars"></div>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-meta">
+                                <span class="distance">225M km avg</span>
+                                <span class="travel-time">7-9 months</span>
+                            </div>
+                            <h3 class="card-title">Mars</h3>
+                            <p class="card-description">The Red Planet - Next human frontier with active rovers and orbital surveys</p>
+                            <ul class="card-facts" aria-label="Mars facts">
+                                <li><strong>2</strong> Active rovers</li>
+                                <li><strong>8</strong> Orbiters</li>
+                                <li><strong>24.6h</strong> Day length</li>
+                            </ul>
+                            <button class="card-link" aria-label="Explore Mars missions">
+                                Explore Missions
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </article>
+                    <article class="destination-card" data-destination="europa" role="listitem">
+                        <div class="card-visual">
+                            <div class="planet-preview europa"></div>
+                            <div class="card-glow europa"></div>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-meta">
+                                <span class="distance">628M km</span>
+                                <span class="travel-time">6+ years</span>
+                            </div>
+                            <h3 class="card-title">Europa</h3>
+                            <p class="card-description">Jupiter's icy moon - Subsurface ocean holds potential for extraterrestrial life</p>
+                            <ul class="card-facts" aria-label="Europa facts">
+                                <li><strong>1</strong> Upcoming mission</li>
+                                <li><strong>3.5</strong> Day orbit</li>
+                                <li><strong>-160°C</strong> Surface temp</li>
+                            </ul>
+                            <button class="card-link" aria-label="Explore Europa missions">
+                                Explore Missions
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </article>
+                    <article class="destination-card" data-destination="titan" role="listitem">
+                        <div class="card-visual">
+                            <div class="planet-preview titan"></div>
+                            <div class="card-glow titan"></div>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-meta">
+                                <span class="distance">1.2B km</span>
+                                <span class="travel-time">7+ years</span>
+                            </div>
+                            <h3 class="card-title">Titan</h3>
+                            <p class="card-description">Saturn's largest moon - Methane lakes and thick atmosphere, Dragonfly bound</p>
+                            <ul class="card-facts" aria-label="Titan facts">
+                                <li><strong>1</strong> Future drone mission</li>
+                                <li><strong>16</strong> Day orbit</li>
+                                <li><strong>-179°C</strong> Surface temp</li>
+                            </ul>
+                            <button class="card-link" aria-label="Explore Titan missions">
+                                Explore Missions
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </article>
+                    <article class="destination-card" data-destination="exoplanets" role="listitem">
+                        <div class="card-visual">
+                            <div class="planet-preview exoplanet"></div>
+                            <div class="card-glow exoplanet"></div>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-meta">
+                                <span class="distance">4.2+ ly</span>
+                                <span class="travel-time">73,000+ yrs</span>
+                            </div>
+                            <h3 class="card-title">Exoplanets</h3>
+                            <p class="card-description">Worlds beyond our solar system - 5,500+ confirmed, dozens potentially habitable</p>
+                            <ul class="card-facts" aria-label="Exoplanet facts">
+                                <li><strong>5,500+</strong> Confirmed</li>
+                                <li><strong>69</strong> Habitable zone</li>
+                                <li><strong>TRAPPIST-1</strong> 7 planets</li>
+                            </ul>
+                            <button class="card-link" aria-label="Explore Exoplanets">
+                                Explore Missions
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section missions" id="missions" aria-labelledby="missions-title">
+            <div class="container">
+                <header class="section-header">
+                    <span class="section-tag">Active Operations</span>
+                    <h2 id="missions-title" class="section-title">Live Missions</h2>
+                    <p class="section-description">Real-time status of humanity's robotic explorers across the solar system</p>
+                </header>
+                <div class="missions-tabs" role="tablist" aria-label="Mission categories">
+                    <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="orbital-panel" id="orbital-tab">Orbital</button>
+                    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="surface-panel" id="surface-tab">Surface</button>
+                    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="deep-panel" id="deep-tab">Deep Space</button>
+                    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="upcoming-panel" id="upcoming-tab">Upcoming</button>
+                </div>
+                <div class="missions-panels">
+                    <div class="tab-panel active" role="tabpanel" id="orbital-panel" aria-labelledby="orbital-tab">
+                        <div class="mission-cards" role="list">
+                            <article class="mission-card" role="listitem">
+                                <div class="mission-status live" aria-label="Live mission">LIVE</div>
+                                <div class="mission-icon jwst" aria-hidden="true"></div>
+                                <div class="mission-info">
+                                    <h3>James Webb Space Telescope</h3>
+                                    <p class="mission-agency">NASA / ESA / CSA</p>
+                                    <div class="mission-details">
+                                        <span><strong>L2 Orbit</strong> • 1.5M km from Earth</span>
+                                        <span><strong>Launched</strong> Dec 25, 2021</span>
+                                    </div>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 78%"></div>
+                                    </div>
+                                    <span class="progress-text">78% Primary Mission</span>
+                                </div>
+                            </article>
+                            <article class="mission-card" role="listitem">
+                                <div class="mission-status live" aria-label="Live mission">LIVE</div>
+                                <div class="mission-icon juno" aria-hidden="true"></div>
+                                <div class="mission-info">
+                                    <h3>Juno</h3>
+                                    <p class="mission-agency">NASA</p>
+                                    <div class="mission-details">
+                                        <span><strong>Jupiter Orbit</strong> • Polar trajectory</span>
+                                        <span><strong>Launched</strong> Aug 5, 2011</span>
+                                    </div>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 92%"></div>
+                                    </div>
+                                    <span class="progress-text">Extended Mission</span>
+                                </div>
+                            </article>
+                            <article class="mission-card" role="listitem">
+                                <div class="mission-status live" aria-label="Live mission">LIVE</div>
+                                <div class="mission-icon mro" aria-hidden="true"></div>
+                                <div class="mission-info">
+                                    <h3>Mars Reconnaissance Orbiter</h3>
+                                    <p class="mission-agency">NASA</p>
+                                    <div class="mission-details">
+                                        <span><strong>Mars Orbit</strong> • 255-320 km altitude</span>
+                                        <span><strong>Launched</strong> Aug 12, 2005</span>
+                                    </div>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-text">Extended Operations</span>
+                                </div>
+                            </article>
+                            <article class="mission-card" role="listitem">
+                                <div class="mission-status live" aria-label="Live mission">LIVE</div>
+                                <div class="mission-icon perseverance" aria-hidden="true"></div>
+                                <div class="mission-info">
+                                    <h3>Perseverance Rover</h3>
+                                    <p class="mission-agency">NASA</p>
+                                    <div class="mission-details">
+                                        <span><strong>Jezero Crater</strong> • Sol 1200+</span>
+                                        <span><strong>Landed</strong> Feb 18, 2021</span>
+                                    </div>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 65%"></div>
+                                    </div>
+                                    <span class="progress-text">Prime Mission</span>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                    <div class="tab-panel" role="tabpanel" id="surface-panel" aria-labelledby="surface-tab" hidden>
+                        <div class="mission-cards" role="list">
+                            <article class="mission-card" role="listitem">
+                                <div class="mission-status active" aria-label="Active mission">ACTIVE</div>
+                                <div class="mission-icon curiosity" aria-hidden="true"></div>
+                                <div class="mission-info">
+                                    <h3>Curiosity Rover</h3>
+                                    <p class="mission-agency">NASA</p>
+                                    <div class="mission-details">
+                                        <span><strong>Gale Crater</strong> • Sol 4200+</span>
+                                        <span><strong>Landed</strong> Aug 6, 2012</span>
+                                    </div>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-text">Extended Mission</span>
+                                </div>
+                            </article>
+                            <article class="mission-card" role="listitem">
+                                <div class="mission-status active" aria-label="Active mission">ACTIVE</div>
+                                <div class="mission-icon insight" aria-hidden="true"></div>
+                                <div class="mission-info">
+                                    <h3>InSight Lander</h3>
+                                    <p class="mission-agency">NASA</p>
+                                    <div class="mission-details">
+                                        <span><strong>Elysium Planitia</strong> • Retired</span>
+                                        <span><strong>Landed</strong> Nov 26, 2018</span>
+                                    </div>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-text">Mission Complete</span>
+                                </div>
+                            </article>
+                            <article class="mission-card" role="listitem">
+                                <div class="mission-status planned" aria-label="Planned mission">PLANNED</div>
+                                <div class="mission-icon artemis" aria-hidden="true"></div>
+                                <div class="mission-info">
+                                    <h3>Artemis III</h3>
+                                    <p class="mission-agency">NASA</p>
+                                    <div class="mission-details">
+                                        <span><strong>Lunar South Pole</strong> • Crewed</span>
+                                        <span><strong>Target</strong> Sep 2026</span>
+                                    </div>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 35%"></div>
+                                    </div>
+                                    <span class="progress-text">In Development</span>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                    <div class="tab-panel" role="tabpanel" id="deep-panel" aria-labelledby="deep-tab" hidden>
+                        <div class="mission-cards" role="list">
+                            <article class="mission-card" role="listitem">
+                                <div class="mission-status live" aria-label="Live mission">LIVE</div>
+                                <div class="mission-icon voyager1" aria-hidden="true"></div>
+                                <div class="mission-info">
+                                    <h3>Voyager 1</h3>
+                                    <p class="mission-agency">NASA</p>
+                                    <div class="mission-details">
+                                        <span><strong>Interstellar Space</strong> • 24B+ km</span>
+                                        <span><strong>Launched</strong> Sep 5, 1977</span>
+                                    </div>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-text">Interstellar Mission</span>
+                                </div>
+                            </article>
+                            <article class="mission-card" role="listitem">
+                                <div class="mission-status live" aria-label="Live mission">LIVE</div>
+                                <div class="mission-icon voyager2" aria-hidden="true"></div>
+                                <div class="mission-info">
+                                    <h3>Voyager 2</h3>
+                                    <p class="mission-agency">NASA</p>
+                                    <div class="mission-details">
+                                        <span><strong>Interstellar Space</strong> • 20B+ km</span>
+                                        <span><strong>Launched</strong> Aug 20, 1977</span>
+                                    </div>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-text">Interstellar Mission</span>
+                                </div>
+                            </article>
+                            <article class="mission-card" role="listitem">
+                                <div class="mission-status live" aria-label="Live mission">LIVE</div>
+                                <div class="mission-icon newhorizons" aria-hidden="true"></div>
+                                <div class="mission-info">
+                                    <h3>New Horizons</h3>
+                                    <p class="mission-agency">NASA</p>
+                                    <div class="mission-details">
+                                        <span><strong>Kuiper Belt</strong> • 58+ AU</span>
+                                        <span><strong>Launched</strong> Jan 19, 2006</span>
+                                    </div>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 88%"></div>
+                                    </div>
+                                    <span class="progress-text">Extended Mission</span>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                    <div class="tab-panel" role="tabpanel" id="upcoming-panel" aria-labelledby="upcoming-tab" hidden>
+                        <div class="mission-cards" role="list">
+                            <article class="mission-card" role="listitem">
+                                <div class="mission-status planned" aria-label="Planned mission">PLANNED</div>
+                                <div class="mission-icon europa-clipper" aria-hidden="true"></div>
+                                <div class="mission-info">
+                                    <h3>Europa Clipper</h3>
+                                    <p class="mission-agency">NASA</p>
+                                    <div class="mission-details">
+                                        <span><strong>Jupiter Orbit</strong> • 49 Flybys</span>
+                                        <span><strong>Launch</strong> Oct 2024</span>
+                                    </div>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 95%"></div>
+                                    </div>
+                                    <span class="progress-text">Ready for Launch</span>
+                                </div>
+                            </article>
+                            <article class="mission-card" role="listitem">
+                                <div class="mission-status planned" aria-label="Planned mission">PLANNED</div>
+                                <div class="mission-icon dragonfly" aria-hidden="true"></div>
+                                <div class="mission-info">
+                                    <h3>Dragonfly</h3>
+                                    <p class="mission-agency">NASA</p>
+                                    <div class="mission-details">
+                                        <span><strong>Titan Surface</strong> • Rotorcraft</span>
+                                        <span><strong>Launch</strong> Jul 2028</span>
+                                    </div>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 40%"></div>
+                                    </div>
+                                    <span class="progress-text">Assembly Phase</span>
+                                </div>
+                            </article>
+                            <article class="mission-card" role="listitem">
+                                <div class="mission-status planned" aria-label="Planned mission">PLANNED</div>
+                                <div class="mission-icon mars-sample" aria-hidden="true"></div>
+                                <div class="mission-info">
+                                    <h3>Mars Sample Return</h3>
+                                    <p class="mission-agency">NASA / ESA</p>
+                                    <div class="mission-details">
+                                        <span><strong>Mars Surface</strong> • Sample Retrieval</span>
+                                        <span><strong>Launch</strong> 2028+</span>
+                                    </div>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 25%"></div>
+                                    </div>
+                                    <span class="progress-text">Early Development</span>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section discoveries" id="discoveries" aria-labelledby="discoveries-title">
+            <div class="container">
+                <header class="section-header">
+                    <span class="section-tag">Cosmic Revelations</span>
+                    <h2 id="discoveries-title" class="section-title">Recent Discoveries</h2>
+                    <p class="section-description">Breakthrough findings reshaping our understanding of the universe</p>
+                </header>
+                <div class="discoveries-carousel" role="region" aria-label="Discoveries carousel">
+                    <div class="discovery-cards" role="list">
+                        <article class="discovery-card" role="listitem">
+                            <div class="discovery-image jwst-deep-field" aria-hidden="true"></div>
+                            <div class="discovery-content">
+                                <span class="discovery-category">Deep Space</span>
+                                <h3>JWST Reveals Earliest Galaxies</h3>
+                                <p>Webb's NIRCam captures galaxies forming just 320 million years after the Big Bang, pushing the cosmic frontier further than ever before.</p>
+                                <div class="discovery-meta">
+                                    <span class="discovery-date">July 2024</span>
+                                    <span class="discovery-source">NASA/ESA/CSA</span>
+                                </div>
+                                <a href="#" class="discovery-link">Read Discovery <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                            </div>
+                        </article>
+                        <article class="discovery-card" role="listitem">
+                            <div class="discovery-image europa-plumes" aria-hidden="true"></div>
+                            <div class="discovery-content">
+                                <span class="discovery-category">Planetary Science</span>
+                                <h3>Europa's Water Plumes Confirmed</h3>
+                                <p>Hubble and Galileo data converge: Europa ejects water vapor 200km high, confirming subsurface ocean access for future missions.</p>
+                                <div class="discovery-meta">
+                                    <span class="discovery-date">May 2024</span>
+                                    <span class="discovery-source">NASA/JPL</span>
+                                </div>
+                                <a href="#" class="discovery-link">Read Discovery <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                            </div>
+                        </article>
+                        <article class="discovery-card" role="listitem">
+                            <div class="discovery-image mars-organics" aria-hidden="true"></div>
+                            <div class="discovery-content">
+                                <span class="discovery-category">Astrobiology</span>
+                                <h3>Complex Organics on Mars</h3>
+                                <p>Perseverance discovers diverse organic molecules in Jezero Crater rocks, the most compelling evidence yet for ancient habitability.</p>
+                                <div class="discovery-meta">
+                                    <span class="discovery-date">March 2024</span>
+                                    <span class="discovery-source">NASA/JPL-Caltech</span>
+                                </div>
+                                <a href="#" class="discovery-link">Read Discovery <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                            </div>
+                        </article>
+                        <article class="discovery-card" role="listitem">
+                            <div class="discovery-image exoplanet-atmosphere" aria-hidden="true"></div>
+                            <div class="discovery-content">
+                                <span class="discovery-category">Exoplanets</span>
+                                <h3>Water Vapor on Habitable Zone World</h3>
+                                <p>K2-18b atmospheric analysis reveals water vapor and methane in a temperate super-Earth's atmosphere — a landmark for biosignature hunting.</p>
+                                <div class="discovery-meta">
+                                    <span class="discovery-date">Jan 2024</span>
+                                    <span class="discovery-source">UCL/STScI</span>
+                                </div>
+                                <a href="#" class="discovery-link">Read Discovery <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="carousel-controls" aria-label="Carousel navigation">
+                        <button class="carousel-btn prev" aria-label="Previous discovery" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+                        </button>
+                        <div class="carousel-dots" role="tablist" aria-label="Discovery slides">
+                            <button class="dot active" role="tab" aria-selected="true" aria-label="Discovery 1"></button>
+                            <button class="dot" role="tab" aria-selected="false" aria-label="Discovery 2"></button>
+                            <button class="dot" role="tab" aria-selected="false" aria-label="Discovery 3"></button>
+                            <button class="dot" role="tab" aria-selected="false" aria-label="Discovery 4"></button>
+                        </div>
+                        <button class="carousel-btn next" aria-label="Next discovery">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section live-data" aria-labelledby="live-title">
+            <div class="container">
+                <header class="section-header">
+                    <span class="section-tag">Real-Time Telemetry</span>
+                    <h2 id="live-title" class="section-title">Mission Control Live</h2>
+                    <p class="section-description">Current positions and status of active deep space missions</p>
+                </header>
+                <div class="live-grid">
+                    <div class="live-card primary" role="region" aria-label="Solar system overview">
+                        <div class="live-header">
+                            <h3>Solar System Tracker</h3>
+                            <span class="live-badge pulse" aria-label="Live data">LIVE</span>
+                        </div>
+                        <div class="solar-system-view" id="solar-system" aria-hidden="true"></div>
+                        <div class="legend" aria-label="Planet legend">
+                            <span class="legend-item"><i class="dot mercury"></i> Mercury</span>
+                            <span class="legend-item"><i class="dot venus"></i> Venus</span>
+                            <span class="legend-item"><i class="dot earth"></i> Earth</span>
+                            <span class="legend-item"><i class="dot mars"></i> Mars</span>
+                            <span class="legend-item"><i class="dot jupiter"></i> Jupiter</span>
+                            <span class="legend-item"><i class="dot saturn"></i> Saturn</span>
+                            <span class="legend-item"><i class="dot uranus"></i> Uranus</span>
+                            <span class="legend-item"><i class="dot neptune"></i> Neptune</span>
+                        </div>
+                    </div>
+                    <div class="live-card" role="region" aria-label="ISS tracker">
+                        <div class="live-header">
+                            <h3>ISS Position</h3>
+                            <span class="live-badge pulse" aria-label="Live data">LIVE</span>
+                        </div>
+                        <div class="iss-tracker">
+                            <div class="iss-map" id="iss-map" aria-hidden="true"></div>
+                            <div class="iss-data">
+                                <div class="data-row">
+                                    <span class="data-label">Latitude</span>
+                                    <span class="data-value" id="iss-lat">—</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="data-label">Longitude</span>
+                                    <span class="data-value" id="iss-lon">—</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="data-label">Altitude</span>
+                                    <span class="data-value" id="iss-alt">—</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="data-label">Velocity</span>
+                                    <span class="data-value" id="iss-vel">—</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="data-label">Crew</span>
+                                    <span class="data-value" id="iss-crew">—</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="live-card" role="region" aria-label="Space weather">
+                        <div class="live-header">
+                            <h3>Space Weather</h3>
+                            <span class="live-badge pulse" aria-label="Live data">LIVE</span>
+                        </div>
+                        <div class="space-weather">
+                            <div class="weather-index">
+                                <div class="index-item">
+                                    <span class="index-label">Solar Wind</span>
+                                    <div class="index-bar"><div class="index-fill" style="width: 45%"></div></div>
+                                    <span class="index-value">420 km/s</span>
+                                </div>
+                                <div class="index-item">
+                                    <span class="index-label">Geomagnetic Kp</span>
+                                    <div class="index-bar"><div class="index-fill" style="width: 30%"></div></div>
+                                    <span class="index-value">Kp 2.3</span>
+                                </div>
+                                <div class="index-item">
+                                    <span class="index-label">X-Ray Flux</span>
+                                    <div class="index-bar"><div class="index-fill" style="width: 15%"></div></div>
+                                    <span class="index-value">B2.1</span>
+                                </div>
+                                <div class="index-item">
+                                    <span class="index-label">Proton Flux</span>
+                                    <div class="index-bar"><div class="index-fill" style="width: 10%"></div></div>
+                                    <span class="index-value">Low</span>
+                                </div>
+                            </div>
+                            <div class="aurora-forecast">
+                                <h4>Aurora Forecast</h4>
+                                <div class="aurora-map" id="aurora-map" aria-hidden="true"></div>
+                                <p class="aurora-status" id="aurora-status">Minimal activity — High latitudes only</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section join" id="contact" aria-labelledby="join-title">
+            <div class="container">
+                <div class="join-content">
+                    <div class="join-text">
+                        <span class="section-tag">Join the Journey</span>
+                        <h2 id="join-title" class="section-title">Be Part of History</h2>
+                        <p class="section-description">
+                            Space exploration belongs to everyone. Join our community of
+                            explorers, receive mission updates, and participate in
+                            citizen science projects.
+                        </p>
+                        <ul class="join-benefits" role="list">
+                            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg> Real-time mission alerts</li>
+                            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg> Exclusive discovery briefings</li>
+                            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg> Citizen science opportunities</li>
+                            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg> Community mission control access</li>
+                        </ul>
+                    </div>
+                    <form class="join-form" aria-label="Join mission newsletter">
+                        <div class="form-group">
+                            <label for="email" class="visually-hidden">Email address</label>
+                            <input type="email" id="email" name="email" placeholder="Enter your email" required autocomplete="email" aria-describedby="email-help">
+                            <span id="email-help" class="visually-hidden">We'll never share your email</span>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-large">
+                            <span>Join Mission Control</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
+                        <p class="form-note">No spam. Unsubscribe anytime. <a href="#">Privacy Policy</a></p>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer" role="contentinfo">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="#" class="logo" aria-label="Stellar Home">
+                        <svg class="logo-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                            <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="1.5"/>
+                            <circle cx="16" cy="16" r="6" fill="currentColor"/>
+                            <path d="M16 2 L16 8 M16 24 L16 30 M2 16 L8 16 M24 16 L30 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <span class="logo-text">STELLAR</span>
+                    </a>
+                    <p>Exploring the cosmos for humanity's future among the stars.</p>
+                    <div class="social-links" role="list" aria-label="Social links">
+                        <a href="#" class="social-link" aria-label="Twitter" role="listitem"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 9.72h-3.508l-6.81-7.82-7.42 7.82h-3.514l8.625-9.87L0.75 2.25h3.314l6.94 7.75L23.49 2.25z"/></svg></a>
+                        <a href="#" class="social-link" aria-label="YouTube" role="listitem"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+                        <a href="#" class="social-link" aria-label="GitHub" role="listitem"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a>
+                        <a href="#" class="social-link" aria-label="Discord" role="listitem"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.445.778-.696 1.202a15.107 15.107 0 0 0-4.701-.597.077.077 0 0 0-.078.038c-.296.365-.62.687-1.005.967a.11.11 0 0 1-.147.026.107.107 0 0 1-.04-.078 13.107 13.107 0 0 1-.332-.53.076.076 0 0 0-.087-.028c-.353.003-.644.173-.798.48a.143.143 0 0 1-.196.008.144.144 0 0 1-.051-.124.96.96 0 0 1 .364-1.276.077.077 0 0 1 .077-.038c.534-.013 1.071-.008 1.61.036a.076.076 0 0 0 .053-.025.079.079 0 0 0 .016-.043c.028-.362.014-.723-.064-1.065a.148.148 0 0 1 .006-.144 19.27 19.27 0 0 1 3.623-3.107.077.077 0 0 1 .125-.006.078.078 0 0 1 .04.062c.087.23.138.485.138.753 0 .517-.231 1.325-1.31 2.197a.076.076 0 0 0-.009.106.927.927 0 0 1-1.613.51.077.077 0 0 1-.04-.079c-.165-1.135-.19-2.253-.19-3.335 0-.779.301-1.517.833-2.071a.077.077 0 0 1 .114-.081 46.03 46.03 0 0 1 3.475-.97.077.077 0 0 1 .083.029.073.073 0 0 1 .01.11 11.078 11.078 0 0 1-.324 2.004.077.077 0 0 1-.04.116 12.337 12.337 0 0 1-1.443.47.074.074 0 0 1-.072-.03c-.207-.18-.388-.38-.55-.59a.077.077 0 0 0-.105.007.48.48 0 0 0-.11.244c-.032.297-.034.767-.034 1.097 0 .583.202 1.152.571 1.541a.078.078 0 0 0 .11.02.076.076 0 0 0 .028-.056c.074-.397.257-.776.534-1.114a.077.077 0 0 1 .062-.07c.288-.08.576-.163.86-.254a.076.076 0 0 1 .083-.006c.294.04.598.11.89.188a19.174 19.174 0 0 0 3.504-.41.077.077 0 0 1 .088.024.073.073 0 0 1 .005.102c-.136.34-.255.684-.36 1.029a15.091 15.091 0 0 1-3.934 3.91.077.077 0 0 0-.032.117.074.074 0 0 0 .044.096c1.892 1.004 4.086 1.076 5.994.214a.077.077 0 0 0 .07-.034.074.074 0 0 0 .01-.112c-.312-2.499-.512-4.992-.512-7.496a.077.077 0 0 1 .076-.077h.008ZM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418z"/></svg></a>
+                    </div>
+                </div>
+                <nav class="footer-nav" aria-label="Footer navigation">
+                    <div class="footer-col">
+                        <h4>Explore</h4>
+                        <ul role="list">
+                            <li><a href="#explore">Destinations</a></li>
+                            <li><a href="#missions">Active Missions</a></li>
+                            <li><a href="#discoveries">Discoveries</a></li>
+                            <li><a href="#">Citizen Science</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Mission Control</h4>
+                        <ul role="list">
+                            <li><a href="#">Live Telemetry</a></li>
+                            <li><a href="#">ISS Tracker</a></li>
+                            <li><a href="#">Space Weather</a></li>
+                            <li><a href="#">Launch Schedule</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Learn</h4>
+                        <ul role="list">
+                            <li><a href="#">Space Academy</a></li>
+                            <li><a href="#">Mission Archives</a></li>
+                            <li><a href="#">Planet Profiles</a></li>
+                            <li><a href="#">Kids Zone</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Organization</h4>
+                        <ul role="list">
+                            <li><a href="#">About Us</a></li>
+                            <li><a href="#">Careers</a></li>
+                            <li><a href="#">Press Kit</a></li>
+                            <li><a href="#">Contact</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 STELLAR. All rights reserved. Not affiliated with NASA or any space agency.</p>
+                <div class="footer-legal">
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Accessibility</a>
+                    <a href="#">Cookie Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="./app.js"></script>
+</body>
+</html>

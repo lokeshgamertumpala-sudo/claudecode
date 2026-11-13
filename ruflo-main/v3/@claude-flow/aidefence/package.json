@@ -1,0 +1,77 @@
+{
+  "name": "@claude-flow/aidefence",
+  "version": "3.2.1",
+  "description": "Prompt injection, jailbreak and PII detection for LLM agents, with self-learning threat patterns and optional AgentDB semantic search over what it learns.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./detection": {
+      "import": "./dist/domain/services/threat-detection-service.js",
+      "types": "./dist/domain/services/threat-detection-service.d.ts"
+    },
+    "./learning": {
+      "import": "./dist/domain/services/threat-learning-service.js",
+      "types": "./dist/domain/services/threat-learning-service.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "test": "vitest",
+    "test:unit": "vitest run src",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "agentdb": "^3.6.0"
+  },
+  "peerDependenciesMeta": {
+    "agentdb": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3",
+    "vitest": "^4.1.0"
+  },
+  "keywords": [
+    "ai-security",
+    "prompt-injection",
+    "jailbreak-detection",
+    "threat-detection",
+    "pii-detection",
+    "llm-security",
+    "aimds",
+    "self-learning",
+    "semantic-search",
+    "agentdb",
+    "claude-flow",
+    "ruflo"
+  ],
+  "author": "rUv <hello@ruv.io>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ruvnet/ruflo.git",
+    "directory": "v3/@claude-flow/aidefence"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/ruflo/issues"
+  },
+  "homepage": "https://ruv.io",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

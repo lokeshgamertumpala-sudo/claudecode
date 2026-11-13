@@ -1,0 +1,49 @@
+{
+  "name": "@claude-flow/swarm",
+  "version": "3.0.6",
+  "type": "module",
+  "description": "Standalone swarm coordination - up to 100+ agents, 4 topologies, hive-mind, consensus",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ruvnet/ruflo.git",
+    "directory": "v3/@claude-flow/swarm"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/ruflo/issues"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "MIGRATION.md"
+  ],
+  "exports": {
+    ".": "./dist/index.js",
+    "./*": "./dist/*.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.0"
+  },
+  "keywords": [
+    "swarm",
+    "multi-agent",
+    "multi-agent-systems",
+    "agent-orchestration",
+    "consensus",
+    "hive-mind",
+    "distributed-systems",
+    "ai-agents",
+    "claude-flow",
+    "ruflo",
+    "typescript"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

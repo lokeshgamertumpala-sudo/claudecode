@@ -1,0 +1,161 @@
+{
+  "tasks": {
+    "task-1794480273989-aey4rf": {
+      "taskId": "task-1794480273989-aey4rf",
+      "type": "implementation",
+      "description": "Test swarm coordination: Create a simple Node.js utility that reads a JSON config file and validates its structure. Each agent should contribute: orchestrator plans, architect designs, researcher checks best practices, backend implements, frontend creates CLI interface, UI/UX reviews, debugging tests, QA reviews.",
+      "priority": "high",
+      "status": "cancelled",
+      "progress": 0,
+      "assignedTo": [
+        "agent-1794480104864-0biina"
+      ],
+      "tags": [],
+      "createdAt": "2026-11-12T10:44:33.989Z",
+      "startedAt": "2026-11-12T10:44:55.773Z",
+      "completedAt": "2026-11-12T10:45:51.042Z",
+      "result": {
+        "cancelReason": "Cancelled by user via CLI"
+      }
+    },
+    "task-1794480501025-14k9yt": {
+      "taskId": "task-1794480501025-14k9yt",
+      "type": "implementation",
+      "description": "PHASE 14 TEST 1 - SWARM: Initialize hierarchical swarm, verify all 8 agents communicate, verify task delegation works, verify parallel execution capability, verify agent termination",
+      "priority": "high",
+      "status": "in_progress",
+      "progress": 0,
+      "assignedTo": [
+        "agent-1794480104864-0biina"
+      ],
+      "tags": [],
+      "createdAt": "2026-11-12T10:48:21.025Z",
+      "startedAt": "2026-11-12T10:48:25.266Z",
+      "completedAt": null
+    },
+    "task-1794482524123-4ht4cq": {
+      "taskId": "task-1794482524123-4ht4cq",
+      "type": "implementation",
+      "description": "Verify fan command works",
+      "priority": "high",
+      "status": "pending",
+      "progress": 0,
+      "assignedTo": [],
+      "tags": [],
+      "createdAt": "2026-11-12T11:22:04.123Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1794482534626-zlspwz": {
+      "taskId": "task-1794482534626-zlspwz",
+      "type": "implementation",
+      "description": "Verify fan command works",
+      "priority": "high",
+      "status": "pending",
+      "progress": 0,
+      "assignedTo": [],
+      "tags": [],
+      "createdAt": "2026-11-12T11:22:14.626Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1794482541122-cpfymc": {
+      "taskId": "task-1794482541122-cpfymc",
+      "type": "implementation",
+      "description": "Test task",
+      "priority": "high",
+      "status": "in_progress",
+      "progress": 0,
+      "assignedTo": [
+        "agent-1794480144142-mscgv9"
+      ],
+      "tags": [],
+      "createdAt": "2026-11-12T11:22:21.122Z",
+      "startedAt": "2026-11-12T11:22:32.332Z",
+      "completedAt": null
+    },
+    "task-1794482597721-cihes3": {
+      "taskId": "task-1794482597721-cihes3",
+      "type": "implementation",
+      "description": "Verify fan command works",
+      "priority": "high",
+      "status": "pending",
+      "progress": 0,
+      "assignedTo": [],
+      "tags": [],
+      "createdAt": "2026-11-12T11:23:17.721Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1794482605299-szx112": {
+      "taskId": "task-1794482605299-szx112",
+      "type": "implementation",
+      "description": "Verify fan command works",
+      "priority": "high",
+      "status": "pending",
+      "progress": 0,
+      "assignedTo": [],
+      "tags": [],
+      "createdAt": "2026-11-12T11:23:25.299Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1794482643627-9he2ce": {
+      "taskId": "task-1794482643627-9he2ce",
+      "type": "implementation",
+      "description": "Verify fan command works",
+      "priority": "high",
+      "status": "pending",
+      "progress": 0,
+      "assignedTo": [],
+      "tags": [],
+      "createdAt": "2026-11-12T11:24:03.627Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1794482692963-m61zbi": {
+      "taskId": "task-1794482692963-m61zbi",
+      "type": "implementation",
+      "description": "Verify fan command works",
+      "priority": "high",
+      "status": "pending",
+      "progress": 0,
+      "assignedTo": [],
+      "tags": [],
+      "createdAt": "2026-11-12T11:24:52.963Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1794482738804-cgb0lt": {
+      "taskId": "task-1794482738804-cgb0lt",
+      "type": "implementation",
+      "description": "Build a REST API with React frontend",
+      "priority": "high",
+      "status": "in_progress",
+      "progress": 0,
+      "assignedTo": [
+        "agent-1794480146482-xvj8ii"
+      ],
+      "tags": [],
+      "createdAt": "2026-11-12T11:25:38.804Z",
+      "startedAt": "2026-11-12T11:25:40.799Z",
+      "completedAt": null
+    },
+    "task-1794483797414-ctl61z": {
+      "taskId": "task-1794483797414-ctl61z",
+      "type": "implementation",
+      "description": "Comprehensive enhancement of StellarForge AI: QA security audit, frontend real-time collaboration, backend WebSocket support, UX dashboard redesign, NASA Space Apps compliance research, debugging/monitoring, architecture scalability review, and research on 2025 challenge requirements",
+      "priority": "high",
+      "status": "in_progress",
+      "progress": 0,
+      "assignedTo": [
+        "agent-1794483876116-9hru0y"
+      ],
+      "tags": [],
+      "createdAt": "2026-11-12T11:43:17.414Z",
+      "startedAt": "2026-11-12T11:44:52.250Z",
+      "completedAt": null
+    }
+  },
+  "version": "3.0.0"
+}

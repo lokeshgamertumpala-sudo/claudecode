@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NVIDIA NIM Benchmark Report</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-elevated: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-hover: #79b8ff;
+      --green: #3fb950;
+      --amber: #d29922;
+      --red: #f85149;
+      --purple: #a371f7;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --ring-size: 120px;
+      --ring-stroke: 10;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #ffffff;
+        --bg-elevated: #f6f8fa;
+        --border: #d0d7de;
+        --text: #1f2328;
+        --text-muted: #656d76;
+        --accent: #0969da;
+        --green: #2da44e;
+        --amber: #9a6700;
+        --red: #cf222e;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+    header {
+      text-align: center;
+      padding: 32px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 32px;
+    }
+    header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+    header .meta { color: var(--text-muted); font-size: 0.95rem; }
+    .meta span { margin: 0 12px; }
+    .meta strong { color: var(--text); }
+
+    .section { margin-bottom: 48px; }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::before {
+      content: ""; width: 4px; height: 24px; background: var(--accent); border-radius: 2px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; user-select: none; }
+    th:hover { color: var(--accent); }
+    th.sorted-asc::after { content: " ▲"; }
+    th.sorted-desc::after { content: " ▼"; }
+    tr { opacity: 0; transform: translateY(10px); animation: slideIn 0.4s ease-out forwards; }
+    @keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
+    tr:nth-child(1) { animation-delay: 0.05s; }
+    tr:nth-child(2) { animation-delay: 0.1s; }
+    tr:nth-child(3) { animation-delay: 0.15s; }
+    tr:nth-child(4) { animation-delay: 0.2s; }
+    tr:nth-child(5) { animation-delay: 0.25s; }
+    tr:hover td { background: rgba(88, 166, 255, 0.05); }
+    .score-cell { font-weight: 700; font-size: 1.1rem; }
+    .score-green { color: var(--green); }
+    .score-amber { color: var(--amber); }
+    .score-red { color: var(--red); }
+    .model-name { font-family: var(--font-mono); font-size: 0.85rem; }
+
+    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px; }
+    .chart-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+    .chart-card h3 { font-size: 1rem; margin-bottom: 16px; color: var(--text-muted); }
+    .chart-wrapper { position: relative; height: 280px; }
+
+    .heatmap { overflow-x: auto; }
+    .heatmap table { min-width: 600px; }
+    .heatmap th, .heatmap td { text-align: center; }
+    .heatmap .cell {
+      width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: 0.85rem; opacity: 0; animation: fadeIn 0.3s ease-out forwards;
+    }
+    @keyframes fadeIn { to { opacity: 1; } }
+    .heatmap .cell-pass { background: rgba(63, 185, 80, 0.25); color: var(--green); }
+    .heatmap .cell-fail { background: rgba(248, 81, 73, 0.25); color: var(--red); }
+    .heatmap .cell-unknown { background: rgba(139, 148, 158, 0.25); color: var(--text-muted); }
+    .heatmap .prompt-label { writing-mode: vertical-rl; text-orientation: mixed; min-width: 60px; }
+
+    .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    .detail-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .detail-header { padding: 16px; background: rgba(88, 166, 255, 0.1); border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .detail-header:hover { background: rgba(88, 166, 255, 0.15); }
+    .detail-title { font-weight: 600; }
+    .detail-toggle { font-size: 1.2rem; color: var(--text-muted); transition: transform 0.2s; }
+    .detail-card.open .detail-toggle { transform: rotate(180deg); }
+    .detail-body { padding: 16px; display: none; font-size: 0.85rem; }
+    .detail-card.open .detail-body { display: block; animation: slideDown 0.2s ease-out; }
+    @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 500px; } }
+    .metric-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .metric-row:last-child { border-bottom: none; }
+    .metric-label { color: var(--text-muted); }
+    .metric-value { font-family: var(--font-mono); font-weight: 500; }
+
+    .findings-list { display: flex; flex-direction: column; gap: 12px; }
+    .finding-item { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; padding: 16px; opacity: 0; transform: translateX(-20px); animation: findingIn 0.4s ease-out forwards; }
+    @keyframes findingIn { to { opacity: 1; transform: translateX(0); } }
+    .finding-item:nth-child(1) { animation-delay: 0.1s; }
+    .finding-item:nth-child(2) { animation-delay: 0.2s; }
+    .finding-item:nth-child(3) { animation-delay: 0.3s; }
+    .finding-item:nth-child(4) { animation-delay: 0.4s; }
+    .finding-item:nth-child(5) { animation-delay: 0.5s; }
+    .finding-item:nth-child(6) { animation-delay: 0.6s; }
+
+    .rings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 24px; margin-bottom: 32px; }
+    .ring-card { text-align: center; }
+    .ring-svg { width: var(--ring-size); height: var(--ring-size); transform: rotate(-90deg); }
+    .ring-bg { fill: none; stroke: var(--border); stroke-width: var(--ring-stroke); }
+    .ring-progress { fill: none; stroke-width: var(--ring-stroke); stroke-linecap: round; stroke-dasharray: 339; stroke-dashoffset: 339; transition: stroke-dashoffset 1.5s ease-out; }
+    .ring-text { font-size: 2rem; font-weight: 700; font-family: var(--font-mono); margin-top: 8px; }
+    .ring-label { color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; font-family: var(--font-mono); }
+
+    @media (max-width: 768px) {
+      .container { padding: 16px; }
+      header h1 { font-size: 1.5rem; }
+      .meta span { display: block; margin: 4px 0; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .rings-grid { grid-template-columns: repeat(2, 1fr); }
+      .ring-size { width: 100px; height: 100px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>NVIDIA NIM Benchmark Report</h1>
+      <div class="meta">
+        <span>🕐 <strong id="ts"></strong></span>
+        <span>🔁 <strong id="runs"></strong> runs</span>
+        <span>📊 <strong id="tokens"></strong> total tokens</span>
+        <span>🤖 <strong id="models-count"></strong> models</span>
+      </div>
+    </header>
+
+    <section class="section" id="leaderboard">
+      <h2 class="section-title">Leaderboard</h2>
+      <div class="rings-grid" id="rings"></div>
+      <table id="leaderboard-table">
+        <thead>
+          <tr>
+            <th data-col="rank">Rank</th>
+            <th data-col="model">Model</th>
+            <th data-col="score">Score</th>
+            <th data-col="speed">Speed</th>
+            <th data-col="throughput">Throughput</th>
+            <th data-col="quality">Quality</th>
+            <th data-col="reliability">Reliability</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+    </section>
+
+    <section class="section" id="charts">
+      <h2 class="section-title">Performance Charts</h2>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Median Time to First Token (ms)</h3>
+          <div class="chart-wrapper"><canvas id="chart-ttft"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Median Throughput (tokens/sec)</h3>
+          <div class="chart-wrapper"><canvas id="chart-tps"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="heatmap">
+      <h2 class="section-title">Quality Heatmap</h2>
+      <div class="heatmap">
+        <table>
+          <thead>
+            <tr><th>Model</th><th id="heatmap-headers"></th></tr>
+          </thead>
+          <tbody id="heatmap-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="details">
+      <h2 class="section-title">Per-Prompt Details</h2>
+      <div class="details-grid" id="details-grid"></div>
+    </section>
+
+    <section class="section" id="findings">
+      <h2 class="section-title">Findings</h2>
+      <div class="findings-list" id="findings-list"></div>
+    </section>
+  </div>
+
+  <script>
+    const DATA = {"timestamp": "2026-11-07T08:17:58.458040", "total_runs": 10, "total_tokens": 7690, "models_tested": ["nvidia/nemotron-3.5-lightning-30b-a3b", "mistralai/mistral-large-4-1t-a52b"], "prompts": [{"id": "short", "name": "Short Factual"}, {"id": "medium", "name": "Medium Explanation"}, {"id": "long", "name": "Long Analysis"}, {"id": "structured", "name": "Structured JSON Output"}, {"id": "coding", "name": "Coding Task"}], "raw_results": [{"model": "nvidia/nemotron-3.5-lightning-30b-a3b", "prompt_id": "short", "run": 1, "ttft_ms": 407.14500000467524, "total_latency_ms": 1615.005600004224, "prompt_tokens": 0, "completion_tokens": 7, "tokens_per_sec": 5.795370757190535, "http_status": 200, "error": null, "finish_reason": "stop", "response_text": "The capital of France is Paris.", "quality_pass": true, "quality_details": {"non_empty": true, "finished_naturally": true, "valid_json": "not_required", "json_fields_present": "not_required", "expected_keywords_found": ["Paris"], "expected_keywords_missing": [], "keywords_present": true}}, {"model": "nvidia/nemotron-3.5-lightning-30b-a3b", "prompt_id": "medium", "run": 1, "ttft_ms": 366.30749999312684, "total_latency_ms": 11788.959099998465, "prompt_tokens": 0, "completion_tokens": 511, "tokens_per_sec": 44.73567240725097, "http_status": 200, "error": null, "finish_reason": "stop", "response_text": "Transformers process sequences of data\u2014most commonly text\u2014by first converting each token into a dense vector, or embedding, that captures its semantic meaning. However, these embeddings don't inherently encode the order of tokens, so the model adds positional encodings to inject information about each token's location in the sequence. This allows the network to distinguish word order, ensuring it understands the difference between \"dog bites man\" and \"man bites dog\" despite using the same vocabulary. The resulting vectors form the input to the transformer's architecture.\n\nThe core of the model is the self-attention mechanism, which lets every token directly interact with every other token in the sequence, regardless of distance. For each token, the model computes three learned projections\u2014query, key, and value\u2014and calculates attention weights by measuring the dot product between queries and keys. These weights determine how much focus each token should place on others, producing a context-aware representation that aggregates information from the whole sequence. This computation is performed in parallel across multiple \"heads\" in multi-head attention, enabling the model to capture diverse relationships such as syntax, semantics, and coreference simultaneously.\n\nThese attention operations are repeated across many identical layers, each combining self-attention with a position-wise feed-forward network. The feed-forward sub-layer applies the same two-layer multilayer perceptron independently to every token, further refining the attended representations. In the original design, a stack of encoder layers processes the full input sequence bidirectionally and in parallel, while a separate stack of decoder layers generates output autoregressively, using a mask to prevent attending to future tokens. This architecture, which eliminates recurrence and convolutions entirely, has become the foundation for modern large language models, powering everything from bidirectional encoders like BERT to generative decoders like GPT.", "quality_pass": true, "quality_details": {"non_empty": true, "finished_naturally": true, "valid_json": "not_required", "json_fields_present": "not_required", "expected_keywords_found": ["attention", "encoder", "decoder"], "expected_keywords_missing": [], "keywords_present": true}}, {"model": "nvidia/nemotron-3.5-lightning-30b-a3b", "prompt_id": "long", "run": 1, "ttft_ms": 367.50649999885354, "total_latency_ms": 32891.88060000015, "prompt_tokens": 0, "completion_tokens": 2848, "tokens_per_sec": 87.56509783227116, "http_status": 200, "error": null, "finish_reason": "stop", "response_text": "# Microservices vs. Monolithic Architectures: A Trade-Off Analysis\n\n## Introduction\nChoosing between a monolithic and microservices architecture is a foundational decision that impacts scalability, team structure, deployment velocity, and long-term operational cost. Neither is universally superior; the right choice depends on organization size, domain complexity, traffic patterns, and team maturity. Below is a comprehensive breakdown of trade-offs across five critical dimensions, each paired with concrete, real-world examples.\n\n---\n\n## 1. Scalability\n\n| **Monolithic** | **Microservices** |\n| :--- | :--- |\n| **Vertical scaling only** \u2013 you add more CPU/RAM to a single instance. Scaling one feature (e.g., search) scales the entire app, often over-provisioning other components. | **Horizontal, per-service scaling** \u2013 individual services can be replicated independently based on demand. Enables right-sizing resources per function. |\n| **Simpler infrastructure** \u2013 one process, one load balancer, one deployment target. | **Orchestration overhead** \u2013 requires service discovery, load balancers, container orchestration (K8s, ECS), and network routing. |\n| **Resource inefficiency** at scale: if one function needs 8 vCPUs, the whole app is limited to that allocation per instance. | **Granular cost control** \u2013 you can run a lightweight authentication service on minimal hardware while spawning 50 instances of a payment processor. |\n\n### Concrete Examples\n- **Netflix**: Transitioned from a monolith to microservices specifically to achieve per-service scalability. Their recommendation engine, streaming backend, and authentication each scale independently based on distinct traffic patterns. During peak events, they can spin up thousands of recommendation service instances without touching the streaming pipeline.\n- **Basecamp/37signals**: Remains largely monolithic. Their SaaS product has a single, well-defined domain. Scaling means adding more app servers behind a load balancer. They avoid the distributed complexity of microservices because their traffic profile and team structure don\u2019t justify it.\n\n---\n\n## 2. Deployment Complexity\n\n| **Monolithic** | **Microservices** |\n| :--- | :--- |\n| **Single artifact** \u2013 CI/CD pipelines build, test, and deploy one version. Rollbacks are immediate (replace the whole binary). | **Multiple artifacts** \u2013 each service has its own pipeline, version, and deployment cadence. Requires contract testing, schema evolution management, and coordination of dependent services. |\n| **Faster initial setup** \u2013 a single repo, one build matrix, one environment. | **Pipeline sprawl** \u2013 dozens/hundreds of pipelines, environment parity challenges, and dependency mapping. |\n| **All-or-nothing risk** \u2013 a bad deploy takes down the entire system, but fix is uniform. | **Independent risk** \u2013 a faulty service can be rolled back or disabled without affecting others, but requires careful feature flags and circuit breakers. |\n\n### Concrete Examples\n- **Amazon**: Pioneered the \"two-pizza team\" model with microservices. They deploy code to production every 11.7 seconds on average (per internal data). Each service has independent pipelines, and failures are contained via strict interface contracts and automated canary releases.\n- **Etsy** (early monolith): In the mid-2000s, Etsy operated a Ruby on Rails monolith. Deploys were initially risky and manual, but they invested heavily in feature flags, automated testing, and a robust rollback strategy, allowing them to deploy multiple times daily without breaking the whole site. Their experience helped popularize safe monolith deployment practices.\n\n---\n\n## 3. Team Autonomy\n\n| **Monolithic** | **Microservices** |\n| :--- | :--- |\n| **Shared codebase** \u2013 all developers work in the same repo/branch. Easier to maintain consistent patterns, but creates merge conflicts and coordination overhead as team size grows. | **Bounded contexts** \u2013 each team owns a service end-to-end (code, DB, API, ops). Teams can choose their own language, framework, and data store best suited to their problem. |\n| **Slower feature velocity at scale** \u2013 merge conflicts, code review bottlenecks, and \"trunk-based\" coordination slow down large teams. | **Faster per-team iteration** \u2013 a team can ship to production without waiting for consensus on the entire codebase. However, they must adhere to API contracts and shared infra standards. |\n| **Easier onboarding** \u2013 new hires learn one codebase and deployment process. | **Steeper onboarding** \u2013 new hires must understand the service\u2019s domain, infra dependencies, networking, and contract testing before contributing. |\n\n### Concrete Examples\n- **Spotify**: Organized around \"squads\" (small, cross-functional teams) each owning a microservice or feature area. A squad can deploy its service independently, use whatever tech stack fits, and iterate without coordinating with other squads. This autonomy enabled rapid experimentation (e.g., Discover Weekly) but required heavy investment in DevOps culture, API governance, and \"guilds\" to prevent fragmentation.\n- **A small 5-person startup**: Often starts as a Python/Node monolith. All five developers push to the same branch, debug together, and deploy to a single Heroku/Render app. Autonomy is high in the sense that anyone can fix anything, but coordination overhead is minimal and decision-making is fast.\n\n---\n\n## 4. Debugging & Observability\n\n| **Monolithic** | **Microservices** |\n| :--- | :--- |\n| **Single process, single stack trace** \u2013 attach a debugger, print logs, and follow the execution path. Errors are typically process-local. | **Distributed tracing required** \u2013 a single user request may span 5\u201310 services. Requires correlation IDs, centralized logging (ELK/Datadog), and tracing systems (Jaeger, Zipkin). |\n| **Faster root-cause identification** \u2013 the bug is usually in one file/function. However, large monoliths can have \"spaghetti\" logic that obscures the path. | **Complex failure modes** \u2013 latency, timeouts, and partial failures are common. A slow database in one service can appear as a timeout in another. Requires disciplined observability. |\n| **Straightforward reproduction** \u2013 reproduce the request in a local dev environment. | **Environment parity needed** \u2013 bugs often only manifest in production with specific service versions, network conditions, and data states. |\n\n### Concrete Examples\n- **Uber**: Operates a massive microservice ecosystem (riding, billing, GPS, mapping). When a rider reports a \"trip stuck\" bug, Uber\u2019s backend relies on distributed tracing to correlate GPS updates, pricing service calls, and payment confirmations across 30+ services. Without centralized tracing, the mean time to resolution (MTTR) would be significantly higher.\n- **Early GitLab (Ruby on Rails monolith)**: Debugging was straightforward: a stack trace pointed to a line in `app/controllers/`. As the codebase grew to hundreds of thousands of lines, developers introduced modular gems and namespacing to keep traces manageable, but they never split into microservices because the debugging complexity was already manageable within one process.\n\n---\n\n## 5. Operational Overhead\n\n| **Monolithic** | **Microservices** |\n| :--- | :--- |\n| **Fewer moving parts** \u2013 one process, one config, one set of health checks. Lower initial infrastructure cost. | **Many moving parts** \u2013 service discovery, API gateways, load balancers, secret management, secret rotation, cluster autoscaling. Higher baseline ops cost. |\n| **Single point of failure** \u2013 if the monolith crashes, the whole system is down. However, recovery is one operation. | **Fault isolation** \u2013 a memory leak in one service doesn\u2019t necessarily kill the whole system. But you now have N failure domains to monitor, patch, and recover. |\n| **Simpler compliance/auditing** \u2013 one codebase, one data model, one access control list. | **Compliance fragmentation** \u2013 different services may use different data stores, encryption standards, or audit logs. Requires unified policy enforcement (OPA, Istio, or custom middleware). |\n\n### Concrete Examples\n- **Traditional Banking Systems**: Many core banking platforms remain monolithic or \"modular monoliths\" running on mainframes. The operational overhead of migrating to microservices\u2014regulatory auditing, data consistency, disaster recovery\u2014outweighs the benefits. A single outage is serious, but patching and compliance are predictable.\n- **DoorDash**: Started as a monolith, then gradually extracted microservices for high-scale, independently variable workloads (e.g., real-time order dispatch, merchant analytics). They run on Kubernetes with service meshes, accepting higher operational complexity because the scale and team size justify it. They report that ops headcount grew, but mean time to recovery for individual services dropped significantly.\n\n---\n\n## Summary Comparison Table\n\n| Dimension | Monolithic | Microservices |\n| :--- | :--- | :--- |\n| **Scalability** | Vertical; uniform resource allocation | Horizontal; per-service granularity |\n| **Deployment** | Single artifact; simpler CI/CD | Multiple artifacts; complex pipelines; independent releases |\n| **Team Autonomy** | Shared codebase; coordination needed | Bounded contexts; tech-stack freedom; requires strong contracts |\n| **Debugging** | Single process; easy stack traces | Distributed tracing; requires observability infrastructure |\n| **Operational Overhead** | Fewer components; lower initial cost | Many components; higher infrastructure & tooling cost |\n\n---\n\n## When to Choose Which\n\n### Stick with a Monolith if:\n- You're a small team (\u226410 engineers) with a focused, unified domain.\n- Traffic is predictable and doesn't require per-feature scaling.\n- You prioritize fast initial delivery and low operational complexity.\n- Regulatory or compliance constraints favor a single, auditable codebase.\n- Example: A B2B SaaS tool, an internal admin panel, or a niche marketplace.\n\n### Move to Microservices if:\n- You have multiple distinct business domains with varying scaling needs.\n- Teams are organized around capabilities rather than layers, and need independent release cycles.\n- You have the maturity to invest in CI/CD, observability, and DevOps culture.\n- You're running on cloud-native infrastructure (K8s, serverless) and can absorb the overhead.\n- Example: Uber, Netflix, Airbnb, or any platform with high traffic variability, multiple product lines, or a need for rapid, independent experimentation.\n\n### The Middle Ground: Modular Monolith\nMany organizations start with a monolith and incrementally introduce module boundaries, dependency injection, and strict API layers. This \"modular monolith\" approach gives many benefits of separation (clear ownership, testability) without the distributed operational tax, until the scale or team size genuinely demands microservices.\n\n---\n\n## Final Thought\nThe microservices vs. monolith debate isn't binary\u2014it's a spectrum of organizational and technical maturity. The most successful architectures are those where the complexity matches the problem scale: a monolith that scales *well* via good engineering, or a microservice ecosystem that *actually* reduces friction through clear boundaries and automation. The best choice is the one that minimizes your specific trade-off pain points now, while leaving a clear upgrade path as your organization evolves.", "quality_pass": true, "quality_details": {"non_empty": true, "finished_naturally": true, "valid_json": "not_required", "json_fields_present": "not_required", "expected_keywords_found": ["microservices", "monolithic", "scalability", "deployment"], "expected_keywords_missing": [], "keywords_present": true}}, {"model": "nvidia/nemotron-3.5-lightning-30b-a3b", "prompt_id": "structured", "run": 1, "ttft_ms": 364.7270999936154, "total_latency_ms": 6168.596499992418, "prompt_tokens": 0, "completion_tokens": 40, "tokens_per_sec": 6.891953840313541, "http_status": 200, "error": null, "finish_reason": "stop", "response_text": "{\n  \"company\": \"NVIDIA\",\n  \"employees\": 22000,\n  \"founded\": 1993,\n  \"hq\": \"Santa Clara, California\",\n  \"products\": [\"GeForce\", \"RTX\", \"CUDA\", \"Jetson\", \"DGX\"]\n}", "quality_pass": true, "quality_details": {"non_empty": true, "finished_naturally": true, "valid_json": true, "json_fields_present": true, "expected_keywords_found": ["company", "employees", "founded", "hq", "products"], "expected_keywords_missing": [], "keywords_present": true}}, {"model": "nvidia/nemotron-3.5-lightning-30b-a3b", "prompt_id": "coding", "run": 1, "ttft_ms": 1693.171099992469, "total_latency_ms": 13182.582399997045, "prompt_tokens": 0, "completion_tokens": 160, "tokens_per_sec": 13.925865810020769, "http_status": 200, "error": null, "finish_reason": "stop", "response_text": "Here's a concise implementation:\n\n```python\nfrom typing import List\n\ndef binary_search(arr: List[int], target: int) -> int:\n    \"\"\"\n    Perform binary search on a sorted list.\n\n    Args:\n        arr (List[int]): A sorted list of integers.\n        target (int): The integer to search for.\n\n    Returns:\n        int: The index of `target` if found, otherwise -1.\n    \"\"\"\n    low, high = 0, len(arr) - 1\n    while low <= high:\n        mid = (low + high) // 2\n        guess = arr[mid]\n        if guess == target:\n            return mid\n        if guess > target:\n            high = mid - 1\n        else:\n            low = mid + 1\n    return -1\n```", "quality_pass": true, "quality_details": {"non_empty": true, "finished_naturally": true, "valid_json": "not_required", "json_fields_present": "not_required", "expected_keywords_found": ["def", "binary_search", "return"], "expected_keywords_missing": [], "keywords_present": true}}, {"model": "mistralai/mistral-large-4-1t-a52b", "prompt_id": "short", "run": 1, "ttft_ms": 768.1318999966606, "total_latency_ms": 2128.95589999971, "prompt_tokens": 0, "completion_tokens": 8, "tokens_per_sec": 5.878791085388026, "http_status": 200, "error": null, "finish_reason": "stop", "response_text": "The capital of France is **Paris**.", "quality_pass": true, "quality_details": {"non_empty": true, "finished_naturally": true, "valid_json": "not_required", "json_fields_present": "not_required", "expected_keywords_found": ["Paris"], "expected_keywords_missing": [], "keywords_present": true}}, {"model": "mistralai/mistral-large-4-1t-a52b", "prompt_id": "medium", "run": 1, "ttft_ms": 504.90080000599846, "total_latency_ms": 58592.49370000907, "prompt_tokens": 0, "completion_tokens": 629, "tokens_per_sec": 10.828474181789804, "http_status": 200, "error": null, "finish_reason": "stop", "response_text": "A transformer model processes sequential data\u2014like text\u2014by using a mechanism called self-attention rather than the recurrent connections found in older architectures like RNNs. When the model reads an input sequence, it converts each token (word or subword) into three vectors: a query, a key, and a value. The query of each token is compared against the keys of all tokens in the sequence using dot products to produce attention scores, which are then normalized via softmax to create weights. These weights determine how much each token\u2019s value vector contributes to the final representation of the current token, allowing the model to capture relationships between words regardless of how far apart they are in the sentence. This parallelizable operation enables the model to process entire sequences simultaneously, making training far more efficient than sequential approaches.\n\nArchitecturally, a standard transformer consists of a stack of encoder layers followed by a stack of decoder layers. Each encoder layer contains a multi-head self-attention sublayer\u2014where multiple attention operations run in parallel to capture different types of relationships\u2014and a position-wise feed-forward network, with residual connections and layer normalization around each sublayer. Because self-attention is permutation-invariant (it doesn\u2019t inherently know word order), the model adds positional encodings to the input embeddings to inject information about token positions. The decoder mirrors this structure but includes a masked self-attention layer that prevents positions from attending to future tokens, ensuring autoregressive generation, plus a cross-attention layer that lets the decoder attend to the encoder\u2019s output representations.\n\nDuring training, the model learns by minimizing the difference between its predicted output tokens and the actual target tokens using a loss function like cross-entropy, with gradients flowing backward through all layers via backpropagation. At inference time, the model generates text one token at a time: the encoder processes the input prompt once, and the decoder produces the first output token, which is then fed back as input to generate the next token, repeating until an end-of-sequence token is produced or a maximum length is reached. This design\u2014combining self-attention\u2019s ability to model global context with deep stacking of layers\u2014allows transformers to scale to billions of parameters and massive datasets, forming the foundation of modern large language models.", "quality_pass": true, "quality_details": {"non_empty": true, "finished_naturally": true, "valid_json": "not_required", "json_fields_present": "not_required", "expected_keywords_found": ["attention", "encoder", "decoder"], "expected_keywords_missing": [], "keywords_present": true}}, {"model": "mistralai/mistral-large-4-1t-a52b", "prompt_id": "long", "run": 1, "ttft_ms": 2421.8415999930585, "total_latency_ms": 81364.85420000099, "prompt_tokens": 0, "completion_tokens": 3292, "tokens_per_sec": 41.70096746472112, "http_status": 200, "error": null, "finish_reason": "stop", "response_text": "# Microservices vs. Monolithic Architectures: A Comprehensive Trade-off Analysis\n\nChoosing between these two architectural styles is one of the most consequential decisions in system design. Neither is universally superior\u2014each shifts costs and benefits across different dimensions. Below is a detailed analysis across the key areas you mentioned, plus a few others that often get overlooked.\n\n---\n\n## 1. Scalability\n\n### Monolith\n- **Coarse-grained scaling**: You scale the entire application as a unit. If only the payment module is under load, you still replicate the whole thing.\n- **Simple horizontal scaling**: Add more instances behind a load balancer. No distributed coordination needed.\n- **Vertical scaling ceiling**: Often easier to scale up (bigger machines) initially, but eventually hits hardware limits.\n- **Example**: A Django or Rails app running on 4 large EC2 instances handles 10k requests/second fine\u2014until one slow database query in the reporting module drags down the checkout flow for everyone.\n\n### Microservices\n- **Fine-grained, independent scaling**: Scale only the service under pressure. Netflix famously scales its streaming service independently of its recommendation engine.\n- **Technology heterogeneity**: The image-processing service can be written in Go, the ML pipeline in Python, the API gateway in Node.js\u2014each scaled with its own resource profile.\n- **Hidden costs**: Scaling one service can cascade. If the order service scales 10x but the inventory database doesn't, you've just moved the bottleneck. Distributed systems introduce network latency and require capacity planning across service boundaries.\n- **Example**: Shopify during Black Friday scales its checkout service to thousands of pods while leaving its blog/content service on a handful of instances\u2014something impossible in a monolith.\n\n**Verdict**: Microservices win when different components have *wildly different* load profiles. Monoliths win when load is uniform, because scaling is simpler and cheaper.\n\n---\n\n## 2. Deployment Complexity\n\n### Monolith\n- **Single artifact, single pipeline**: One build, one deploy, one rollback. A failed deploy is easy to revert.\n- **Atomic releases**: All features ship together, so there's no version-skew problem between components.\n- **Example**: GitHub historically deployed its monolithic Rails app multiple times per day with a simple chatops command (`/deploy`), with rollback being a single command.\n\n### Microservices\n- **Many pipelines**: Each service needs its own CI/CD pipeline, artifact registry, and deployment strategy. A 50-service system might have 50 pipelines to maintain.\n- **Version skew and compatibility**: Services deploy independently, so you must maintain backward compatibility of APIs, handle rolling upgrades, and sometimes run multiple versions simultaneously (blue-green, canary).\n- **Dependency ordering**: Deploying a change that spans services requires orchestration\u2014deploy the database schema first, then service A, then service B.\n- **Example**: Amazon's \"two-pizza teams\" each own their service's full lifecycle, but this requires massive investment in internal tooling (Apollo, their deployment system) to make deploys safe. Without that tooling, microservice deployment becomes chaos.\n\n**Verdict**: Monoliths are dramatically simpler to deploy. Microservices trade deployment simplicity for deployment *frequency and independence*\u2014but only if you invest heavily in automation.\n\n---\n\n## 3. Team Autonomy\n\n### Monolith\n- **Coordination overhead**: With 50 engineers on one codebase, merge conflicts, code review bottlenecks, and \"who owns this module?\" disputes are constant. Teams often organize into feature teams that still share one deployable unit.\n- **Shared fate**: One team's bad commit can break everyone's deploy (the \"big ball of mud\" risk).\n- **Example**: A startup with 8 engineers thrives on a monolith\u2014everyone knows the codebase, onboarding is fast, and refactoring is easy because everything is in one place.\n\n### Microservices\n- **Clear ownership boundaries**: Teams own services end-to-end (\"you build it, you run it\"\u2014the Amazon/DevOps model). Conway's Law works *for* you: architecture mirrors team structure.\n- **Independent release cadence**: Team A can ship 20 times a day without coordinating with Team B.\n- **Costs**: Teams must handle on-call for their services, and cross-team changes require API contracts, RFCs, and coordination. \"Autonomy\" can become \"fiefdoms\" if teams refuse to share libraries or standards.\n- **Example**: Spotify's squad model\u2014each squad owns a microservice or feature area, with chapters/guilds maintaining cross-cutting standards. This enabled hundreds of engineers to work in parallel.\n\n**Verdict**: Microservices enable autonomy at scale (dozens to hundreds of engineers). Monoliths are better for small teams, where the coordination cost of service boundaries exceeds the benefit.\n\n---\n\n## 4. Debugging and Observability\n\n### Monolith\n- **Single process, single stack trace**: A request flows through one process; a stack trace tells you exactly where it failed. Logs, metrics, and traces are all in one place.\n- **Easy local reproduction**: Run the whole app on your laptop with one command (plus a database), reproduce the bug, fix it.\n- **Example**: Debugging a 500 error in a monolith is often: read the stack trace, set a breakpoint, done.\n\n### Microservices\n- **Distributed tracing is mandatory**: A single user request may touch 15 services. Without tools like Jaeger, Zipkin, or OpenTelemetry, debugging is nearly impossible\u2014you're correlating logs across dozens of services by timestamp.\n- **Heisenbugs and partial failures**: Networks fail, services time out, retries cause duplicate side effects. A bug might only appear when service X is slow *and* service Y returns a 503.\n- **Harder local development**: Running 15 services locally requires Docker Compose orchestration, mock services, and significant RAM. Many teams use \"development environments in the cloud\" instead.\n- **Example**: At Uber, a single ride request flows through dozens of microservices; when something goes wrong, engineers rely on distributed tracing (Jaeger) and centralized logging (ELK stack) to reconstruct the request path. The operational cost of this observability stack is substantial.\n\n**Verdict**: Monoliths are far easier to debug. Microservices *require* mature observability practices\u2014without them, you're flying blind.\n\n---\n\n## 5. Operational Overhead\n\n### Monolith\n- **Low infrastructure footprint**: A few servers, one database, one monitoring dashboard. Total cost of ownership is low.\n- **Simple ops**: One service to monitor, one log stream, one alerting config. A small team can run it 24/7.\n- **Example**: Basecamp runs its monolithic HEY email service on a handful of servers with a tiny ops team\u2014deliberately choosing simplicity over scale.\n\n### Microservices\n- **Infrastructure explosion**: Service mesh (Istio/Linkerd), API gateways, message brokers (Kafka, RabbitMQ), service discovery, config servers, container orchestration (Kubernetes), CI/CD for each service, secrets management (Vault), etc.\n- **On-call burden**: More services = more alerts = more pager duty. Burnout is a real risk; teams need SRE practices and error budgets.\n- **Data management complexity**: Each service often owns its own database (polyglot persistence), which means distributed transactions become hard\u2014you need sagas, event sourcing, or eventual consistency patterns.\n- **Example**: A 30-service system on Kubernetes might need a dedicated platform team of 5\u201310 engineers just to keep the infrastructure running, plus per-service on-call rotations.\n\n**Verdict**: Monoliths have dramatically lower operational overhead. Microservices shift complexity from *code* to *infrastructure*\u2014you don't eliminate complexity, you relocate it.\n\n---\n\n## 6. Additional Dimensions Worth Considering\n\n| Dimension | Monolith | Microservices |\n|---|---|---|\n| **Data consistency** | ACID transactions across the whole DB\u2014simple and reliable | Eventual consistency, sagas, distributed transactions\u2014hard |\n| **Testing** | Easy end-to-end tests in one process; fast integration tests | Need contract testing (Pact), test environments, mocking |\n| **Security** | Smaller attack surface; one perimeter | Larger attack surface; need mTLS, auth between services, zero-trust |\n| **Time to first product** | Fast\u2014build one thing and ship | Slow\u2014need infra, CI/CD, observability before first service ships |\n| **Refactoring** | Easy\u2014IDE refactoring across the whole codebase | Hard\u2014refactoring across service boundaries requires API versioning |\n| **Cost at small scale** | Cheap | Expensive (many small services = overhead) |\n| **Failure isolation** | One bug can take down everything | Failures are contained to one service (with circuit breakers) |\n\n---\n\n## 7. Concrete Real-World Examples\n\n- **Amazon**: Started as a monolith, migrated to services in the early 2000s. The famous \"Bezos mandate\" (2002) required all teams to expose service APIs. Result: massive scalability, but at the cost of enormous infrastructure investment.\n- **Netflix**: Went all-in on microservices during its 2008\u20132011 cloud migration, pioneering tools like Hystrix (circuit breakers) and Chaos Monkey. Handles billions of streaming requests daily\u2014but employs thousands of engineers.\n- **Shopify**: Runs a *modular monolith*\u2014a single deployable Rails app with strict internal module boundaries. They get team autonomy via code organization rather than services, and can still deploy atomically. This is a popular middle ground.\n- **GitHub**: Deliberately stayed monolithic (with some extracted services) for years, deploying multiple times daily. They only extracted services where scaling demands justified it.\n- **Basecamp / 37signals**: Runs HEY and Basecamp as monoliths on few servers, arguing that for their scale, microservices would be pure overhead.\n- **SoundCloud**: Started monolithic, extracted services only for components with distinct scaling needs (e.g., file uploads), keeping the core monolithic.\n- **Twitter**: Migrated from a monolithic Rails app (\"the Fail Whale\" era) to microservices, which fixed scaling but introduced significant operational complexity.\n\n---\n\n## 8. The \"Modular Monolith\" Middle Ground\n\nMany teams now land here: a **single deployable application with strict internal module boundaries** (Shopify's approach). You get:\n- Monolith simplicity (one deploy, one DB, easy debugging)\n- Team autonomy via clear module ownership and internal APIs\n- The *option* to extract a module into a service later if it needs independent scaling\n\nExtraction is much easier than splitting a tangled monolith, provided the boundaries were enforced from the start (e.g., via package-level dependency rules, ArchUnit tests, or tools like Spring Modulith).\n\n---\n\n## 9. Decision Framework: When to Choose What\n\n**Choose a monolith when:**\n- Team is small (< 10\u201315 engineers)\n- Product is early-stage; requirements are changing rapidly\n- Load is uniform across features\n- You lack DevOps/SRE maturity\n- Time-to-market matters most\n\n**Choose microservices when:**\n- Different components have very different scaling/availability needs\n- You have many teams that need to deploy independently\n- You need technology diversity (e.g., ML in Python, real-time in Go)\n- A single team's failure shouldn't take down the whole system\n- You have the infrastructure and observability maturity to support it\n\n**Key principle**: Start with a well-structured monolith, and extract services only when you have a *concrete, measured reason* (scaling bottleneck, team coordination pain, deployment coupling). As Martin Fowler says: \"You shouldn't start with microservices\u2014you should start with a monolith and split when the pain is real.\" Premature decomposition is one of the most expensive mistakes in software architecture, because the boundaries you guess at early are usually wrong.\n\n---\n\n## Summary Table\n\n| Dimension | Winner (typical case) | Caveat |\n|---|---|---|\n| Scalability granularity | Microservices | Only if load profiles differ; otherwise monolith scales fine |\n| Deployment simplicity | Monolith | Microservices need heavy automation to be safe |\n| Team autonomy | Microservices (at scale) | Monolith + module boundaries works for smaller teams |\n| Debugging | Monolith | Microservices need distributed tracing, mature observability |\n| Operational overhead | Monolith | Microservices shift complexity to infra; need platform team |\n| Data consistency | Monolith | ACID is easy; distributed consistency is hard |\n| Early-stage speed | Monolith | Microservices slow down initial development |\n| Failure isolation | Microservices | Requires circuit breakers, bulkheads, retries |\n\n**Bottom line**: Microservices are not \"better\"\u2014they're a trade. You exchange code-level simplicity for organizational scalability, paying with infrastructure complexity, debugging difficulty, and operational cost. The best architecture is the simplest one that solves your actual problems today, with clear boundaries that let you evolve toward services later if\u2014and only if\u2014the pain justifies it.", "quality_pass": true, "quality_details": {"non_empty": true, "finished_naturally": true, "valid_json": "not_required", "json_fields_present": "not_required", "expected_keywords_found": ["microservices", "monolithic", "scalability", "deployment"], "expected_keywords_missing": [], "keywords_present": true}}, {"model": "mistralai/mistral-large-4-1t-a52b", "prompt_id": "structured", "run": 1, "ttft_ms": 2820.770899998024, "total_latency_ms": 105882.79519999924, "prompt_tokens": 0, "completion_tokens": 60, "tokens_per_sec": 0.5821736998426034, "http_status": 200, "error": null, "finish_reason": "stop", "response_text": "```json\n{\n  \"company\": \"NVIDIA\",\n  \"employees\": 29600,\n  \"founded\": 1993,\n  \"hq\": \"Santa Clara, California, USA\",\n  \"products\": [\"GeForce RTX GPUs\", \"CUDA\", \"H100 Tensor Core GPU\", \"Tegra\", \"DRIVE\", \"Omniverse\", \"Mellanox Networking\"]\n}\n```", "quality_pass": true, "quality_details": {"non_empty": true, "finished_naturally": true, "valid_json": true, "json_fields_present": true, "expected_keywords_found": ["company", "employees", "founded", "hq", "products"], "expected_keywords_missing": [], "keywords_present": true}}, {"model": "mistralai/mistral-large-4-1t-a52b", "prompt_id": "coding", "run": 1, "ttft_ms": 432.6359999977285, "total_latency_ms": 8850.46620000503, "prompt_tokens": 0, "completion_tokens": 135, "tokens_per_sec": 16.03738692660763, "http_status": 200, "error": null, "finish_reason": "stop", "response_text": "```python\nfrom typing import Sequence, TypeVar\n\nT = TypeVar(\"T\")\n\ndef binary_search(arr: Sequence[T], target: T) -> int:\n    \"\"\"Return the index of `target` in sorted `arr`, or -1 if absent.\"\"\"\n    lo, hi = 0, len(arr) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if arr[mid] == target:\n            return mid\n        if arr[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1\n```\n\nExample:\n\n```python\nbinary_search([1, 3, 5, 7, 9], 5)  # 2\nbinary_search([1, 3, 5, 7, 9], 4)  # -1\n```", "quality_pass": true, "quality_details": {"non_empty": true, "finished_naturally": true, "valid_json": "not_required", "json_fields_present": "not_required", "expected_keywords_found": ["def", "binary_search", "return"], "expected_keywords_missing": [], "keywords_present": true}}], "summaries": {"nvidia/nemotron-3.5-lightning-30b-a3b": {"model": "nvidia/nemotron-3.5-lightning-30b-a3b", "overall_score": 75.7, "speed_score": 24.6, "throughput_score": 6.2, "quality_score": 30.0, "reliability_score": 15.0, "findings": ["Fast TTFT (368ms median)", "Low throughput (13.9 tok/s, target 45)"], "prompt_summaries": {"short": {"model": "nvidia/nemotron-3.5-lightning-30b-a3b", "prompt_id": "short", "runs": 1, "successful_runs": 1, "ttft_ms": {"mean": 407.14500000467524, "p50": 407.14500000467524, "p95": 407.14500000467524}, "total_latency_ms": {"mean": 1615.005600004224, "p50": 1615.005600004224, "p95": 1615.005600004224}, "tokens_per_sec": {"mean": 5.795370757190535, "p50": 5.795370757190535, "p95": 5.795370757190535}, "quality_pass_rate": 1, "success_rate": 1.0}, "medium": {"model": "nvidia/nemotron-3.5-lightning-30b-a3b", "prompt_id": "medium", "runs": 1, "successful_runs": 1, "ttft_ms": {"mean": 366.30749999312684, "p50": 366.30749999312684, "p95": 366.30749999312684}, "total_latency_ms": {"mean": 11788.959099998465, "p50": 11788.959099998465, "p95": 11788.959099998465}, "tokens_per_sec": {"mean": 44.73567240725097, "p50": 44.73567240725097, "p95": 44.73567240725097}, "quality_pass_rate": 1, "success_rate": 1.0}, "long": {"model": "nvidia/nemotron-3.5-lightning-30b-a3b", "prompt_id": "long", "runs": 1, "successful_runs": 1, "ttft_ms": {"mean": 367.50649999885354, "p50": 367.50649999885354, "p95": 367.50649999885354}, "total_latency_ms": {"mean": 32891.88060000015, "p50": 32891.88060000015, "p95": 32891.88060000015}, "tokens_per_sec": {"mean": 87.56509783227116, "p50": 87.56509783227116, "p95": 87.56509783227116}, "quality_pass_rate": 1, "success_rate": 1.0}, "structured": {"model": "nvidia/nemotron-3.5-lightning-30b-a3b", "prompt_id": "structured", "runs": 1, "successful_runs": 1, "ttft_ms": {"mean": 364.7270999936154, "p50": 364.7270999936154, "p95": 364.7270999936154}, "total_latency_ms": {"mean": 6168.596499992418, "p50": 6168.596499992418, "p95": 6168.596499992418}, "tokens_per_sec": {"mean": 6.891953840313541, "p50": 6.891953840313541, "p95": 6.891953840313541}, "quality_pass_rate": 1, "success_rate": 1.0}, "coding": {"model": "nvidia/nemotron-3.5-lightning-30b-a3b", "prompt_id": "coding", "runs": 1, "successful_runs": 1, "ttft_ms": {"mean": 1693.171099992469, "p50": 1693.171099992469, "p95": 1693.171099992469}, "total_latency_ms": {"mean": 13182.582399997045, "p50": 13182.582399997045, "p95": 13182.582399997045}, "tokens_per_sec": {"mean": 13.925865810020769, "p50": 13.925865810020769, "p95": 13.925865810020769}, "quality_pass_rate": 1, "success_rate": 1.0}}}, "mistralai/mistral-large-4-1t-a52b": {"model": "mistralai/mistral-large-4-1t-a52b", "overall_score": 62.2, "speed_score": 10.0, "throughput_score": 7.1, "quality_score": 30.0, "reliability_score": 15.0, "findings": ["Slow TTFT (768ms median, target 600ms)", "Low throughput (16.0 tok/s, target 45)"], "prompt_summaries": {"short": {"model": "mistralai/mistral-large-4-1t-a52b", "prompt_id": "short", "runs": 1, "successful_runs": 1, "ttft_ms": {"mean": 768.1318999966606, "p50": 768.1318999966606, "p95": 768.1318999966606}, "total_latency_ms": {"mean": 2128.95589999971, "p50": 2128.95589999971, "p95": 2128.95589999971}, "tokens_per_sec": {"mean": 5.878791085388026, "p50": 5.878791085388026, "p95": 5.878791085388026}, "quality_pass_rate": 1, "success_rate": 1.0}, "medium": {"model": "mistralai/mistral-large-4-1t-a52b", "prompt_id": "medium", "runs": 1, "successful_runs": 1, "ttft_ms": {"mean": 504.90080000599846, "p50": 504.90080000599846, "p95": 504.90080000599846}, "total_latency_ms": {"mean": 58592.49370000907, "p50": 58592.49370000907, "p95": 58592.49370000907}, "tokens_per_sec": {"mean": 10.828474181789804, "p50": 10.828474181789804, "p95": 10.828474181789804}, "quality_pass_rate": 1, "success_rate": 1.0}, "long": {"model": "mistralai/mistral-large-4-1t-a52b", "prompt_id": "long", "runs": 1, "successful_runs": 1, "ttft_ms": {"mean": 2421.8415999930585, "p50": 2421.8415999930585, "p95": 2421.8415999930585}, "total_latency_ms": {"mean": 81364.85420000099, "p50": 81364.85420000099, "p95": 81364.85420000099}, "tokens_per_sec": {"mean": 41.70096746472112, "p50": 41.70096746472112, "p95": 41.70096746472112}, "quality_pass_rate": 1, "success_rate": 1.0}, "structured": {"model": "mistralai/mistral-large-4-1t-a52b", "prompt_id": "structured", "runs": 1, "successful_runs": 1, "ttft_ms": {"mean": 2820.770899998024, "p50": 2820.770899998024, "p95": 2820.770899998024}, "total_latency_ms": {"mean": 105882.79519999924, "p50": 105882.79519999924, "p95": 105882.79519999924}, "tokens_per_sec": {"mean": 0.5821736998426034, "p50": 0.5821736998426034, "p95": 0.5821736998426034}, "quality_pass_rate": 1, "success_rate": 1.0}, "coding": {"model": "mistralai/mistral-large-4-1t-a52b", "prompt_id": "coding", "runs": 1, "successful_runs": 1, "ttft_ms": {"mean": 432.6359999977285, "p50": 432.6359999977285, "p95": 432.6359999977285}, "total_latency_ms": {"mean": 8850.46620000503, "p50": 8850.46620000503, "p95": 8850.46620000503}, "tokens_per_sec": {"mean": 16.03738692660763, "p50": 16.03738692660763, "p95": 16.03738692660763}, "quality_pass_rate": 1, "success_rate": 1.0}}}}};
+    const PROMPTS = DATA.prompts;
+
+    function fmt(n, d=1) { return n ? Number(n).toFixed(d) : '—'; }
+    function scoreClass(s) { return s >= 75 ? 'score-green' : s >= 50 ? 'score-amber' : 'score-red'; }
+    function ringColor(s) { return s >= 75 ? 'var(--green)' : s >= 50 ? 'var(--amber)' : 'var(--red)'; }
+
+    document.getElementById('ts').textContent = new Date(DATA.timestamp).toLocaleString();
+    document.getElementById('runs').textContent = DATA.total_runs;
+    document.getElementById('tokens').textContent = DATA.total_tokens.toLocaleString();
+    document.getElementById('models-count').textContent = DATA.models_tested.length;
+
+    const models = Object.entries(DATA.summaries).sort((a,b) => b[1].overall_score - a[1].overall_score);
+    const ringsEl = document.getElementById('rings');
+    const tbody = document.getElementById('leaderboard-body');
+
+    models.forEach(([model, summary], idx) => {
+      const score = summary.overall_score;
+      const offset = 339 * (1 - score / 100);
+      ringsEl.innerHTML += `
+        <div class="ring-card">
+          <svg class="ring-svg" viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="54"/>
+            <circle class="ring-progress" cx="60" cy="60" r="54" style="stroke: ${ringColor(score)}; stroke-dashoffset: ${offset};"/>
+          </svg>
+          <div class="ring-text" style="color: ${ringColor(score)}">${fmt(score)}</div>
+          <div class="ring-label">${model.split('/').pop()}</div>
+        </div>
+      `;
+
+      const tr = document.createElement('tr');
+      tr.style.animationDelay = `${(idx+1)*0.05}s`;
+      tr.innerHTML = `
+        <td>${idx+1}</td>
+        <td class="model-name">${model}</td>
+        <td class="score-cell ${scoreClass(score)}">${fmt(score)}</td>
+        <td class="score-cell ${scoreClass(summary.speed_score/0.35*100)}">${fmt(summary.speed_score)}</td>
+        <td class="score-cell ${scoreClass(summary.throughput_score/0.20*100)}">${fmt(summary.throughput_score)}</td>
+        <td class="score-cell ${scoreClass(summary.quality_score/0.30*100)}">${fmt(summary.quality_score)}</td>
+        <td class="score-cell ${scoreClass(summary.reliability_score/0.15*100)}">${fmt(summary.reliability_score)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.querySelectorAll('#leaderboard-table th[data-col]').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        const rows = Array.from(tbody.rows);
+        const isAsc = th.classList.toggle('sorted-asc');
+        th.classList.toggle('sorted-desc', !isAsc);
+        document.querySelectorAll('#leaderboard-table th').forEach(h => {
+          if (h !== th) h.classList.remove('sorted-asc', 'sorted-desc');
+        });
+        const colMap = {rank:0, model:1, score:2, speed:3, throughput:4, quality:5, reliability:6};
+        rows.sort((a,b) => {
+          const av = a.cells[colMap[col]].textContent;
+          const bv = b.cells[colMap[col]].textContent;
+          const an = parseFloat(av), bn = parseFloat(bv);
+          return isAsc ? (an - bn) : (bn - an);
+        });
+        rows.forEach((r,i) => { r.style.animationDelay = `${(i+1)*0.05}s`; tbody.appendChild(r); });
+      });
+    });
+
+    const modelNames = models.map(m => m[0].split('/').pop());
+    const ttftData = models.map(m => m[1].prompt_summaries?.short?.ttft_ms?.p50 || 0);
+    const tpsData = models.map(m => m[1].prompt_summaries?.short?.tokens_per_sec?.p50 || 0);
+
+    new Chart(document.getElementById('chart-ttft'), {
+      type: 'bar',
+      data: { labels: modelNames, datasets: [{
+        label: 'TTFT (ms)', data: ttftData, backgroundColor: 'rgba(88,166,255,0.6)', borderColor: 'var(--accent)', borderWidth: 1,
+        borderRadius: 6, borderSkipped: false,
+      }]},
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.raw} ms` } } }, scales: { y: { beginAtZero: true, grid: { color: 'var(--border)' }, ticks: { color: 'var(--text-muted)' } }, x: { grid: { display: false }, ticks: { color: 'var(--text-muted)' } } }, animation: { duration: 800, easing: 'easeOutQuart' } }
+    });
+
+    new Chart(document.getElementById('chart-tps'), {
+      type: 'bar',
+      data: { labels: modelNames, datasets: [{
+        label: 'Tokens/sec', data: tpsData, backgroundColor: 'rgba(63,185,80,0.6)', borderColor: 'var(--green)', borderWidth: 1,
+        borderRadius: 6, borderSkipped: false,
+      }]},
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.raw.toFixed(1)} tok/s` } } }, scales: { y: { beginAtZero: true, grid: { color: 'var(--border)' }, ticks: { color: 'var(--text-muted)' } }, x: { grid: { display: false }, ticks: { color: 'var(--text-muted)' } } }, animation: { duration: 800, easing: 'easeOutQuart' } }
+    });
+
+    const headersEl = document.getElementById('heatmap-headers');
+    const bodyEl = document.getElementById('heatmap-body');
+    PROMPTS.forEach((p, i) => { headersEl.innerHTML += `<th><span class="prompt-label">${p.name}</span></th>`; });
+    models.forEach(([model, summary], mi) => {
+      let row = `<td class="model-name">${model.split('/').pop()}</td>`;
+      PROMPTS.forEach((p, pi) => {
+        const ps = summary.prompt_summaries?.[p.id];
+        const rate = ps?.quality_pass_rate ?? null;
+        let cls = 'cell-unknown', txt = '?';
+        if (rate !== null) {
+          if (rate >= 0.9) { cls = 'cell-pass'; txt = '✓'; }
+          else if (rate > 0) { cls = 'cell-fail'; txt = `${Math.round(rate*100)}%`; }
+          else { cls = 'cell-fail'; txt = '✗'; }
+        }
+        row += `<td><div class="cell ${cls}" style="animation-delay:${pi*0.05 + mi*0.1}s">${txt}</div></td>`;
+      });
+      const tr = document.createElement('tr');
+      tr.innerHTML = row;
+      bodyEl.appendChild(tr);
+    });
+
+    const detailsGrid = document.getElementById('details-grid');
+    models.forEach(([model, summary]) => {
+      PROMPTS.forEach(p => {
+        const ps = summary.prompt_summaries?.[p.id];
+        if (!ps) return;
+        const card = document.createElement('div');
+        card.className = 'detail-card';
+        card.innerHTML = `
+          <div class="detail-header" onclick="this.parentElement.classList.toggle('open')">
+            <span class="detail-title">${p.name} <span style="color:var(--text-muted);font-weight:400">(${model.split('/').pop()})</span></span>
+            <span class="detail-toggle">▼</span>
+          </div>
+          <div class="detail-body">
+            <div class="metric-row"><span class="metric-label">Runs</span><span class="metric-value">${ps.runs} (${ps.successful_runs} ok)</span></div>
+            <div class="metric-row"><span class="metric-label">TTFT (p50/p95)</span><span class="metric-value">${fmt(ps.ttft_ms.p50)} / ${fmt(ps.ttft_ms.p95)} ms</span></div>
+            <div class="metric-row"><span class="metric-label">Latency (p50/p95)</span><span class="metric-value">${fmt(ps.total_latency_ms.p50)} / ${fmt(ps.total_latency_ms.p95)} ms</span></div>
+            <div class="metric-row"><span class="metric-label">Throughput (p50/p95)</span><span class="metric-value">${fmt(ps.tokens_per_sec.p50)} / ${fmt(ps.tokens_per_sec.p95)} tok/s</span></div>
+            <div class="metric-row"><span class="metric-label">Quality Pass Rate</span><span class="metric-value">${fmt(ps.quality_pass_rate*100,0)}%</span></div>
+            <div class="metric-row"><span class="metric-label">Success Rate</span><span class="metric-value">${fmt(ps.success_rate*100,0)}%</span></div>
+          </div>
+        `;
+        detailsGrid.appendChild(card);
+      });
+    });
+
+    const findingsEl = document.getElementById('findings-list');
+    models.forEach(([model, summary]) => {
+      summary.findings.forEach((f, fi) => {
+        const div = document.createElement('div');
+        div.className = 'finding-item';
+        div.style.animationDelay = `${fi*0.1}s`;
+        div.textContent = `${model.split('/').pop()}: ${f}`;
+        findingsEl.appendChild(div);
+      });
+    });
+  </script>
+</body>
+</html>

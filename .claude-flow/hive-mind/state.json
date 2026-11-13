@@ -1,0 +1,24 @@
+{
+  "initialized": true,
+  "topology": "hierarchical",
+  "workers": [
+    "hive-worker-1794484491858-5cuu"
+  ],
+  "consensus": {
+    "pending": [],
+    "history": []
+  },
+  "sharedMemory": {},
+  "createdAt": "2026-11-12T11:54:43.661Z",
+  "updatedAt": "2026-11-12T11:54:51.859Z",
+  "consensusStrategy": "byzantine",
+  "maxAgents": 15,
+  "memoryBackend": "hybrid",
+  "persist": true,
+  "queen": {
+    "agentId": "queen-1794484483661",
+    "electedAt": "2026-11-12T11:54:43.661Z",
+    "term": 1
+  },
+  "hiveToken": "c38863c1a7f1e987ea4da697d0f3a432852fc06c88dbab4cd6d5910d9cffeaf0"
+}
