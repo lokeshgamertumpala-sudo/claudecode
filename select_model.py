@@ -5,58 +5,48 @@ import requests
 import json
 
 MODELS = {
-    "1": ("Auto Smart-Failover", "auto", "Seamless resilience mesh (Nemotron Ultra -> Laguna XS -> Mistral Large 4 -> Step 5)"),
-    "2": ("Mistral Large 4", "mistralai/mistral-large-4-1t-a52b", "1.05T Frontier MoE, 52B Active"),
-    "3": ("Step 5 Preview", "stepfun-ai/step-5-preview", "600B MoE, 1M Context Window, Advanced Multimodal Reasoning"),
-    "4": ("MiniMax M3.1 Flash", "minimaxai/minimax-m3.1-flash", "428B MoE, Ultra-Fast Agentic & Code Specialist"),
-    "5": ("NVIDIA Nemotron Ultra 550B MoE", "nvidia/nemotron-3-ultra-550b-a55b", "550B Flagship Reasoning Giant, Sub-Second Latency (RECOMMENDED DEFAULT)"),
-    "6": ("DeepSeek V4.1 Flash", "deepseek-ai/deepseek-v4.1-flash", "High-speed reasoning & massive context coding powerhouse"),
-    "7": ("Poolside Laguna XS 2.1", "poolside/laguna-xs-2.1", "High-speed software engineering & code specialist")
+    "1": ("NVIDIA Nemotron Ultra 550B MoE", "nvidia/nemotron-3-ultra-550b-a55b", "550B Flagship Reasoning Giant, Sub-Second Latency (RECOMMENDED DEFAULT)"),
+    "2": ("Step 5 Preview", "stepfun-ai/step-5-preview", "600B MoE, 1M Context Window, Advanced Multimodal Reasoning"),
+    "3": ("MiniMax M3.1 Flash", "minimaxai/minimax-m3.1-flash", "428B MoE, Ultra-Fast Agentic & Code Specialist"),
+    "4": ("Mistral Large 4", "mistralai/mistral-large-4-1t-a52b", "1.05T Frontier MoE, 52B Active"),
+    "5": ("Poolside Laguna XS 2.1", "poolside/laguna-xs-2.1", "High-speed software engineering & code specialist"),
+    "6": ("Auto Smart-Failover", "auto", "Seamless resilience mesh across active frontier models")
 }
 
 ALIASES = {
     "auto": "auto",
     "smart": "auto",
-    "1": "auto",
-    "mistral": "mistralai/mistral-large-4-1t-a52b",
-    "mistral-large": "mistralai/mistral-large-4-1t-a52b",
-    "mistral-large-4": "mistralai/mistral-large-4-1t-a52b",
-    "mistral-4": "mistralai/mistral-large-4-1t-a52b",
-    "mistralai/mistral-large-4-1t-a52b": "mistralai/mistral-large-4-1t-a52b",
-    "2": "mistralai/mistral-large-4-1t-a52b",
-    "step": "stepfun-ai/step-5-preview",
-    "step-5": "stepfun-ai/step-5-preview",
-    "step5": "stepfun-ai/step-5-preview",
-    "step-5-preview": "stepfun-ai/step-5-preview",
-    "stepfun-ai/step-5-preview": "stepfun-ai/step-5-preview",
-    "3": "stepfun-ai/step-5-preview",
-    "minimax": "minimaxai/minimax-m3.1-flash",
-    "m3.1": "minimaxai/minimax-m3.1-flash",
-    "m3.1-flash": "minimaxai/minimax-m3.1-flash",
-    "minimax-m3.1": "minimaxai/minimax-m3.1-flash",
-    "minimax-m3.1-flash": "minimaxai/minimax-m3.1-flash",
-    "minimaxai/minimax-m3.1-flash": "minimaxai/minimax-m3.1-flash",
-    "4": "minimaxai/minimax-m3.1-flash",
+    "6": "auto",
     "ultra": "nvidia/nemotron-3-ultra-550b-a55b",
     "nemotron-ultra": "nvidia/nemotron-3-ultra-550b-a55b",
     "nemotron-ultra-550b": "nvidia/nemotron-3-ultra-550b-a55b",
     "ultra-550b": "nvidia/nemotron-3-ultra-550b-a55b",
     "nemotron": "nvidia/nemotron-3-ultra-550b-a55b",
     "nvidia/nemotron-3-ultra-550b-a55b": "nvidia/nemotron-3-ultra-550b-a55b",
-    "5": "nvidia/nemotron-3-ultra-550b-a55b",
-    "deepseek": "deepseek-ai/deepseek-v4.1-flash",
-    "deepseek-v4.1-flash": "deepseek-ai/deepseek-v4.1-flash",
-    "deepseek-v4.1": "deepseek-ai/deepseek-v4.1-flash",
-    "deepseek-flash": "deepseek-ai/deepseek-v4.1-flash",
-    "flash": "deepseek-ai/deepseek-v4.1-flash",
-    "deepseek-ai/deepseek-v4.1-flash": "deepseek-ai/deepseek-v4.1-flash",
-    "6": "deepseek-ai/deepseek-v4.1-flash",
+    "1": "nvidia/nemotron-3-ultra-550b-a55b",
+    "step": "stepfun-ai/step-5-preview",
+    "step-5": "stepfun-ai/step-5-preview",
+    "step5": "stepfun-ai/step-5-preview",
+    "step-5-preview": "stepfun-ai/step-5-preview",
+    "stepfun-ai/step-5-preview": "stepfun-ai/step-5-preview",
+    "2": "stepfun-ai/step-5-preview",
+    "minimax": "minimaxai/minimax-m3.1-flash",
+    "m3.1": "minimaxai/minimax-m3.1-flash",
+    "m3.1-flash": "minimaxai/minimax-m3.1-flash",
+    "minimax-m3.1": "minimaxai/minimax-m3.1-flash",
+    "minimax-m3.1-flash": "minimaxai/minimax-m3.1-flash",
+    "minimaxai/minimax-m3.1-flash": "minimaxai/minimax-m3.1-flash",
+    "3": "minimaxai/minimax-m3.1-flash",
+    "mistral": "mistralai/mistral-large-4-1t-a52b",
+    "mistral-large": "mistralai/mistral-large-4-1t-a52b",
+    "mistral-large-4": "mistralai/mistral-large-4-1t-a52b",
+    "mistral-4": "mistralai/mistral-large-4-1t-a52b",
+    "mistralai/mistral-large-4-1t-a52b": "mistralai/mistral-large-4-1t-a52b",
+    "4": "mistralai/mistral-large-4-1t-a52b",
     "laguna": "poolside/laguna-xs-2.1",
     "poolside": "poolside/laguna-xs-2.1",
     "poolside/laguna-xs-2.1": "poolside/laguna-xs-2.1",
-    "7": "poolside/laguna-xs-2.1",
-    "kimi": "mistralai/mistral-large-4-1t-a52b",
-    "kimi-k3": "mistralai/mistral-large-4-1t-a52b",
+    "5": "poolside/laguna-xs-2.1",
     "nemotron-3-super-120b-a12b": "nvidia/nemotron-3-ultra-550b-a55b",
     "nvidia/nemotron-3-super-120b-a12b": "nvidia/nemotron-3-ultra-550b-a55b",
     "boost": "nvidia/nemotron-3-ultra-550b-a55b",
@@ -132,6 +122,24 @@ def update_claude_settings(canonical, display_name):
 
 def set_model(choice_key_or_name):
     target = choice_key_or_name.lower().strip()
+    if target in ("kimi", "kimi-k3", "kimi-k3.1", "kimi-k3.1-pro", "moonshot", "moonshotai"):
+        print("\n" + "=" * 75)
+        print("  [!] NOTICE: MOONSHOT AI KIMI K3.1 PRO STATUS ON NVIDIA NIM")
+        print("=" * 75)
+        print("  As shown on NVIDIA's official catalog (build.nvidia.com/moonshotai/kimi-k3_1-pro):")
+        print("    '# API access for this model is not available yet.")
+        print("     # This endpoint is published for preview and playground use only - it is")
+        print("     # not open for programmatic access, and no API key will authorize it.'")
+        print("\n  Claude Code requires programmatic API access. Please use one of the 5 fully active")
+        print("  frontier models with 100% free serverless endpoints:")
+        print("    1. NVIDIA Nemotron Ultra 550B MoE (nvidia/nemotron-3-ultra-550b-a55b)")
+        print("    2. Step 5 Preview (stepfun-ai/step-5-preview)")
+        print("    3. MiniMax M3.1 Flash (minimaxai/minimax-m3.1-flash)")
+        print("    4. Mistral Large 4 (mistralai/mistral-large-4-1t-a52b)")
+        print("    5. Poolside Laguna XS 2.1 (poolside/laguna-xs-2.1)")
+        print("=" * 75 + "\n")
+        return get_current()
+
     canonical = ALIASES.get(target, target)
     
     valid_slugs = {slug for _, slug, _ in MODELS.values()} | {"auto"}

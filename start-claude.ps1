@@ -17,12 +17,12 @@ if ($Help -or $Model -in @("-h", "--help", "help")) {
     Write-Host "====================================================" -ForegroundColor Cyan
     Write-Host "Usage: .\start-claude.ps1 [Model] [-Unrestricted]" -ForegroundColor Cyan
     Write-Host "`nModels:" -ForegroundColor Yellow
-    Write-Host "  ultra    / 5  : NVIDIA Nemotron Ultra 550B MoE (550B MoE, TTFT 0.48s, Fast Reasoning) [DEFAULT]"
-    Write-Host "  mistral  / 2  : Mistral Large 4 (1.05T MoE, 52B Active)"
-    Write-Host "  step     / 3  : Step 5 Preview (600B MoE, 1M Context Window, Multimodal Reasoning)"
-    Write-Host "  minimax  / 4  : MiniMax M3.1 Flash (428B MoE, Ultra-Fast Agentic & Code Specialist)"
-    Write-Host "  deepseek / 6  : DeepSeek V4.1 Flash (High-speed reasoning & coding powerhouse)"
-    Write-Host "  auto     / 1  : Auto Smart-Failover (Zero API Errors resilience mesh)"
+    Write-Host "  ultra    / 1  : NVIDIA Nemotron Ultra 550B MoE (550B MoE, TTFT 0.48s, Sub-Second) [DEFAULT]"
+    Write-Host "  step     / 2  : Step 5 Preview (600B MoE, 1M Context Window, Multimodal Reasoning)"
+    Write-Host "  minimax  / 3  : MiniMax M3.1 Flash (428B MoE, Ultra-Fast Agentic & Code Specialist)"
+    Write-Host "  mistral  / 4  : Mistral Large 4 (1.05T MoE, 52B Active)"
+    Write-Host "  laguna   / 5  : Poolside Laguna XS 2.1 (High-Speed Software Engineering Specialist)"
+    Write-Host "  auto     / 6  : Auto Smart-Failover (Zero API Errors resilience mesh)"
     Write-Host "`nFlags:" -ForegroundColor Yellow
     Write-Host "  -Unrestricted : Run in full autonomous terminal mode (bypasses permission prompts)"
     exit 0
