@@ -57,9 +57,16 @@ ALIASES = {
 pref_file = os.path.join(os.path.dirname(__file__), "active_model.txt")
 
 def get_current():
-    if os.path.exists(pref_file):
+    candidates = [
+        r"C:\Users\NEW\OneDrive\Desktop\claudecode\active_model.txt",
+        pref_file,
+        os.path.join(os.getcwd(), "active_model.txt"),
+    ]
+    existing = [c for c in candidates if os.path.exists(c)]
+    if existing:
+        newest = max(existing, key=os.path.getmtime)
         try:
-            with open(pref_file, "r", encoding="utf-8") as f:
+            with open(newest, "r", encoding="utf-8") as f:
                 c = f.read().strip()
                 if c:
                     return ALIASES.get(c.lower(), c)
@@ -70,6 +77,8 @@ def get_current():
 def update_claude_settings(canonical, display_name):
     settings_dirs = [
         os.path.join(os.path.dirname(__file__), ".claude"),
+        r"C:\Users\NEW\OneDrive\Desktop\claudecode\.claude",
+        r"C:\Users\NEW\.gemini\antigravity\worktrees\claudecode\fix_model_search_errors\.claude",
         os.path.expanduser("~/.claude")
     ]
     active_desc = ""
@@ -154,8 +163,18 @@ def set_model(choice_key_or_name):
             display_name = name
             break
 
-    with open(pref_file, "w", encoding="utf-8") as f:
-        f.write(canonical)
+    pref_targets = [
+        pref_file,
+        r"C:\Users\NEW\OneDrive\Desktop\claudecode\active_model.txt",
+        r"C:\Users\NEW\.gemini\antigravity\worktrees\claudecode\fix_model_search_errors\active_model.txt",
+    ]
+    for pt in pref_targets:
+        try:
+            os.makedirs(os.path.dirname(pt), exist_ok=True)
+            with open(pt, "w", encoding="utf-8") as f:
+                f.write(canonical)
+        except Exception:
+            pass
     
     # Sync Claude Code settings so the real model name displays in the terminal
     update_claude_settings(canonical, display_name)

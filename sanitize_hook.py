@@ -308,7 +308,10 @@ try:
                 if isinstance(body_json, dict):
                     if body_json.get("stop_reason") in ("max_tokens", "length"):
                         body_json["stop_reason"] = "end_turn"
-                    return JSONResponse(body_json, status_code=200, headers=dict(response.headers))
+                    resp_headers = dict(response.headers)
+                    resp_headers.pop("content-length", None)
+                    resp_headers.pop("Content-Length", None)
+                    return JSONResponse(body_json, status_code=200, headers=resp_headers)
             except Exception:
                 pass
 
@@ -716,10 +719,17 @@ class RequestSanitizer(CustomLogger):
         return new_content
 
     def get_selected_model(self) -> str:
-        pref_file = os.path.join(os.path.dirname(__file__), "active_model.txt")
-        if os.path.exists(pref_file):
+        candidates = [
+            r"C:\Users\NEW\OneDrive\Desktop\claudecode\active_model.txt",
+            os.path.join(os.path.dirname(__file__), "active_model.txt"),
+            os.path.join(os.getcwd(), "active_model.txt"),
+            os.path.expanduser("~/.claude/active_model.txt"),
+        ]
+        existing = [c for c in candidates if os.path.exists(c)]
+        if existing:
+            newest = max(existing, key=os.path.getmtime)
             try:
-                with open(pref_file, "r", encoding="utf-8") as f:
+                with open(newest, "r", encoding="utf-8") as f:
                     choice = f.read().strip().lower()
                     if choice:
                         return choice
