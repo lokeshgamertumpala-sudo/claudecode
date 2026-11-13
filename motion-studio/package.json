@@ -1,0 +1,27 @@
+{
+  "name": "motion-studio",
+  "version": "1.0.0",
+  "description": "Production Remotion React 18 Motion Graphics Studio",
+  "scripts": {
+    "start": "remotion preview src/index.ts",
+    "check": "tsc --noEmit",
+    "still": "remotion still src/index.ts",
+    "build": "remotion render src/index.ts KineticTypography out/video.mp4",
+    "preview": "remotion preview src/index.ts",
+    "render": "remotion render src/index.ts",
+    "render:turbo": "remotion render src/index.ts --concurrency=12 --gl=angle"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.218",
+    "@remotion/player": "^4.0.218",
+    "lucide-react": "^0.344.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "remotion": "^4.0.218"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.3.3"
+  }
+}

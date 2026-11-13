@@ -160,7 +160,27 @@ You have multiple 1-click launchers:
 
 ## 🍎 macOS (MacBook) Quickstart
 
-### 1. Make Shell Scripts Executable
+### ⚡ 1-Click Launch (Easiest & Recommended)
+
+You can launch everything (Proxy + Health Checks + Claude Code) in **one single step**:
+
+* **Option A: Double-Click in Finder (Native Mac 1-Click)**
+  1. Open the project folder in Finder.
+  2. Double-click `launch.command` (or `launch-mac.command`).
+  3. Terminal opens automatically, verifies the proxy, tests health, and drops you straight into Claude Code!
+
+* **Option B: Run from Terminal / MacBook Shell**
+  ```bash
+  chmod +x *.sh *.command
+  ./launch.sh
+  ```
+  *(Or run `bash launch-macbook.bat`)*
+
+---
+
+### Step-by-Step Manual macOS Setup
+
+#### 1. Make Shell Scripts Executable
 
 Open Terminal in the cloned repository directory:
 
