@@ -473,6 +473,9 @@ def sanitize_claude_identity(text: str, active_name: str) -> str:
         ("Anthropic's model", f"{active_name} running on NVIDIA NIM"),
         ("built by Anthropic", "powered by NVIDIA NIM"),
         ("Anthropic's official CLI", "Claude Code CLI"),
+        ("NVIDIA Nemotron 3 Super 120B", f"{active_name}"),
+        ("Nemotron 3 Super 120B", f"{active_name}"),
+        ("nvidia/nemotron-3-super-120b-a12b", f"{active_name}"),
     ]
     for old, new in replacements:
         text = text.replace(old, new)
@@ -591,11 +594,10 @@ When designing, modifying, or executing software projects, you MUST adhere stric
    - Always run syntax checks and verify import chains before concluding. Zero runtime errors, zero syntax errors, and 100% interconnected harmony.
 8. ENGINE IDENTITY & RUNTIME AWARENESS:
    - Your underlying reasoning engine is powered by NVIDIA NIM enterprise inference running your active model (NVIDIA Nemotron Ultra 550B MoE, Poolside Laguna XS 2.1, Mistral Large 4, Step 5 Preview, or MiniMax M3.1 Flash) integrated with Claude Code CLI.
-   - When asked what AI model, mode, or engine you are, explicitly declare your active model powered by NVIDIA NIM. Never claim to be Anthropic Claude or Sonnet.
-9. AUTONOMOUS ACTION MANDATE (ZERO CONVERSATIONAL PAUSES):
-   - When asked to create, edit, or execute code or files, NEVER emit conversational promises alone (e.g., do NOT say "Now I understand. Let me create the composition..." or "I will now implement X...").
-   - You MUST invoke the `Write`, `Edit`, or `Bash` tool IMMEDIATELY in the exact same turn!
-   - Emitting conversational text without calling a tool halts Claude Code's autonomous loop and leaves the user waiting. Always emit the tool call directly.
+   - Respond authentically using your native knowledge, reasoning, and capabilities. Never claim to be Anthropic Claude or Sonnet.
+9. AUTONOMOUS ACTION MANDATE:
+   - When asked to create, edit, or execute code or files, NEVER emit conversational promises alone. Transition directly into the required tool calls (Write, Edit, or Bash).
+   - For greetings (e.g. "hi", "hello", "hey"), questions, discussions, or system inquiries, respond naturally and conversationally without invoking write tools.
    - When the user prompt is "do it", "continue", "proceed", or "go ahead", you MUST invoke the tool call immediately without further commentary.
 """
 
@@ -1024,35 +1026,33 @@ class RequestSanitizer(CustomLogger):
             "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-haiku-4-5",
             "claude-opus-4", "claude-opus-4-5", "claude-3-opus-20240229", "*", "auto", ""
         )
-        if boost_triggered:
+        if req_model and req_model not in generic_claude_models:
+            target_model = self.resolve_target_model(req_model, total_chars=total_chars)
+        elif boost_triggered:
             print("[SMART-ROUTER] /boost, Motion, or TURBO BOOST detected! Pinning directly to Nemotron Ultra 550B MoE (backup-ultra).", flush=True)
             target_model = "backup-ultra"
         else:
             pref = self.get_selected_model()
             if pref and pref != "auto":
                 target_model = self.resolve_target_model(pref, total_chars=total_chars)
-            elif req_model and req_model not in generic_claude_models:
-                target_model = self.resolve_target_model(req_model, total_chars=total_chars)
             else:
                 target_model = self.resolve_target_model("auto", total_chars=total_chars)
         data["model"] = target_model
 
-        active_name = MODEL_DISPLAY_NAMES.get(target_model, "NVIDIA Nemotron Ultra 550B MoE (NVIDIA NIM)")
+        active_name = MODEL_DISPLAY_NAMES.get(target_model, "Frontier AI Model (NVIDIA NIM)")
 
         # 2. Build Injected Directives with Motion Graphics Intelligence
-        identity_directive = f"""[CRITICAL ENGINE SPECIFICATION & RUNTIME IDENTITY]
-You are an advanced AI software engineer running inside Claude Code CLI.
-Your underlying reasoning and coding engine is {active_name} powered by NVIDIA NIM enterprise inference via local proxy routing.
-When asked what model, mode, or engine you are, or who built/powers you, you MUST state clearly and accurately:
-"{active_name} powered by NVIDIA NIM via local proxy routing."
+        identity_directive = f"""[CRITICAL ENGINE SPECIFICATION]
+You are an advanced AI assistant running via local NVIDIA NIM inference ({active_name}).
+Respond authentically using your native knowledge, reasoning, and capabilities.
 Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
 """
         directive_parts = [identity_directive.strip()]
         if motion_triggered:
             directive_parts.append(ONESHOT_MOTION_DIRECTIVE.strip())
+            directive_parts.append(MOTION_GRAPHICS_REMOTION_DIRECTIVE.strip())
         if continuation_triggered:
             directive_parts.append(CONTINUATION_ACTION_DIRECTIVE.strip())
-        directive_parts.append(MOTION_GRAPHICS_REMOTION_DIRECTIVE.strip())
         directive_parts.append(ARCHITECTURAL_COHESION_DIRECTIVE.strip())
 
         full_directive = "\n\n".join(directive_parts)

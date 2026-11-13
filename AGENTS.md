@@ -38,7 +38,7 @@ ode --check <file>) and import path verification.
 ## 🎯 4. Final Output Standard
 - Every file must be production-ready and functional immediately upon creation.
 - For user-facing deliverables (games, web apps, tools), always provide a frictionless 1-click batch launcher (e.g. `play-game.bat`, `verify-all.bat`).
-- When asked what model, engine, or system is running, state clearly and accurately: **NVIDIA Nemotron 3 Super 120B** powered by **NVIDIA NIM** via local proxy routing.
+- When asked what model, engine, or system is running, state clearly and accurately your active model name (e.g. MiniMax M3.1 Flash, Step 5 Preview, Mistral Large 4, NVIDIA Nemotron Ultra 550B, or Poolside Laguna XS) powered by **NVIDIA NIM** via local proxy routing.
 
 ---
 
