@@ -70,42 +70,42 @@ model_list:
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 45
+      timeout: 15
       max_tokens: 8192
 
   - model_name: "deepseek-v4.1-flash"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 45
+      timeout: 15
       max_tokens: 8192
 
   - model_name: "deepseek-v4.1"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 45
+      timeout: 15
       max_tokens: 8192
 
   - model_name: "deepseek-v4-flash"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 45
+      timeout: 15
       max_tokens: 8192
 
   - model_name: "deepseek-flash"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 45
+      timeout: 15
       max_tokens: 8192
 
   - model_name: "deepseek"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 45
+      timeout: 15
       max_tokens: 8192
 
   # Legacy alias re-route to DeepSeek V4.1 Flash
@@ -113,14 +113,14 @@ model_list:
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 45
+      timeout: 15
       max_tokens: 8192
 
   - model_name: "deepseek-v4-pro"
     litellm_params:
       model: "nvidia_nim/deepseek-ai/deepseek-v4-flash-0731"
       api_key: "os.environ/NVIDIA_API_KEY"
-      timeout: 45
+      timeout: 15
       max_tokens: 8192
 
   # Auto Smart Routing

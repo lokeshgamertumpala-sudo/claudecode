@@ -22,20 +22,9 @@ try:
     async def api_hello_endpoint():
         return PlainTextResponse("ok")
 
-    @app.middleware("http")
-    async def strip_experimental_beta_param(request: Request, call_next):
-        """Strip ?beta=true from /v1/messages.
-        LiteLLM's experimental_pass_through adapter deadlocks and times out on DeepSeek
-        reasoning chunks. Stripping ?beta=true routes all Claude Code traffic to LiteLLM's
-        rock-solid, stable Anthropic streaming adapter with 100% full text output."""
-        if "/v1/messages" in request.url.path and "beta" in request.query_params:
-            from urllib.parse import urlencode
-            filtered = [(k, v) for k, v in request.query_params.items() if k != "beta"]
-            request.scope["query_string"] = urlencode(filtered).encode("utf-8")
-        return await call_next(request)
-
     @app.post("/v1/code/sessions/{session_id}/worker/web-search")
-    async def worker_web_search_endpoint(session_id: str, request: Request):
+    @app.post("/worker/web-search")
+    async def worker_web_search_endpoint(request: Request, session_id: str = "default"):
         try:
             body = await request.json()
         except Exception:
@@ -54,7 +43,8 @@ try:
         return JSONResponse({"results": results})
 
     @app.post("/v1/code/sessions/{session_id}/worker/web-fetch")
-    async def worker_web_fetch_endpoint(session_id: str, request: Request):
+    @app.post("/worker/web-fetch")
+    async def worker_web_fetch_endpoint(request: Request, session_id: str = "default"):
         try:
             body = await request.json()
         except Exception:
@@ -246,8 +236,8 @@ class RequestSanitizer(CustomLogger):
         # (litellm_slug, nim_model_id, human_name)
         self.model_pool = [
             ("backup-nemotron", "nvidia/nemotron-3-super-120b-a12b", "Nemotron 120B"),
-            ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731", "DeepSeek V4.1 Flash"),
             ("backup-laguna", "poolside/laguna-xs-2.1", "Poolside Laguna XS 2.1"),
+            ("deepseek-v4-flash", "deepseek-ai/deepseek-v4-flash-0731", "DeepSeek V4.1 Flash"),
             ("moonshotai/kimi-k3", "moonshotai/kimi-k3", "Moonshot Kimi-K3"),
         ]
 
@@ -442,7 +432,9 @@ class RequestSanitizer(CustomLogger):
         if isinstance(tool_choice, dict):
             tc_type = tool_choice.get("type", "")
             tc_name = tool_choice.get("name", "")
-            if tc_type == "tool" or tc_name in ("web_search", "web_search_20250305"):
+            tools = data.get("tools", [])
+            tool_names = [t.get("name") for t in tools if isinstance(t, dict)]
+            if tc_name in ("web_search", "web_search_20250305") or (tc_name and tool_names and tc_name not in tool_names):
                 data["tool_choice"] = {"type": "auto"}
                 print(f"[SANITIZE] Converted tool_choice {{type:{tc_type!r}, name:{tc_name!r}}} -> {{type:auto}} to prevent NIM 400", flush=True)
 

@@ -121,6 +121,7 @@ $env:ANTHROPIC_MAX_TOKENS = "8192"
 $env:CLAUDE_CODE_DISABLE_THINKING_LIMIT = "1"
 $env:CLAUDE_CODE_WEBSEARCH_USE_CCR_PROXY = "1"
 $env:CLAUDE_CODE_WEBFETCH_USE_CCR_PROXY = "1"
+$env:CLAUDE_CODE_SESSION_ID = "session_local_worker"
 
 # 5. Autonomous Maximum Power Flags:
 # --dangerously-skip-permissions: Never blocks or waits for user keystrokes on shell commands/file edits

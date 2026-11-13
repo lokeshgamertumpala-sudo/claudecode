@@ -1,0 +1,5 @@
+litellm[proxy]>=1.40.0
+fastapi>=0.100.0
+uvicorn>=0.22.0
+requests>=2.28.0
+pyyaml>=6.0
