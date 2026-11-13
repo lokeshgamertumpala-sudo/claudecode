@@ -4,32 +4,44 @@
     "options": [
       {
         "model": "claude-sonnet-5",
-        "label": "DeepSeek V4.1 Flash",
-        "description": "High-speed flagship reasoning & massive context coding powerhouse (DeepSeek V4.1 Flash on NVIDIA NIM)",
+        "label": "NVIDIA Nemotron Ultra 550B MoE",
+        "description": "550B Flagship Reasoning Giant, Sub-Second Latency (RECOMMENDED DEFAULT)",
         "behavesAs": "sonnet"
       },
       {
-        "model": "nvidia/nemotron-3-super-120b-a12b",
-        "label": "NVIDIA Nemotron 3 Super 120B",
-        "description": "120B enterprise powerhouse, ultra-fast ~0.3s latency (RECOMMENDED)",
+        "model": "mistralai/mistral-large-4-1t-a52b",
+        "label": "Mistral Large 4",
+        "description": "1.05T Frontier MoE, 52B Active",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "stepfun-ai/step-5-preview",
+        "label": "Step 5 Preview",
+        "description": "600B MoE, 1M Context Window, Advanced Multimodal Reasoning",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "minimaxai/minimax-m3.1-flash",
+        "label": "MiniMax M3.1 Flash",
+        "description": "428B MoE, Ultra-Fast Agentic & Code Specialist",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "nvidia/nemotron-3-ultra-550b-a55b",
+        "label": "NVIDIA Nemotron Ultra 550B MoE",
+        "description": "550B Flagship Reasoning Giant, Sub-Second Latency (RECOMMENDED DEFAULT)",
+        "behavesAs": "sonnet"
+      },
+      {
+        "model": "deepseek-ai/deepseek-v4.1-flash",
+        "label": "DeepSeek V4.1 Flash",
+        "description": "High-speed reasoning & massive context coding powerhouse",
         "behavesAs": "sonnet"
       },
       {
         "model": "poolside/laguna-xs-2.1",
         "label": "Poolside Laguna XS 2.1",
-        "description": "High-speed software engineering & code specialist, ~0.3s latency",
-        "behavesAs": "sonnet"
-      },
-      {
-        "model": "deepseek-ai/deepseek-v4-flash-0731",
-        "label": "DeepSeek V4.1 Flash",
-        "description": "High-speed flagship reasoning & massive context coding powerhouse (DeepSeek V4.1 Flash on NVIDIA NIM)",
-        "behavesAs": "sonnet"
-      },
-      {
-        "model": "moonshotai/kimi-k3",
-        "label": "Moonshot AI Kimi-K3",
-        "description": "Ultra-deep reasoning & advanced multi-step problem solving (Kimi Flagship)",
+        "description": "High-speed software engineering & code specialist",
         "behavesAs": "sonnet"
       }
     ]

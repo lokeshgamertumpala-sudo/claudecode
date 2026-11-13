@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
-# ==============================================================================
-# Model Switcher CLI for macOS & Linux
-# Usage: ./model.sh [nemotron|laguna|deepseek|kimi|auto]
-# ==============================================================================
+# Claude Code Model Switcher (macOS / Linux / POSIX)
+set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PYTHON_CMD="python3"
-if ! command -v python3 >/dev/null 2>&1; then
+cd "$SCRIPT_DIR"
+
+if command -v python3 >/dev/null 2>&1; then
+    PYTHON_CMD="python3"
+elif command -v python >/dev/null 2>&1; then
     PYTHON_CMD="python"
+else
+    echo "[ERROR] Python 3 not found." >&2
+    exit 1
 fi
 
-exec $PYTHON_CMD "$SCRIPT_DIR/select_model.py" "$@"
+"$PYTHON_CMD" "$SCRIPT_DIR/select_model.py" "$@"
