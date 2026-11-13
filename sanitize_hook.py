@@ -89,11 +89,12 @@ try:
                     # If no body block (text or tool_use) was emitted before closure, synthesize one so Claude Code never errors
                     if not has_emitted_body_block:
                         target_idx = current_block_index + 1 if message_started else 0
+                        timeout_msg = "Upstream model timed out (>60s). Please retry or switch to MiniMax M3.1 Flash (start-minimax.bat) or Laguna XS (start-laguna.bat) for instant responses."
                         parts.append(
                             f'event: content_block_start\ndata: {{"type": "content_block_start", "index": {target_idx}, "content_block": {{"type": "text", "text": ""}}}}'
                         )
                         parts.append(
-                            f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": {target_idx}, "delta": {{"type": "text_delta", "text": "Ready to assist you."}}}}'
+                            f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": {target_idx}, "delta": {{"type": "text_delta", "text": "{timeout_msg}"}}}}'
                         )
                         parts.append(
                             f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {target_idx}}}'
@@ -262,8 +263,8 @@ try:
 
                         except asyncio.TimeoutError:
                             silence_seconds += 2.5
-                            if silence_seconds >= 1800.0:
-                                print("[SSE-STREAM] Upstream LLM stalled (>1800s silence). Gracefully terminating stream.", flush=True)
+                            if silence_seconds >= 60.0:
+                                print("[SSE-STREAM] Upstream LLM stalled (>60s silence). Gracefully terminating stream.", flush=True)
                                 closure = build_closure()
                                 if closure:
                                     yield closure
@@ -1121,8 +1122,14 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
                 combined = "\n\n".join(parts)
                 data["system"] = condense_system_prompt_for_deepseek(combined)
             data.pop("thinking", None)
+        elif target_model in (
+            "backup-mistral", "backup-laguna", "backup-minimax",
+            "mistralai/mistral-large-4-1t-a52b", "poolside/laguna-xs-2.1", "minimaxai/minimax-m3.1-flash"
+        ):
+            # For Mistral Large 4, Laguna XS, and MiniMax: pop thinking to eliminate reasoning traps and deliver instant tokens
+            data.pop("thinking", None)
         else:
-            # Clamp BOTH "enabled" and "adaptive" thinking types: set type: "enabled" and budget_tokens: 1024 (<10s reasoning)
+            # For native reasoning models (Nemotron Ultra 550B, Step 5): clamp thinking to 1024 budget
             thinking = data.get("thinking")
             if isinstance(thinking, dict):
                 t_type = thinking.get("type")
