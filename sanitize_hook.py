@@ -76,9 +76,9 @@ try:
                         return b""
                     parts = []
                     if not message_started:
+                        active_slug = "claude-sonnet-5"
                         parts.append(
-                            'event: message_start\n'
-                            'data: {"type": "message_start", "message": {"id": "msg_fallback", "type": "message", "role": "assistant", "content": [], "model": "nvidia/nemotron-3-ultra-550b-a55b", "stop_reason": null, "stop_sequence": null, "usage": {"input_tokens": 0, "output_tokens": 0}}}'
+                            f'event: message_start\ndata: {{"type": "message_start", "message": {{"id": "msg_fallback", "type": "message", "role": "assistant", "content": [], "model": "{active_slug}", "stop_reason": null, "stop_sequence": null, "usage": {{"input_tokens": 0, "output_tokens": 0}}}}}}'
                         )
                     if block_open:
                         parts.append(
@@ -93,7 +93,7 @@ try:
                             f'event: content_block_start\ndata: {{"type": "content_block_start", "index": {target_idx}, "content_block": {{"type": "text", "text": ""}}}}'
                         )
                         parts.append(
-                            f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": {target_idx}, "delta": {{"type": "text_delta", "text": "Proceeding with implementation..."}}}}'
+                            f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": {target_idx}, "delta": {{"type": "text_delta", "text": "Ready to assist you."}}}}'
                         )
                         parts.append(
                             f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {target_idx}}}'
@@ -200,7 +200,7 @@ try:
                                                     target_idx = current_block_index + 1
                                                     synth_block = (
                                                         f'event: content_block_start\ndata: {{"type": "content_block_start", "index": {target_idx}, "content_block": {{"type": "text", "text": ""}}}}\n\n'
-                                                        f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": {target_idx}, "delta": {{"type": "text_delta", "text": "Proceeding with implementation."}}}}\n\n'
+                                                        f'event: content_block_delta\ndata: {{"type": "content_block_delta", "index": {target_idx}, "delta": {{"type": "text_delta", "text": "Ready to assist you."}}}}\n\n'
                                                         f'event: content_block_stop\ndata: {{"type": "content_block_stop", "index": {target_idx}}}\n\n'
                                                     )
                                                     yield synth_block.encode("utf-8")
@@ -622,6 +622,7 @@ class RequestSanitizer(CustomLogger):
             ("backup-step", "stepfun-ai/step-5-preview", "Step 5 Preview"),
             ("backup-minimax", "minimaxai/minimax-m3.1-flash", "MiniMax M3.1 Flash"),
             ("backup-deepseek", "deepseek-ai/deepseek-v4.1-flash", "DeepSeek V4.1 Flash"),
+            ("backup-kimi", "moonshotai/kimi-k3.1-pro", "Moonshot AI Kimi K3.1 Pro"),
         ]
 
         self.health = {}
@@ -927,61 +928,23 @@ class RequestSanitizer(CustomLogger):
         motion_triggered = False
         continuation_triggered = False
         last_user_msg = None
-        history_has_motion = False
+        if messages and isinstance(messages, list):
+            for m in messages:
+                if isinstance(m, dict) and m.get("role") == "user":
+                    last_user_msg = m
 
-        motion_keywords = (
-            "remotion", "motion-studio", "motion graphic", "motion graphics",
-            "/motion", "cinematic", "explainer", "animation", "neural network video",
-            "space intro", "beyond earth", "openclaudex", "video structure",
-            "video-export", "visual direction", "4k quality", "aspect ratio",
-            "60-second", "10-second", "60s cinematic", "10s cinematic",
-            "particle physics", "three.js", "motion-design", "neural network",
-            "massively interconnected"
-        )
+        user_text = ""
+        user_text_clean = ""
+        is_greeting = False
+
         continuation_phrases = (
             "do it", "continue", "proceed", "go ahead", "done", "next",
             "keep going", "finish", "yes", "ok", "proceed with implementation",
             "do that", "execute", "start", "run it"
         )
 
-        if messages and isinstance(messages, list):
-            for m in messages:
-                if not isinstance(m, dict):
-                    continue
-                role = m.get("role")
-                c = m.get("content")
-                text_content = ""
-                if isinstance(c, str):
-                    text_content = c.lower()
-                elif isinstance(c, list):
-                    text_content = " ".join(
-                        str(p.get("text", "")) + " " + str(p.get("content", ""))
-                        for p in c if isinstance(p, dict)
-                    ).lower()
-
-                if "/boost" in text_content or "turbo boost" in text_content:
-                    boost_triggered = True
-
-                if any(k in text_content for k in motion_keywords) or (
-                    ("video" in text_content or "motion" in text_content or "animation" in text_content or "intro" in text_content) and
-                    any(act in text_content for act in ("create", "make", "generate", "render", "explainer", "build", "test", "deliverable", "code"))
-                ):
-                    history_has_motion = True
-
-                if role == "user":
-                    last_user_msg = m
-
-        if not boost_triggered and top_system:
-            sys_str = str(top_system).lower()
-            if "/boost" in sys_str or "turbo boost" in sys_str:
-                boost_triggered = True
-            if any(k in sys_str for k in motion_keywords):
-                history_has_motion = True
-
-        # Check latest user message for motion request or continuation intent
         if last_user_msg:
             c = last_user_msg.get("content")
-            user_text = ""
             if isinstance(c, str):
                 user_text = c.strip().lower()
             elif isinstance(c, list):
@@ -991,65 +954,39 @@ class RequestSanitizer(CustomLogger):
                 )
             user_text_clean = user_text.strip(".!?,")
 
-            user_is_motion = any(k in user_text for k in motion_keywords) or (
-                ("video" in user_text or "motion" in user_text or "animation" in user_text or "intro" in user_text) and
-                any(act in user_text for act in ("create", "make", "generate", "render", "explainer", "build", "remotion", "show", "test", "deliverable"))
-            )
+            greeting_words = {"hi", "hello", "hey", "sup", "howdy", "greetings", "good morning", "good afternoon", "good evening", "yo", "test"}
+            is_greeting = user_text_clean in greeting_words or any(user_text_clean.startswith(w + " ") for w in ("hi", "hello", "hey", "howdy", "yo"))
 
-            if user_text_clean in continuation_phrases or any(user_text_clean.startswith(p) for p in ("do it", "continue", "proceed", "go ahead", "do that", "execute")):
-                continuation_triggered = True
+            if not is_greeting:
+                if user_text.startswith("/boost") or "turbo boost" in user_text:
+                    boost_triggered = True
 
-            # If user asks for motion, or continues a motion task
-            if user_is_motion or (continuation_triggered and history_has_motion):
-                motion_triggered = True
+                user_is_motion = (
+                    ("remotion" in user_text or "motion-studio" in user_text or user_text.startswith("/motion")) and
+                    any(act in user_text for act in ("create", "make", "generate", "render", "build", "write", "edit", "new"))
+                )
+                if user_is_motion:
+                    motion_triggered = True
 
-            # Inject mandate into user message (supports both str and list content)
-            if continuation_triggered:
-                mandate_text = "[ACTION MANDATE: Continuation confirmed. DO NOT output conversational text alone! IMMEDIATELY emit the next required tool call (Write, Edit, or Bash) to execute the pending implementation.]"
-                if isinstance(c, str):
-                    if "[ACTION MANDATE:" not in c:
-                        last_user_msg["content"] = c + "\n\n" + mandate_text
-                elif isinstance(c, list):
-                    text_parts = [p for p in c if isinstance(p, dict) and p.get("type") == "text"]
-                    if text_parts:
-                        if "[ACTION MANDATE:" not in text_parts[-1].get("text", ""):
-                            text_parts[-1]["text"] = text_parts[-1]["text"] + "\n\n" + mandate_text
-                    else:
-                        c.append({"type": "text", "text": mandate_text})
-            elif motion_triggered and not continuation_triggered:
-                mandate_text = "[1-SHOT MOTION MANDATE: All library components are pre-cached in memory. DO NOT search for patterns. DO NOT read library files. DO NOT output conversational text before calling tools. IMMEDIATELY emit the Write tool call to motion-studio/src/compositions/<Name>.tsx!]"
-                if isinstance(c, str):
-                    if "[1-SHOT MOTION MANDATE:" not in c:
-                        last_user_msg["content"] = c + "\n\n" + mandate_text
-                elif isinstance(c, list):
-                    text_parts = [p for p in c if isinstance(p, dict) and p.get("type") == "text"]
-                    if text_parts:
-                        if "[1-SHOT MOTION MANDATE:" not in text_parts[-1].get("text", ""):
-                            text_parts[-1]["text"] = text_parts[-1]["text"] + "\n\n" + mandate_text
-                    else:
-                        c.append({"type": "text", "text": mandate_text})
+                if user_text_clean in continuation_phrases or any(user_text_clean.startswith(p) for p in ("do it", "continue", "proceed", "go ahead", "do that", "execute")):
+                    continuation_triggered = True
 
-        # Motion graphics prompts automatically benefit from turbo ultra routing
-        if motion_triggered:
-            boost_triggered = True
-
+        pref = self.get_selected_model()
         req_model = str(data.get("model", "")).strip().lower()
         generic_claude_models = (
             "claude-sonnet-5", "claude-sonnet-4-5", "claude-sonnet-4", "claude-3-7-sonnet-20250219",
             "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-haiku-4-5",
             "claude-opus-4", "claude-opus-4-5", "claude-3-opus-20240229", "*", "auto", ""
         )
-        if req_model and req_model not in generic_claude_models:
+        if pref and pref != "auto":
+            target_model = self.resolve_target_model(pref, total_chars=total_chars)
+        elif req_model and req_model not in generic_claude_models:
             target_model = self.resolve_target_model(req_model, total_chars=total_chars)
         elif boost_triggered:
-            print("[SMART-ROUTER] /boost, Motion, or TURBO BOOST detected! Pinning directly to Nemotron Ultra 550B MoE (backup-ultra).", flush=True)
+            print("[SMART-ROUTER] /boost or TURBO BOOST requested. Pinning to Nemotron Ultra 550B MoE (backup-ultra).", flush=True)
             target_model = "backup-ultra"
         else:
-            pref = self.get_selected_model()
-            if pref and pref != "auto":
-                target_model = self.resolve_target_model(pref, total_chars=total_chars)
-            else:
-                target_model = self.resolve_target_model("auto", total_chars=total_chars)
+            target_model = self.resolve_target_model("auto", total_chars=total_chars)
         data["model"] = target_model
 
         active_name = MODEL_DISPLAY_NAMES.get(target_model, "Frontier AI Model (NVIDIA NIM)")
@@ -1071,36 +1008,40 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
         full_directive = "\n\n".join(directive_parts)
 
         # 3. Sanitize System Prompt
+        def strip_prior_directives(text: str) -> str:
+            if not isinstance(text, str):
+                return text
+            import re
+            text = re.sub(r'\[CRITICAL ENGINE SPECIFICATION\].*?Never claim to be Anthropic Claude[^\n]*\n*', '', text, flags=re.DOTALL)
+            text = re.sub(r'\[CRITICAL 1-SHOT DIRECT ACTION MANDATE.*?(?=\[CRITICAL|\[MOTION|\[ARCHITECTURAL|$)', '', text, flags=re.DOTALL)
+            text = re.sub(r'\[MOTION GRAPHICS & REMOTION CORE ENGINEERING INTELLIGENCE.*?(?=\[CRITICAL|\[MOTION|\[ARCHITECTURAL|$)', '', text, flags=re.DOTALL)
+            text = re.sub(r'\[CRITICAL CONTINUATION DIRECTIVE.*?(?=\[CRITICAL|\[MOTION|\[ARCHITECTURAL|$)', '', text, flags=re.DOTALL)
+            text = re.sub(r'\[ARCHITECTURAL COHESION DIRECTIVE.*?(?=\[CRITICAL|\[MOTION|\[ARCHITECTURAL|$)', '', text, flags=re.DOTALL)
+            return text.strip()
+
         if top_system:
             if isinstance(top_system, str):
-                cleaned = sanitize_claude_identity(top_system, active_name)
-                if "[CRITICAL ENGINE SPECIFICATION" not in cleaned:
-                    data["system"] = full_directive + "\n\n" + cleaned
-                else:
-                    extra_dirs = []
-                    if motion_triggered and "[CRITICAL 1-SHOT DIRECT ACTION MANDATE" not in cleaned:
-                        extra_dirs.append(ONESHOT_MOTION_DIRECTIVE.strip())
-                    if continuation_triggered and "[CRITICAL CONTINUATION DIRECTIVE" not in cleaned:
-                        extra_dirs.append(CONTINUATION_ACTION_DIRECTIVE.strip())
-                    if extra_dirs:
-                        data["system"] = "\n\n".join(extra_dirs) + "\n\n" + cleaned
-                    else:
-                        data["system"] = cleaned
+                cleaned = strip_prior_directives(sanitize_claude_identity(top_system, active_name))
+                data["system"] = full_directive + "\n\n" + cleaned
             elif isinstance(top_system, list):
+                filtered_system = []
                 for p in top_system:
                     if isinstance(p, dict) and "text" in p and isinstance(p["text"], str):
-                        p["text"] = sanitize_claude_identity(p["text"], active_name)
-                has_dir = any(isinstance(p, dict) and "[CRITICAL ENGINE SPECIFICATION" in p.get("text", "") for p in top_system)
-                if not has_dir:
-                    top_system.insert(0, {"type": "text", "text": full_directive + "\n\n"})
-                else:
-                    extra_dirs = []
-                    if motion_triggered and not any(isinstance(p, dict) and "[CRITICAL 1-SHOT DIRECT ACTION MANDATE" in p.get("text", "") for p in top_system):
-                        extra_dirs.append(ONESHOT_MOTION_DIRECTIVE.strip())
-                    if continuation_triggered and not any(isinstance(p, dict) and "[CRITICAL CONTINUATION DIRECTIVE" in p.get("text", "") for p in top_system):
-                        extra_dirs.append(CONTINUATION_ACTION_DIRECTIVE.strip())
-                    if extra_dirs:
-                        top_system.insert(0, {"type": "text", "text": "\n\n".join(extra_dirs) + "\n\n"})
+                        txt = p["text"]
+                        if any(marker in txt for marker in (
+                            "[CRITICAL ENGINE SPECIFICATION",
+                            "[CRITICAL 1-SHOT DIRECT ACTION MANDATE",
+                            "[MOTION GRAPHICS & REMOTION CORE ENGINEERING INTELLIGENCE",
+                            "[CRITICAL CONTINUATION DIRECTIVE",
+                            "[ARCHITECTURAL COHESION DIRECTIVE"
+                        )):
+                            continue
+                        p["text"] = sanitize_claude_identity(txt, active_name)
+                        filtered_system.append(p)
+                    else:
+                        filtered_system.append(p)
+                filtered_system.insert(0, {"type": "text", "text": full_directive + "\n\n"})
+                data["system"] = filtered_system
 
         # 4. Sanitize Messages and History
         if messages and isinstance(messages, list):
@@ -1122,28 +1063,27 @@ Never claim to be Anthropic Claude, Claude Sonnet 4.5, or Claude Sonnet 5.
             if system_msg:
                 s_content = system_msg.get("content")
                 if isinstance(s_content, str):
-                    if "[CRITICAL ENGINE SPECIFICATION" not in s_content:
-                        system_msg["content"] = full_directive + "\n\n" + s_content
-                    else:
-                        extra_dirs = []
-                        if motion_triggered and "[CRITICAL 1-SHOT DIRECT ACTION MANDATE" not in s_content:
-                            extra_dirs.append(ONESHOT_MOTION_DIRECTIVE.strip())
-                        if continuation_triggered and "[CRITICAL CONTINUATION DIRECTIVE" not in s_content:
-                            extra_dirs.append(CONTINUATION_ACTION_DIRECTIVE.strip())
-                        if extra_dirs:
-                            system_msg["content"] = "\n\n".join(extra_dirs) + "\n\n" + s_content
+                    s_cleaned = strip_prior_directives(sanitize_claude_identity(s_content, active_name))
+                    system_msg["content"] = full_directive + "\n\n" + s_cleaned
                 elif isinstance(s_content, list):
-                    has_dir = any(isinstance(p, dict) and "[CRITICAL ENGINE SPECIFICATION" in p.get("text", "") for p in s_content)
-                    if not has_dir:
-                        s_content.insert(0, {"type": "text", "text": full_directive + "\n\n"})
-                    else:
-                        extra_dirs = []
-                        if motion_triggered and not any(isinstance(p, dict) and "[CRITICAL 1-SHOT DIRECT ACTION MANDATE" in p.get("text", "") for p in s_content):
-                            extra_dirs.append(ONESHOT_MOTION_DIRECTIVE.strip())
-                        if continuation_triggered and not any(isinstance(p, dict) and "[CRITICAL CONTINUATION DIRECTIVE" in p.get("text", "") for p in s_content):
-                            extra_dirs.append(CONTINUATION_ACTION_DIRECTIVE.strip())
-                        if extra_dirs:
-                            s_content.insert(0, {"type": "text", "text": "\n\n".join(extra_dirs) + "\n\n"})
+                    filtered_s = []
+                    for p in s_content:
+                        if isinstance(p, dict) and "text" in p and isinstance(p["text"], str):
+                            txt = p["text"]
+                            if any(marker in txt for marker in (
+                                "[CRITICAL ENGINE SPECIFICATION",
+                                "[CRITICAL 1-SHOT DIRECT ACTION MANDATE",
+                                "[MOTION GRAPHICS & REMOTION CORE ENGINEERING INTELLIGENCE",
+                                "[CRITICAL CONTINUATION DIRECTIVE",
+                                "[ARCHITECTURAL COHESION DIRECTIVE"
+                            )):
+                                continue
+                            p["text"] = sanitize_claude_identity(txt, active_name)
+                            filtered_s.append(p)
+                        else:
+                            filtered_s.append(p)
+                    filtered_s.insert(0, {"type": "text", "text": full_directive + "\n\n"})
+                    system_msg["content"] = filtered_s
             elif not top_system:
                 messages.insert(0, {"role": "system", "content": full_directive})
 

@@ -4,8 +4,8 @@
     "options": [
       {
         "model": "claude-sonnet-5",
-        "label": "NVIDIA Nemotron Ultra 550B MoE",
-        "description": "550B Flagship Reasoning Giant, Sub-Second Latency (RECOMMENDED DEFAULT)",
+        "label": "Poolside Laguna XS 2.1",
+        "description": "High-speed software engineering & code specialist",
         "behavesAs": "sonnet"
       },
       {
