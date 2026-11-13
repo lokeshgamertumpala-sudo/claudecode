@@ -243,6 +243,28 @@
       timeout: 1800
       max_tokens: 8192
 
+  # 7. Moonshot AI Kimi K3.1 Pro (via OpenRouter or DeepInfra)
+  - model_name: "moonshotai/kimi-k3.1-pro"
+    litellm_params:
+      model: "openrouter/moonshotai/kimi-k3.1-pro"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "kimi-k3.1-pro"
+    litellm_params:
+      model: "openrouter/moonshotai/kimi-k3.1-pro"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
+  - model_name: "backup-kimi"
+    litellm_params:
+      model: "openrouter/moonshotai/kimi-k3.1-pro"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      timeout: 1800
+      max_tokens: 8192
+
   # Auto Smart Routing (Default: NVIDIA Nemotron Ultra 550B MoE - Sub-Second Fast)
   - model_name: "auto"
     litellm_params:

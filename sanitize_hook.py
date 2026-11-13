@@ -389,6 +389,9 @@ MODEL_DISPLAY_NAMES = {
     "backup-deepseek": "DeepSeek V4.1 Flash",
     "poolside/laguna-xs-2.1": "Poolside Laguna XS 2.1",
     "backup-laguna": "Poolside Laguna XS 2.1",
+    "moonshotai/kimi-k3.1-pro": "Moonshot AI Kimi K3.1 Pro (2.8T MoE)",
+    "kimi-k3.1-pro": "Moonshot AI Kimi K3.1 Pro (2.8T MoE)",
+    "backup-kimi": "Moonshot AI Kimi K3.1 Pro (2.8T MoE)",
     "auto": "Auto Smart-Failover (Nemotron Ultra / Laguna XS / Mistral 4 / Step 5)",
 }
 
@@ -762,8 +765,10 @@ class RequestSanitizer(CustomLogger):
             "laguna": ("backup-laguna", "poolside/laguna-xs-2.1"),
             "poolside": ("backup-laguna", "poolside/laguna-xs-2.1"),
             "poolside/laguna-xs-2.1": ("backup-laguna", "poolside/laguna-xs-2.1"),
-            "5": ("backup-laguna", "poolside/laguna-xs-2.1"),
-            "moonshotai/kimi-k3.1-pro": ("backup-ultra", "nvidia/nemotron-3-ultra-550b-a55b"),
+            "laguna-xs": ("backup-laguna", "poolside/laguna-xs-2.1"),
+            "kimi": ("backup-kimi", "moonshotai/kimi-k3.1-pro"),
+            "kimi-k3.1-pro": ("backup-kimi", "moonshotai/kimi-k3.1-pro"),
+            "moonshotai/kimi-k3.1-pro": ("backup-kimi", "moonshotai/kimi-k3.1-pro"),
             "nvidia/nemotron-3-super-120b-a12b": ("backup-ultra", "nvidia/nemotron-3-ultra-550b-a55b"),
             "nemotron-3-super-120b-a12b": ("backup-ultra", "nvidia/nemotron-3-ultra-550b-a55b"),
             "boost": ("backup-ultra", "nvidia/nemotron-3-ultra-550b-a55b"),
